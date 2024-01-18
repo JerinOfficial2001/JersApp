@@ -1,6 +1,6 @@
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
-import React from 'react';
+import React, {useState} from 'react';
 import AuthModal from '../src/components/AuthModal';
 import Home from '../screens/Home';
 import Message from '../screens/Message';
@@ -10,8 +10,8 @@ import AllContacts from '../screens/AllContacts';
 const Stack = createStackNavigator();
 
 export default function Navigator() {
-  const [visible, setVisible] = React.useState(false);
-
+  const [visible, setVisible] = useState(false);
+  const [headerTitle, setheaderTitle] = useState('');
   return (
     <NavigationContainer>
       <Stack.Navigator>
@@ -28,6 +28,7 @@ export default function Navigator() {
               backgroundColor: '#008169',
             },
             headerTintColor: 'white',
+            title: headerTitle,
           }}
           name="Message"
           component={Message}

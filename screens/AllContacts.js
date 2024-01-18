@@ -2,34 +2,17 @@ import React, {useEffect, useState} from 'react';
 import {PermissionsAndroid, ScrollView, Text, View} from 'react-native';
 import Contacts from 'react-native-contacts';
 import MyComponent from '../src/components/MyComponent';
+import {requestContactsPermission} from '../src/controllers/contacts';
 
 export default function AllContacts(props) {
   const [contacts, setContacts] = useState([]);
-  const requestContactsPermission = async () => {
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-        {
-          title: 'Contacts Permission',
-          message: 'This app needs access to your contacts.',
-          buttonNeutral: 'Ask Me Later',
-          buttonNegative: 'Cancel',
-          buttonPositive: 'OK',
-        },
-      );
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        Contacts.getAll().then(data => {
-          setContacts(data);
-        });
-      } else {
-        console.log('Contacts permission denied');
-      }
-    } catch (err) {
-      console.warn(err);
-    }
-  };
+
   useEffect(() => {
-    requestContactsPermission();
+    requestContactsPermission().then(res => {
+      if (res) {
+        setContacts(res);
+      }
+    });
   }, []);
 
   return (
@@ -53,7 +36,9 @@ export default function AllContacts(props) {
             contact={elem}
             key={index}
             onclick={() => {
-              props.navigation.navigate('Message');
+              props.navigation.navigate('Message', {
+                id: elem?.rawContactId,
+              });
             }}
           />
         );

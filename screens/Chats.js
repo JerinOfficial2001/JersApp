@@ -10,7 +10,9 @@ export default function Chats(props) {
           <MyComponent
             key={elem}
             onclick={() => {
-              props.navigation.navigate('Message');
+              props.navigation.navigate('Message', {
+                id: 0,
+              });
             }}
           />
         );
