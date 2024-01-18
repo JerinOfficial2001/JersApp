@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {ScrollView, Text} from 'react-native';
 import {requestContactsPermission} from '../src/controllers/contacts';
+import {login} from '../src/controllers/auth';
 
 export default function Message({route, navigation, ...props}) {
   const {id} = route.params;
@@ -14,6 +15,7 @@ export default function Message({route, navigation, ...props}) {
         });
       }
     });
+    login();
   }, []);
   return (
     <ScrollView>
