@@ -1,6 +1,6 @@
 export const login = async () => {
   try {
-    const response = await fetch('http://localhost:3001/api/auth');
+    const response = await fetch('https://next-api-ruby.vercel.app/api/auth');
     console.log('checked');
     const data = await response.json();
     console.log('Data:', data);
