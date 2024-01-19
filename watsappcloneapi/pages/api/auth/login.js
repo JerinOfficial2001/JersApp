@@ -21,9 +21,9 @@ export default async function handler(req, res) {
       case 'POST':
         try {
           const {mobNum, password} = req.body;
-          const user = await Auth.findOne({mobNum});
+          const user = await Auth.find({mobNum});
 
-          if (user.password === password) {
+          if (user && user.password === password) {
             // Generate JWT token
             const token = jwt.sign({mobNum: user.mobNum}, SECRET_KEY, {
               expiresIn: '1h',
