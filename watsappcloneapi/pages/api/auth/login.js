@@ -14,67 +14,66 @@ export default async function handler(req, res) {
   await connectToDatabase();
 
   // Use cors middleware by including headers in the response
-  corsMiddleware(req, res, async () => {
-    const {method} = req;
 
-    switch (method) {
-      case 'POST':
-        try {
-          const {mobNum, password} = req.body;
-          const user = await Auth.findOne({mobNum});
-          if (user) {
-            if (user.mobNum == mobNum && user.password == password) {
-              res.json({status: 'ok', data: user});
-            } else if (user.password !== password) {
-              res.json({status: 'error', error: 'Invalid Password'});
-            } else if (user.mobNum !== mobNum) {
-              res.json({status: 'error', error: 'Invalid Mobile Number'});
-            }
-          } else {
-            res.json({status: 'error', error: 'User Not Found'});
+  const {method} = req;
+
+  switch (method) {
+    case 'POST':
+      try {
+        const {mobNum, password} = req.body;
+        const user = await Auth.findOne({mobNum});
+        if (user) {
+          if (user.mobNum == mobNum && user.password == password) {
+            res.json({status: 'ok', data: user});
+          } else if (user.password !== password) {
+            res.json({status: 'error', error: 'Invalid Password'});
+          } else if (user.mobNum !== mobNum) {
+            res.json({status: 'error', error: 'Invalid Mobile Number'});
           }
-        } catch (error) {
-          console.error('Error:', error);
-          res
+        } else {
+          res.json({status: 'error', error: 'User Not Found'});
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        res
+          .status(401)
+          .json({status: 'error', data: `Unauthorized - ${error.message}`});
+      }
+
+      break;
+
+    case 'GET':
+      try {
+        // Extract token from the request headers or cookies
+        const token = req.headers.authorization?.replace('Bearer ', ''); // Adjust this according to your token handling
+
+        if (!token) {
+          return res
             .status(401)
-            .json({status: 'error', data: `Unauthorized - ${error.message}`});
+            .json({status: 'error', data: 'Unauthorized - Missing Token'});
         }
 
-        break;
+        // Verify and decode the token
+        const decoded = jwt.verify(token, SECRET_KEY);
 
-      case 'GET':
-        try {
-          // Extract token from the request headers or cookies
-          const token = req.headers.authorization?.replace('Bearer ', ''); // Adjust this according to your token handling
+        // Retrieve user data based on the decoded information
+        const user = await Auth.findById(decoded.userId);
 
-          if (!token) {
-            return res
-              .status(401)
-              .json({status: 'error', data: 'Unauthorized - Missing Token'});
-          }
-
-          // Verify and decode the token
-          const decoded = jwt.verify(token, SECRET_KEY);
-
-          // Retrieve user data based on the decoded information
-          const user = await Auth.findById(decoded.userId);
-
-          if (user) {
-            res.status(200).json({status: 'ok', data: {user}});
-          } else {
-            res.status(404).json({status: 'error', data: 'User not found'});
-          }
-        } catch (error) {
-          console.error('Error:', error);
-          res
-            .status(401)
-            .json({status: 'error', data: 'Unauthorized - Invalid Token'});
+        if (user) {
+          res.status(200).json({status: 'ok', data: {user}});
+        } else {
+          res.status(404).json({status: 'error', data: 'User not found'});
         }
-        break;
+      } catch (error) {
+        console.error('Error:', error);
+        res
+          .status(401)
+          .json({status: 'error', data: 'Unauthorized - Invalid Token'});
+      }
+      break;
 
-      default:
-        res.status(405).json({error: 'Method Not Allowed'});
-        break;
-    }
-  });
+    default:
+      res.status(405).json({error: 'Method Not Allowed'});
+      break;
+  }
 }
