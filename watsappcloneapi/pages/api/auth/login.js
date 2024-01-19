@@ -5,7 +5,7 @@ import cors from 'cors';
 
 const SECRET_KEY = process.env.NEXT_PUBLIC_SECRET_KEY; // Replace with the same secret key used for signing tokens
 const corsMiddleware = cors({
-  origin: ['http://localhost:3001', 'https://next-api-ruby.vercel.app'], // Replace with the actual origin of your client app
+  origin: 'https://next-api-ruby.vercel.app', // Replace with the actual origin of your client app
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
 });
