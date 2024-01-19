@@ -31,7 +31,7 @@ export default async function handler(req, res) {
             res.json({status: 'error', error: 'Invalid Mobile Number'});
           }
         } else {
-          res.json({status: 'error', error: 'User Not Found'});
+          res.json({status: 'error', error: 'User Nottt Found'});
         }
       } catch (error) {
         console.error('Error:', error);
