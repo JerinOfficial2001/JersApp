@@ -6,15 +6,23 @@ import Home from '../screens/Home';
 import Message from '../screens/Message';
 import PlayStatus from '../screens/PlayStatus';
 import AllContacts from '../screens/AllContacts';
+import Login from '../screens/auth/Login';
 
 const Stack = createStackNavigator();
 
 export default function Navigator() {
   const [visible, setVisible] = useState(false);
-  const [headerTitle, setheaderTitle] = useState('');
+
   return (
     <NavigationContainer>
       <Stack.Navigator>
+        <Stack.Screen
+          options={{
+            headerShown: false,
+          }}
+          name="Login"
+          component={Login}
+        />
         <Stack.Screen
           options={{
             headerShown: false,
@@ -28,7 +36,6 @@ export default function Navigator() {
               backgroundColor: '#008169',
             },
             headerTintColor: 'white',
-            title: headerTitle,
           }}
           name="Message"
           component={Message}

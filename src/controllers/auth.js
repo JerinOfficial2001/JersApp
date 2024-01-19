@@ -1,5 +1,5 @@
 export const login = async (mobNum, password) => {
-  fetch('/api/login', {
+  fetch('https://next-api-ruby.vercel.app/api/auth/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -11,7 +11,6 @@ export const login = async (mobNum, password) => {
       if (data.status === 'ok') {
         const {token} = data.data;
 
-        // Step 2: Use the obtained token to make a GET request to retrieve user data
         fetch('/api/getUserData', {
           method: 'GET',
           headers: {

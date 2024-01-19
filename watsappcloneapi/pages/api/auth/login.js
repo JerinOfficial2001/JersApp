@@ -1,10 +1,18 @@
 import connectToDatabase from '@/api/lib/db';
 import Auth from '@/api/model/auth';
 import jwt from 'jsonwebtoken';
+import Cors from 'cors';
+import initMiddleware from '@/api/lib/init-middleware';
 
 const SECRET_KEY = 'watsappClone@jerin_25_01_2001#$%'; // Replace with the same secret key used for signing tokens
-
+const cors = initMiddleware(
+  // You can pass options to the middleware
+  Cors({
+    methods: ['GET', 'POST', 'OPTIONS'],
+  }),
+);
 export default async function handler(req, res) {
+  await cors(req, res);
   await connectToDatabase();
   const {method} = req;
 

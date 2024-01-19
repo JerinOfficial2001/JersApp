@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {Image, TouchableOpacity, View} from 'react-native';
-import {Avatar, Button, Card, Text} from 'react-native-paper';
+import {Text} from 'react-native-paper';
 
 const MyComponent = ({onclick, style, status, contact, contactPg}) => (
   <TouchableOpacity onPress={onclick}>
