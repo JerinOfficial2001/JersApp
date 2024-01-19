@@ -2,7 +2,7 @@ import connectToDatabase from '@/api/lib/db';
 import Auth from '@/api/model/auth';
 import jwt from 'jsonwebtoken';
 
-const SECRET_KEY = 'watsappClone@jerin_25_01_2001#$%'; // Replace with the same secret key used for signing tokens
+const SECRET_KEY = process.env.NEXT_PUBLIC_SECRET_KEY; // Replace with the same secret key used for signing tokens
 
 export default async function handler(req, res) {
   await connectToDatabase();
