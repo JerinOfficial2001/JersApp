@@ -26,9 +26,7 @@ export default async function handler(req, res) {
             return res.json({error: 'User Not Found'});
           }
           if (password == user.password) {
-            const token = jwt.sign({mobNum: user.mobNum}, SECRET_KEY, {
-              expiresIn: 10,
-            });
+            const token = jwt.sign({mobNum: user.mobNum}, SECRET_KEY);
 
             if (res.status(201)) {
               return res.json({status: 'ok', data: token});
