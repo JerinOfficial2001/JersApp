@@ -1,18 +1,9 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 
 import connectToDatabase from '@/api/lib/db';
-import initMiddleware from '@/api/lib/init-middleware';
 import Auth from '@/api/model/auth';
-import Cors from 'cors';
 
-const cors = initMiddleware(
-  // You can pass options to the middleware
-  Cors({
-    methods: ['GET', 'POST', 'OPTIONS'],
-  }),
-);
 export default async function handler(req, res) {
-  await cors(req, res);
   await connectToDatabase();
   const {method} = req;
   switch (method) {
