@@ -13,7 +13,7 @@ export default async function handler(req, res) {
       try {
         const {mobNum, password} = req.body;
         const user = await Auth.findOne({mobNum});
-
+        console.log(user, 'USER');
         if (user && user.password === password) {
           // Generate JWT token
           const token = jwt.sign({userId: user._id}, SECRET_KEY, {
@@ -26,8 +26,11 @@ export default async function handler(req, res) {
         }
       } catch (error) {
         console.error('Error:', error);
-        res.status(500).json({error: 'Internal Server Error'});
+        res
+          .status(401)
+          .json({status: 'error', data: `Unauthorized - ${error.message}`});
       }
+
       break;
 
     case 'GET':
