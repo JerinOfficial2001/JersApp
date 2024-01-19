@@ -22,20 +22,21 @@ export default async function handler(req, res) {
         try {
           const {mobNum, password} = req.body;
           const user = await Auth.findOne({mobNum});
-
-          if (user && user.password == password) {
-            // Generate JWT token
-
-            const token = jwt.sign({mobNum}, SECRET_KEY, {
-              expiresIn: '1h',
+          if (!user) {
+            return res.json({error: 'User Not Found'});
+          }
+          if (password == user.password) {
+            const token = jwt.sign({mobNum: user.mobNum}, SECRET_KEY, {
+              expiresIn: 10,
             });
 
-            res.status(200).json({status: 'ok', data: {token}});
-          } else {
-            res
-              .status(401)
-              .json({status: 'error', data: 'Invalid credentials'});
+            if (res.status(201)) {
+              return res.json({status: 'ok', data: token});
+            } else {
+              return res.json({status: 'error'});
+            }
           }
+          res.json({status: 'error', error: 'Invalid Password'});
         } catch (error) {
           console.error('Error:', error);
           res
