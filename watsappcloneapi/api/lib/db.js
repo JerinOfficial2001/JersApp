@@ -1,8 +1,7 @@
 import mongoose from 'mongoose';
 
 // const { MONGODB_URI, MONGODB_DB } = process.env;
-const MONGODB_URI =
-  'mongodb+srv://jerin2001:Jerin2001@cluster0.bzglc9k.mongodb.net/?retryWrites=true&w=majority';
+const MONGODB_URI = process.env.NEXT_PUBLIC_MONGODB;
 
 if (!MONGODB_URI) {
   throw new Error(
