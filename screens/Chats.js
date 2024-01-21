@@ -1,17 +1,32 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {ScrollView, Text, View} from 'react-native';
 import MyComponent from '../src/components/MyComponent';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {getContactByUserId} from '../src/controllers/contacts';
 
 export default function Chats(props) {
+  const [chats, setchats] = useState([]);
+  useEffect(() => {
+    AsyncStorage.getItem('userData').then(data => {
+      if (data) {
+        const userData = JSON.parse(data);
+        getContactByUserId(userData?._id).then(data => {
+          setchats(data);
+        });
+      }
+    });
+  }, []);
+
   return (
     <ScrollView style={{padding: 10}}>
-      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(elem => {
+      {chats?.map(elem => {
         return (
           <MyComponent
-            key={elem}
+            contact={elem?.ContactDetails}
+            key={elem?.ContactDetails.rawContactId}
             onclick={() => {
               props.navigation.navigate('Message', {
-                id: 0,
+                id: elem?.ContactDetails.rawContactId,
               });
             }}
           />

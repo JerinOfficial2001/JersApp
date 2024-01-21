@@ -36,8 +36,20 @@ export const login = async (mobNum, password, props) => {
       const userData = await userDataResponse.json();
 
       if (userData.status === 'ok') {
-        // AsyncStorage.setItem('userData', JSON.stringify(userData.data.user));
-        props.navigation.navigate('Home');
+        // Store user data in AsyncStorage
+        AsyncStorage.setItem('userData', JSON.stringify(userData.data.user));
+
+        // Check if 'userData' key exists before navigating
+        AsyncStorage.getItem('userData').then(storedUserData => {
+          if (storedUserData) {
+            // 'userData' key exists, navigate to 'Home'
+            props.navigation.navigate('Home');
+            console.log(storedUserData);
+          } else {
+            // 'userData' key does not exist, handle accordingly
+            console.error('Error: userData key not found in AsyncStorage');
+          }
+        });
       } else {
         console.error('Error:', userData.data);
       }

@@ -23,3 +23,40 @@ export const requestContactsPermission = async () => {
     console.warn(err);
   }
 };
+export const getContactByUserId = async id => {
+  try {
+    const response = await fetch(
+      `http://192.168.208.174:4000/api/contact/get/${id}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      },
+    ).then(res => res.json());
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+export const addContact = async (ContactDetails, user_id, name) => {
+  try {
+    const response = await fetch(
+      `http://192.168.208.174:4000/api/contact/add`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ContactDetails, user_id, name}),
+      },
+    ).then(res => res.json());
+    if (response.status == 'error') {
+      return response.data;
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};

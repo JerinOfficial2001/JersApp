@@ -5,19 +5,19 @@ import {login} from '../../src/controllers/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Login(props) {
-  // useEffect(() => {
-  //   // Check for the token and navigate accordingly
-  //   checkToken();
-  // }, []);
+  useEffect(() => {
+    // Check for the token and navigate accordingly
+    checkToken();
+  }, []);
 
-  // const checkToken = async () => {
-  //   const token = await AsyncStorage.getItem('userData');
-  //   // If a token exists, navigate to the home screen
-  //   if (token) {
-  //     // Navigate to the 'Home' screen
-  //     props.navigation.navigate('Home');
-  //   }
-  // };
+  const checkToken = async () => {
+    const token = await AsyncStorage.getItem('userData');
+    // If a token exists, navigate to the home screen
+    if (token) {
+      // Navigate to the 'Home' screen
+      props.navigation.navigate('Home');
+    }
+  };
   const [formData, setformData] = useState({mobNum: '', password: ''});
   const [isHide, setisHide] = useState(false);
   const [errMsg, seterrMsg] = useState({});
