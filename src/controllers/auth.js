@@ -1,8 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {iprotecsLapIP} from '../api';
 
 export const login = async (mobNum, password, props) => {
   try {
-    const response = await fetch('http://192.168.208.174:4000/api/auth/login', {
+    const response = await fetch(iprotecsLapIP + '/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

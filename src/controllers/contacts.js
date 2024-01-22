@@ -1,5 +1,6 @@
 import {PermissionsAndroid} from 'react-native';
 import Contacts from 'react-native-contacts';
+import {iprotecsLapIP} from '../api';
 
 export const requestContactsPermission = async () => {
   try {
@@ -25,16 +26,13 @@ export const requestContactsPermission = async () => {
 };
 export const getContactByUserId = async id => {
   try {
-    const response = await fetch(
-      `http://192.168.208.174:4000/api/contact/get/${id}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
+    const response = await fetch(iprotecsLapIP + `/api/contact/get/${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
-    ).then(res => res.json());
+    }).then(res => res.json());
     return response;
   } catch (error) {
     console.log(error);
@@ -42,17 +40,14 @@ export const getContactByUserId = async id => {
 };
 export const addContact = async (ContactDetails, user_id, name) => {
   try {
-    const response = await fetch(
-      `http://192.168.208.174:4000/api/contact/add`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({ContactDetails, user_id, name}),
+    const response = await fetch(iprotecsLapIP + `/api/contact/add`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
-    ).then(res => res.json());
+      body: JSON.stringify({ContactDetails, user_id, name}),
+    }).then(res => res.json());
     if (response.status == 'error') {
       return response.data;
     }

@@ -4,7 +4,6 @@ import Contacts from 'react-native-contacts';
 import MyComponent from '../src/components/MyComponent';
 import {
   addContact,
-  getContactByUserId,
   requestContactsPermission,
 } from '../src/controllers/contacts';
 import AsyncStorage from '@react-native-async-storage/async-storage';

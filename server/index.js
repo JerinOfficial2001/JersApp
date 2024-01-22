@@ -10,8 +10,10 @@ const Auth = require('./routes/auth');
 const Contact = require('./routes/contact');
 const Chat = require('./routes/chat');
 const PORT = process.env.PORT;
+const http = require('http');
+const server = http.createServer(app);
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log('SERVER STARTED');
 });
 const MONGO = process.env.MONGODB;

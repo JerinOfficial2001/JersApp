@@ -1,22 +1,30 @@
 const {Chat} = require('../model/chat');
+const express = require('express');
+const app = express();
+const socketIo = require('socket.io');
+const http = require('http');
+const server = http.createServer(app);
 
+const io = socketIo(server);
 exports.addChat = async (req, res, next) => {
   try {
-    const response = await Chat.create(req.body);
-    res.status(200).json({status: 'ok', data: response});
+    const {from, to, text} = req.body;
+    const message = new Chat({username: from, message: text});
+    await message.save();
+
+    io.to(to).emit('privateMessage', {...message.toObject(), from});
+    io.to(from).emit('privateMessage', {...message.toObject(), from});
+
+    res.json({success: true});
   } catch (error) {
-    next(error);
+    res.status(500).json({error: 'Internal Server Error'});
   }
 };
-exports.getChatByID = async (req, res, next) => {
-  // const user_id = req.params.user_id;
-  const receiver_id = req.params.receiver_id;
+
+exports.getChatByUserName = async (req, res, next) => {
   try {
-    const response = await Chat.find({
-      // user: user_id,
-      receiver: receiver_id,
-    });
-    res.send(response);
+    const messages = await Chat.find().sort({createdAt: 'asc'});
+    res.json(messages);
   } catch (error) {
     next(error);
   }

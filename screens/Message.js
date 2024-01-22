@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import {requestContactsPermission} from '../src/controllers/contacts';
 import {Searchbar, TextInput} from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {sendMessage} from '../src/controllers/chats';
 
 export default function Message({route, navigation, ...props}) {
   const {id} = route.params;
@@ -22,9 +24,22 @@ export default function Message({route, navigation, ...props}) {
         navigation.setOptions({
           title: particularData ? particularData.displayName : 'Message',
         });
+        AsyncStorage.getItem('userData').then(data => {
+          const userData = data ? JSON.parse(data) : false;
+          setformData({
+            ...formData,
+            recipient: particularData?.displayName,
+            username: userData?._id,
+          });
+        });
       }
     });
   }, []);
+  const [formData, setformData] = useState({});
+  const handleSubmit = () => {
+    sendMessage(formData);
+    // console.log(formData);
+  };
   return (
     <ImageBackground
       source={require('../src/assets/chatBg.png')} // specify the path to your image
@@ -40,8 +55,21 @@ export default function Message({route, navigation, ...props}) {
         )}
       />
 
-      <View style={{padding: 10}}>
+      <View
+        style={{
+          padding: 10,
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+        }}>
         <Searchbar
+          value={formData.text}
+          onChangeText={event => {
+            setformData({
+              ...formData,
+              text: event,
+            });
+          }}
           placeholder="Message"
           style={styles.inputField}
           placeholderTextColor="#697279"
@@ -57,6 +85,14 @@ export default function Message({route, navigation, ...props}) {
             );
           }}
         />
+        <TouchableOpacity onPress={handleSubmit}>
+          <View style={styles.sendBtn}>
+            <Image
+              source={require('../src/assets/send.png')}
+              style={{height: 30, width: 30}}
+            />
+          </View>
+        </TouchableOpacity>
       </View>
     </ImageBackground>
   );
@@ -74,6 +110,7 @@ const styles = StyleSheet.create({
   },
   inputField: {
     backgroundColor: '#2d383e',
+    width: '87%',
   },
   messageCardContainer: {
     marginVertical: 3,
@@ -82,5 +119,11 @@ const styles = StyleSheet.create({
   messageCardtext: {
     backgroundColor: '#064e49',
     width: 'auto',
+  },
+  sendBtn: {
+    backgroundColor: '#14a95f',
+    padding: 10,
+    borderRadius: 200,
+    marginLeft: 3,
   },
 });
