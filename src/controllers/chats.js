@@ -13,8 +13,21 @@ export const sendMessage = async data => {
         to: data.recipient,
         text: data.text,
       }),
-    });
-    console.log(response, 'SEND MSG');
+    }).then(res => res.json());
+  } catch (error) {
+    console.error('Error sending private message:', error);
+  }
+};
+export const getMessage = async () => {
+  try {
+    const response = await fetch(iprotecsLapIP + '/api/chat/get', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    }).then(res => res.json());
+    console.log(response, 'GET MSG');
   } catch (error) {
     console.error('Error sending private message:', error);
   }

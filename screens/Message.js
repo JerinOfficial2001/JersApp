@@ -12,7 +12,10 @@ import {
 import {requestContactsPermission} from '../src/controllers/contacts';
 import {Searchbar, TextInput} from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {sendMessage} from '../src/controllers/chats';
+import {getMessage, sendMessage} from '../src/controllers/chats';
+import {io} from 'socket.io-client';
+import {iprotecsLapIP} from '../src/api';
+import {GiftedChat} from 'react-native-gifted-chat';
 
 export default function Message({route, navigation, ...props}) {
   const {id} = route.params;
@@ -34,8 +37,48 @@ export default function Message({route, navigation, ...props}) {
         });
       }
     });
+    getMessage();
   }, []);
+  const [messages, setMessages] = useState([]);
+
+  useEffect(() => {
+    const socket = io(iprotecsLapIP);
+
+    // Listen for incoming messages
+    socket.on('message', message => {
+      setMessages(previousMessages =>
+        GiftedChat.append(previousMessages, message),
+      );
+    });
+
+    // Listen for private messages
+    socket.on('privateMessage', message => {
+      setMessages(previousMessages =>
+        GiftedChat.append(previousMessages, message),
+      );
+    });
+
+    // Clean up on component unmount
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
   const [formData, setformData] = useState({});
+  const onSend = (newMessages = []) => {
+    setMessages(previousMessages =>
+      GiftedChat.append(previousMessages, newMessages),
+    );
+    const socket = io(iprotecsLapIP);
+
+    // Send private message
+    socket.emit('privateMessage', {
+      ...newMessages[0],
+      from: formData?._id,
+      to: formData?.recipient,
+    });
+    handleSubmit();
+  };
   const handleSubmit = () => {
     sendMessage(formData);
     // console.log(formData);
@@ -45,7 +88,7 @@ export default function Message({route, navigation, ...props}) {
       source={require('../src/assets/chatBg.png')} // specify the path to your image
       style={styles.backgroundImage}>
       {/* Your screen content goes here */}
-      <FlatList
+      {/* <FlatList
         style={styles.content}
         data={[1, 2, 3, 4, 5, 6]}
         renderItem={({item}) => (
@@ -53,8 +96,13 @@ export default function Message({route, navigation, ...props}) {
             <Text style={styles.messageCardtext}>{item}</Text>
           </View>
         )}
+      /> */}
+      <GiftedChat
+        messages={messages}
+        onSend={onSend}
+        user={{_id: formData?._id}}
+        placeholder={`Chatting with ${formData?.recipient}`}
       />
-
       <View
         style={{
           padding: 10,
