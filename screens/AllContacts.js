@@ -7,6 +7,7 @@ import {
   requestContactsPermission,
 } from '../src/controllers/contacts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {getAllUsers} from '../src/controllers/auth';
 
 export default function AllContacts(props) {
   const [contacts, setContacts] = useState([]);
@@ -32,6 +33,7 @@ export default function AllContacts(props) {
       userID: userData?._id,
     });
   };
+  console.log(contacts[0]?.phoneNumbers?.map(num => num.number.split('+91')));
   return (
     <ScrollView>
       {[

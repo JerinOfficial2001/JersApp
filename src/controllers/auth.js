@@ -12,11 +12,6 @@ export const login = async (mobNum, password, props) => {
       body: JSON.stringify({mobNum, password}),
     });
 
-    if (!response.ok) {
-      // Handle non-OK responses (e.g., 4xx or 5xx errors)
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
     const data = await response.json();
 
     // Uncomment and modify the following based on your data structure
@@ -25,7 +20,7 @@ export const login = async (mobNum, password, props) => {
       const {token} = data.data;
 
       const userDataResponse = await fetch(
-        'http://192.168.208.174:4000/api/auth/getUserData',
+        iprotecsLapIP + '/api/auth/getUserData',
         {
           method: 'GET',
           headers: {
@@ -45,7 +40,6 @@ export const login = async (mobNum, password, props) => {
           if (storedUserData) {
             // 'userData' key exists, navigate to 'Home'
             props.navigation.navigate('Home');
-            console.log(storedUserData);
           } else {
             // 'userData' key does not exist, handle accordingly
             console.error('Error: userData key not found in AsyncStorage');
@@ -54,11 +48,54 @@ export const login = async (mobNum, password, props) => {
       } else {
         console.error('Error:', userData.data);
       }
+    } else if (data.status == 'error' && data.message == 'User not found') {
+      props.navigation.navigate('Register', {
+        mobNum: mobNum,
+        password: password,
+      });
     } else {
       console.error('Error:', data.data);
     }
   } catch (error) {
     console.error('Error:', error.message);
     // Handle the error appropriately (e.g., show an error message to the user)
+  }
+};
+export const register = async (data, props) => {
+  try {
+    const response = await fetch(iprotecsLapIP + '/api/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(data),
+    }).then(res => res.json());
+    if (response.status == 'ok') {
+      login(data.mobNum, data.password, props);
+    }
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
+};
+export const getAllUsers = async () => {
+  try {
+    try {
+      const response = await fetch(iprotecsLapIP + '/api/auth/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      }).then(res => res.json());
+      if (response.status == 'ok') {
+        console.log(response);
+        return response.data;
+      }
+    } catch (error) {
+      console.error('Error:', error.message);
+    }
+  } catch (error) {
+    console.error('Error:', error.message);
   }
 };

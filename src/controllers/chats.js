@@ -27,7 +27,6 @@ export const getMessage = async () => {
         Accept: 'application/json',
       },
     }).then(res => res.json());
-    console.log(response, 'GET MSG');
   } catch (error) {
     console.error('Error sending private message:', error);
   }

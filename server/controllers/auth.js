@@ -8,7 +8,9 @@ exports.login = async (req, res) => {
   const data = req.body;
   try {
     const user = await Auth.findOne({mobNum: data.mobNum});
-    if (user && user.password == data.password) {
+    if (!user) {
+      res.status(200).json({status: 'error', message: 'User not found'});
+    } else if (user && user.password == data.password) {
       const token = jwt.sign({userId: user._id}, SECRET_KEY, {
         expiresIn: '24h',
       });

@@ -101,7 +101,7 @@ export default function Message({route, navigation, ...props}) {
         messages={messages}
         onSend={onSend}
         user={{_id: formData?._id}}
-        placeholder={`Chatting with ${formData?.recipient}`}
+        placeholder="Message"
       />
       <View
         style={{

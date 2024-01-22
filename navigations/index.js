@@ -7,6 +7,7 @@ import Message from '../screens/Message';
 import PlayStatus from '../screens/PlayStatus';
 import AllContacts from '../screens/AllContacts';
 import Login from '../screens/auth/Login';
+import Register from '../screens/auth/Register';
 
 const Stack = createStackNavigator();
 
@@ -22,6 +23,13 @@ export default function Navigator() {
           }}
           name="Login"
           component={Login}
+        />
+        <Stack.Screen
+          options={{
+            headerShown: false,
+          }}
+          name="Register"
+          component={Register}
         />
         <Stack.Screen
           options={{
