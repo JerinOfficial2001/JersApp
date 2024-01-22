@@ -81,17 +81,18 @@ export const register = async (data, props) => {
 export const getAllUsers = async () => {
   try {
     try {
-      const response = await fetch(iprotecsLapIP + '/api/auth/', {
+      const response = await fetch(iprotecsLapIP + '/api/auth', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
         },
       }).then(res => res.json());
-      if (response.status == 'ok') {
-        console.log(response);
-        return response.data;
-      }
+      // if (response.status == 'ok') {
+      //   console.log(response);
+      //   return response.data;
+      // }
+      console.log(response, 'TEST');
     } catch (error) {
       console.error('Error:', error.message);
     }

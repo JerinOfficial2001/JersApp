@@ -17,6 +17,7 @@ export default function AllContacts(props) {
       if (res) {
         setContacts(res);
       }
+      getAllUsers();
     });
     AsyncStorage.getItem('userData').then(storedData => {
       const storedUserData = JSON.parse(storedData);

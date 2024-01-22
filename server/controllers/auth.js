@@ -42,7 +42,7 @@ exports.register = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
   try {
     const response = await Auth.find({});
-    console.log(response);
+    res.status(200).json({status: 'ok', data: response});
   } catch (error) {
     console.log(error);
     res.status(500).send(error);

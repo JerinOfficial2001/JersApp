@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.post('/login', login);
 router.post('/register', register);
-router.post('/', getAllUsers);
+router.get('/', getAllUsers);
 router.get('/getUserData', getUserData);
 // router.get('/', async (req, res) => {
 //   try {
