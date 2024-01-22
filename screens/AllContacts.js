@@ -15,9 +15,20 @@ export default function AllContacts(props) {
   useEffect(() => {
     requestContactsPermission().then(res => {
       if (res) {
-        setContacts(res);
+        getAllUsers().then(dbContact => {
+          if (dbContact) {
+            const mobContacts = res.map(contact =>
+              contact.phoneNumbers[0]?.number.substring(3),
+            );
+            const apiContacts = dbContact.map(contact => contact.mobNum);
+            const commonContact = mobContacts.filter(contact =>
+              apiContacts.includes(contact),
+            );
+
+            setContacts(commonContact);
+          }
+        });
       }
-      getAllUsers();
     });
     AsyncStorage.getItem('userData').then(storedData => {
       const storedUserData = JSON.parse(storedData);
@@ -34,33 +45,33 @@ export default function AllContacts(props) {
       userID: userData?._id,
     });
   };
-  console.log(contacts[0]?.phoneNumbers?.map(num => num.number.split('+91')));
+
   return (
     <ScrollView>
-      {[
-        contacts[0],
-        contacts[1],
-        contacts[2],
-        contacts[3],
-        contacts[4],
-        contacts[5],
-        contacts[6],
-        contacts[7],
-        contacts[8],
-        contacts[9],
-        contacts[10],
-      ]?.map((elem, index) => {
-        return (
-          <MyComponent
-            contactPg
-            contact={elem}
-            key={index}
-            onclick={() => {
-              handleClick(elem);
-            }}
-          />
-        );
-      })}
+      {contacts.length > 0 ? (
+        contacts.map((elem, index) => {
+          return (
+            <MyComponent
+              contactPg
+              contact={elem}
+              key={index}
+              onclick={() => {
+                handleClick(elem);
+              }}
+            />
+          );
+        })
+      ) : (
+        <View
+          style={{
+            width: '100%',
+            alignItems: 'center',
+            height: 700,
+            justifyContent: 'center',
+          }}>
+          <Text style={{color: 'black'}}>No Contacts</Text>
+        </View>
+      )}
     </ScrollView>
   );
 }

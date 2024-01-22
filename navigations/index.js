@@ -8,6 +8,7 @@ import PlayStatus from '../screens/PlayStatus';
 import AllContacts from '../screens/AllContacts';
 import Login from '../screens/auth/Login';
 import Register from '../screens/auth/Register';
+import Settings from '../screens/Settings';
 
 const Stack = createStackNavigator();
 
@@ -30,6 +31,13 @@ export default function Navigator() {
           }}
           name="Register"
           component={Register}
+        />
+        <Stack.Screen
+          options={{
+            headerShown: false,
+          }}
+          name="Settings"
+          component={Settings}
         />
         <Stack.Screen
           options={{

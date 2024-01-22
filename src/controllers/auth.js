@@ -88,11 +88,9 @@ export const getAllUsers = async () => {
           Accept: 'application/json',
         },
       }).then(res => res.json());
-      // if (response.status == 'ok') {
-      //   console.log(response);
-      //   return response.data;
-      // }
-      console.log(response, 'TEST');
+      if (response.status == 'ok') {
+        return response.data;
+      }
     } catch (error) {
       console.error('Error:', error.message);
     }
