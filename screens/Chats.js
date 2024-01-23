@@ -5,22 +5,29 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getContactByUserId} from '../src/controllers/contacts';
 
 export default function Chats(props) {
-  const [chats, setchats] = useState([]);
+  const [chats, setChats] = useState([]);
+
   useEffect(() => {
-    AsyncStorage.getItem('userData').then(data => {
-      if (data) {
-        const userData = JSON.parse(data);
-        getContactByUserId(userData?._id).then(data => {
-          setchats(data);
-        });
+    const fetchData = async () => {
+      try {
+        const data = await AsyncStorage.getItem('userData');
+        if (data) {
+          const userData = JSON.parse(data);
+          const contacts = await getContactByUserId(userData?._id);
+          setChats(contacts);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
       }
-    });
+    };
+
+    fetchData();
   }, []);
 
   return (
     <ScrollView style={{padding: 10}}>
-      {chats?.map(elem => {
-        return (
+      {chats.length > 0 ? (
+        chats.map(elem => (
           <MyComponent
             contact={elem?.ContactDetails}
             key={elem?.ContactDetails.rawContactId}
@@ -30,8 +37,18 @@ export default function Chats(props) {
               });
             }}
           />
-        );
-      })}
+        ))
+      ) : (
+        <View
+          style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            flex: 1,
+            height: 600,
+          }}>
+          <Text style={{color: 'gray'}}>No Chats</Text>
+        </View>
+      )}
     </ScrollView>
   );
 }

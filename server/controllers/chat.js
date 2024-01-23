@@ -8,8 +8,12 @@ const server = http.createServer(app);
 const io = socketIo(server);
 exports.addChat = async (req, res, next) => {
   try {
-    const {from, to, text} = req.body;
-    const message = new Chat({username: from, message: text});
+    const {from, to, text, recipient} = req.body;
+    const message = new Chat({
+      username: from,
+      message: text,
+      recipient: recipient,
+    });
     await message.save();
 
     io.to(to).emit('privateMessage', {...message.toObject(), from});

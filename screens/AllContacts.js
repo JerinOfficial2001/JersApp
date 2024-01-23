@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {PermissionsAndroid, ScrollView, Text, View} from 'react-native';
-import Contacts from 'react-native-contacts';
+import {ScrollView, Text, View} from 'react-native';
 import MyComponent from '../src/components/MyComponent';
 import {
   addContact,
@@ -11,32 +10,56 @@ import {getAllUsers} from '../src/controllers/auth';
 
 export default function AllContacts(props) {
   const [contacts, setContacts] = useState([]);
-  const [userData, setuserData] = useState({});
-  useEffect(() => {
-    requestContactsPermission().then(res => {
-      if (res) {
-        getAllUsers().then(dbContact => {
-          if (dbContact) {
-            const mobContacts = res.map(contact =>
-              contact.phoneNumbers[0]?.number.substring(3),
-            );
-            const apiContacts = dbContact.map(contact => contact.mobNum);
-            const commonContact = mobContacts.filter(contact =>
-              apiContacts.includes(contact),
-            );
+  const [userData, setUserData] = useState({});
+  const [loading, setLoading] = useState(true);
 
-            setContacts(commonContact);
-          }
-        });
+  const getContacts = async () => {
+    try {
+      const permissionsGranted = await requestContactsPermission();
+
+      if (permissionsGranted) {
+        const dbContact = await getAllUsers();
+
+        if (dbContact) {
+          const mobContacts = permissionsGranted.map(contact =>
+            contact.phoneNumbers[0]?.number.substring(3),
+          );
+          const apiContacts = dbContact.map(contact => contact.mobNum);
+          const commonMobNumbers = apiContacts.filter(contact =>
+            mobContacts.includes(contact),
+          );
+          const commonMobContacts = permissionsGranted.filter(contact =>
+            commonMobNumbers.includes(
+              contact.phoneNumbers[0]?.number.substring(3),
+            ),
+          );
+          setContacts(commonMobContacts);
+          setLoading(false);
+        }
       }
-    });
-    AsyncStorage.getItem('userData').then(storedData => {
-      const storedUserData = JSON.parse(storedData);
-      if (storedUserData) {
-        setuserData(storedUserData);
+    } catch (error) {
+      console.error('Error fetching contacts:', error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const storedData = await AsyncStorage.getItem('userData');
+        const storedUserData = JSON.parse(storedData);
+
+        if (storedUserData) {
+          setUserData(storedUserData);
+          await getContacts();
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
       }
-    });
+    };
+
+    fetchData();
   }, []);
+
   const handleClick = elem => {
     addContact(elem, userData?._id, elem.displayName);
 
@@ -46,21 +69,33 @@ export default function AllContacts(props) {
     });
   };
 
+  if (loading) {
+    return (
+      <View
+        style={{
+          width: '100%',
+          alignItems: 'center',
+          height: 700,
+          justifyContent: 'center',
+        }}>
+        <Text style={{color: 'black'}}>Loading...</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView>
       {contacts.length > 0 ? (
-        contacts.map((elem, index) => {
-          return (
-            <MyComponent
-              contactPg
-              contact={elem}
-              key={index}
-              onclick={() => {
-                handleClick(elem);
-              }}
-            />
-          );
-        })
+        contacts.map((elem, index) => (
+          <MyComponent
+            contactPg
+            contact={elem}
+            key={index}
+            onclick={() => {
+              handleClick(elem);
+            }}
+          />
+        ))
       ) : (
         <View
           style={{

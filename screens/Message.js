@@ -19,6 +19,7 @@ import {GiftedChat} from 'react-native-gifted-chat';
 
 export default function Message({route, navigation, ...props}) {
   const {id} = route.params;
+  const [messages, setMessages] = useState([]);
 
   useEffect(() => {
     requestContactsPermission().then(res => {
@@ -31,15 +32,45 @@ export default function Message({route, navigation, ...props}) {
           const userData = data ? JSON.parse(data) : false;
           setformData({
             ...formData,
-            recipient: particularData?.displayName,
+            recipient: particularData?.rawContactId,
             username: userData?._id,
           });
         });
       }
     });
-    getMessage();
+    getMessage().then(data => {
+      // setMessages([
+      //   {
+      //     _id: 1,
+      //     text: 'Hello developer',
+      //     createdAt: new Date(),
+      //     user: {
+      //       _id: 2,
+      //       name: 'React Native',
+      //     },
+      //   },
+      //   {
+      //     _id: 2,
+      //     text: 'Hello',
+      //     createdAt: new Date(),
+      //     user: {
+      //       _id: 1,
+      //       name: 'React',
+      //     },
+      //   },
+      //   {
+      //     _id: 3,
+      //     text: 'Hello',
+      //     createdAt: new Date(),
+      //     user: {
+      //       _id: 1,
+      //       name: 'React',
+      //     },
+      //   },
+      // ]);
+      setMessages(data);
+    });
   }, []);
-  const [messages, setMessages] = useState([]);
 
   useEffect(() => {
     const socket = io(iprotecsLapIP);
@@ -74,7 +105,7 @@ export default function Message({route, navigation, ...props}) {
     // Send private message
     socket.emit('privateMessage', {
       ...newMessages[0],
-      from: formData?._id,
+      from: formData?.username,
       to: formData?.recipient,
     });
     handleSubmit();
@@ -100,7 +131,7 @@ export default function Message({route, navigation, ...props}) {
       <GiftedChat
         messages={messages}
         onSend={onSend}
-        user={{_id: formData?._id}}
+        user={{_id: formData?.username, name: formData?.username}}
         placeholder="Message"
       />
       <View

@@ -1,6 +1,7 @@
 import {iprotecsLapIP} from '../api';
 
 export const sendMessage = async data => {
+  console.log(data, 'ADDMSG');
   try {
     const response = await fetch(iprotecsLapIP + '/api/chat/add', {
       method: 'POST',
@@ -27,6 +28,7 @@ export const getMessage = async () => {
         Accept: 'application/json',
       },
     }).then(res => res.json());
+    return response;
   } catch (error) {
     console.error('Error sending private message:', error);
   }

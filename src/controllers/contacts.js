@@ -40,7 +40,7 @@ export const getContactByUserId = async id => {
 };
 export const addContact = async (ContactDetails, user_id, name) => {
   try {
-    const response = await fetch(iprotecsLapIP + `/api/contact/add`, {
+    const response = await fetch(iprotecsLapIP + '/api/contact/add', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
