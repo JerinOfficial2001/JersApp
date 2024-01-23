@@ -34,6 +34,10 @@ export default function Message({route, navigation, ...props}) {
             ...formData,
             recipient: particularData?.rawContactId,
             username: userData?._id,
+            user: {
+              id: userData._id,
+              name: userData._id,
+            },
           });
         });
       }
@@ -112,8 +116,9 @@ export default function Message({route, navigation, ...props}) {
   };
   const handleSubmit = () => {
     sendMessage(formData);
-    // console.log(formData);
+    console.log(formData);
   };
+
   return (
     <ImageBackground
       source={require('../src/assets/chatBg.png')} // specify the path to your image
@@ -133,6 +138,9 @@ export default function Message({route, navigation, ...props}) {
         onSend={onSend}
         user={{_id: formData?.username, name: formData?.username}}
         placeholder="Message"
+        onInputTextChanged={val => {
+          setformData({...formData, text: val});
+        }}
       />
       <View
         style={{

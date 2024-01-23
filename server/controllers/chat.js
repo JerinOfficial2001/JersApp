@@ -11,7 +11,7 @@ exports.addChat = async (req, res, next) => {
     const {from, to, text, recipient} = req.body;
     const message = new Chat({
       username: from,
-      message: text,
+      text: text,
       recipient: recipient,
     });
     await message.save();

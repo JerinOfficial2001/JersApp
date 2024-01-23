@@ -1,7 +1,6 @@
 import {iprotecsLapIP} from '../api';
 
 export const sendMessage = async data => {
-  console.log(data, 'ADDMSG');
   try {
     const response = await fetch(iprotecsLapIP + '/api/chat/add', {
       method: 'POST',
@@ -12,7 +11,8 @@ export const sendMessage = async data => {
       body: JSON.stringify({
         from: data.username,
         to: data.recipient,
-        text: data.text,
+        message: data.text,
+        recipient: data.recipient,
       }),
     }).then(res => res.json());
   } catch (error) {
