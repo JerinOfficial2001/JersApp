@@ -29,10 +29,22 @@ export default function TabNavigator({props}) {
 
   return (
     <View style={{height: '100%'}}>
-      <View style={{backgroundColor: '#008169', padding: 15}}>
+      <View
+        style={{
+          backgroundColor: '#008169',
+          padding: 15,
+          justifyContent: 'space-between',
+          flexDirection: 'row',
+        }}>
         <Text style={{color: 'white', fontWeight: 'bold', letterSpacing: 1}}>
           Whatsapp Clone
         </Text>
+        <TouchableOpacity onPress={() => props.navigation.navigate('Settings')}>
+          <Image
+            source={require('../src/assets/vertIcon.png')}
+            style={{height: 20, width: 20}}
+          />
+        </TouchableOpacity>
       </View>
       <Tab.Navigator
         initialRouteName="Chats"

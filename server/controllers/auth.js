@@ -28,10 +28,10 @@ exports.register = async (req, res) => {
   const data = req.body;
   try {
     const user = await Auth.findOne({mobNum: data.mobNum});
-    if (user.mobNum !== req.body.mobNum) {
+    if (!user) {
       const response = await Auth.create(data);
       res.status(200).json({status: 'ok', data: response});
-    } else {
+    } else if (user.mobNum == req.body.mobNum) {
       res.status(401).json({status: 'error', data: 'User already exists'});
     }
   } catch (error) {

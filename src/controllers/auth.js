@@ -69,8 +69,13 @@ export const register = async (data, props) => {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        mobNum: data.mobNum,
+        password: data.password,
+        name: data.name,
+      }),
     }).then(res => res.json());
+    console.log(response);
     if (response.status == 'ok') {
       login(data.mobNum, data.password, props);
     }
