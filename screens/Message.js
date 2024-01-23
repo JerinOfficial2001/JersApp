@@ -34,45 +34,46 @@ export default function Message({route, navigation, ...props}) {
             ...formData,
             recipient: particularData?.rawContactId,
             username: userData?._id,
-            user: {
-              id: userData._id,
-              name: userData._id,
-            },
+            user: userData,
           });
         });
+        getMessage().then(data => {
+          const particularChats = data.filter(
+            i => i.recipient == particularData.rawContactId,
+          );
+          // console.log(particularChats, 'CHAT');
+          // setMessages([
+          //   {
+          //     _id: 1,
+          //     text: 'Hello developer',
+          //     createdAt: new Date(),
+          //     user: {
+          //       _id: 2,
+          //       name: 'React Native',
+          //     },
+          //   },
+          //   {
+          //     _id: 2,
+          //     text: 'Hello',
+          //     createdAt: new Date(),
+          //     user: {
+          //       _id: 1,
+          //       name: 'React',
+          //     },
+          //   },
+          //   {
+          //     _id: 3,
+          //     text: 'Hello',
+          //     createdAt: new Date(),
+          //     user: {
+          //       _id: 1,
+          //       name: 'React',
+          //     },
+          //   },
+          // ]);
+          setMessages(particularChats);
+        });
       }
-    });
-    getMessage().then(data => {
-      // setMessages([
-      //   {
-      //     _id: 1,
-      //     text: 'Hello developer',
-      //     createdAt: new Date(),
-      //     user: {
-      //       _id: 2,
-      //       name: 'React Native',
-      //     },
-      //   },
-      //   {
-      //     _id: 2,
-      //     text: 'Hello',
-      //     createdAt: new Date(),
-      //     user: {
-      //       _id: 1,
-      //       name: 'React',
-      //     },
-      //   },
-      //   {
-      //     _id: 3,
-      //     text: 'Hello',
-      //     createdAt: new Date(),
-      //     user: {
-      //       _id: 1,
-      //       name: 'React',
-      //     },
-      //   },
-      // ]);
-      setMessages(data);
     });
   }, []);
 
@@ -116,7 +117,6 @@ export default function Message({route, navigation, ...props}) {
   };
   const handleSubmit = () => {
     sendMessage(formData);
-    console.log(formData);
   };
 
   return (
@@ -142,7 +142,7 @@ export default function Message({route, navigation, ...props}) {
           setformData({...formData, text: val});
         }}
       />
-      <View
+      {/* <View
         style={{
           padding: 10,
           display: 'flex',
@@ -180,7 +180,7 @@ export default function Message({route, navigation, ...props}) {
             />
           </View>
         </TouchableOpacity>
-      </View>
+      </View> */}
     </ImageBackground>
   );
 }

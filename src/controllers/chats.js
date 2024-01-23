@@ -11,7 +11,7 @@ export const sendMessage = async data => {
       body: JSON.stringify({
         from: data.username,
         to: data.recipient,
-        message: data.text,
+        text: data.text,
         recipient: data.recipient,
       }),
     }).then(res => res.json());
