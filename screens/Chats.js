@@ -3,27 +3,30 @@ import {ScrollView, Text, View} from 'react-native';
 import MyComponent from '../src/components/MyComponent';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getContactByUserId} from '../src/controllers/contacts';
+import {useFocusEffect} from '@react-navigation/native';
 
 export default function Chats(props) {
   const [chats, setChats] = useState([]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await AsyncStorage.getItem('userData');
-        if (data) {
-          const userData = JSON.parse(data);
-          const contacts = await getContactByUserId(userData?._id);
-          setChats(contacts);
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
+  const fetchData = async () => {
+    try {
+      const data = await AsyncStorage.getItem('userData');
+      if (data) {
+        const userData = JSON.parse(data);
+        const contacts = await getContactByUserId(userData?._id);
+        setChats(contacts);
       }
-    };
-
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+  useEffect(() => {
     fetchData();
   }, []);
-
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchData();
+    }, []),
+  );
   return (
     <ScrollView style={{padding: 10}}>
       {chats.length > 0 ? (

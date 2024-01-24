@@ -60,14 +60,13 @@ export default function AllContacts(props) {
   }, []);
 
   const handleClick = elem => {
-    addContact(elem, userData?._id, elem.displayName, elem.rawContactId);
-
-    if (userData) {
-      props.navigation.navigate('Message', {
-        id: elem?.rawContactId,
-        userID: userData?._id,
-      });
-    }
+    addContact(
+      elem,
+      userData?._id,
+      elem.displayName,
+      elem.phoneNumbers[0]?.number.substring(3),
+      props,
+    );
   };
 
   if (loading) {

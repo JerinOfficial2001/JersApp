@@ -39,7 +39,13 @@ export const getContactByUserId = async id => {
     console.log(error);
   }
 };
-export const addContact = async (ContactDetails, user_id, name, Contact_id) => {
+export const addContact = async (
+  ContactDetails,
+  user_id,
+  name,
+  Contact_id,
+  props,
+) => {
   try {
     const response = await fetch(iprotecsLapIP + '/api/contact/add', {
       method: 'POST',
@@ -51,6 +57,11 @@ export const addContact = async (ContactDetails, user_id, name, Contact_id) => {
     }).then(res => res.json());
     if (response.status == 'error') {
       return response.data;
+    } else {
+      props.navigation.navigate('Message', {
+        id: ContactDetails?.rawContactId,
+        userID: user_id,
+      });
     }
   } catch (error) {
     console.log(error);
