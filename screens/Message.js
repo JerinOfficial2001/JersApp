@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import {
+  addContact,
   getContactByUserId,
   requestContactsPermission,
 } from '../src/controllers/contacts';
@@ -20,37 +21,44 @@ import {Bubble, GiftedChat, Send} from 'react-native-gifted-chat';
 export default function Message({route, navigation, ...props}) {
   const {id} = route.params;
   const [messages, setMessages] = useState([]);
-
+  const [userDetails, setuserDetails] = useState({});
+  const [contactDetails, setcontactDetails] = useState({});
   useEffect(() => {
     AsyncStorage.getItem('userData').then(data => {
-      const userData = data ? JSON.parse(data) : false;
+      const userData = JSON.parse(data);
       if (userData) {
+        setuserDetails(userData);
         getContactByUserId(userData?._id).then(contacts => {
-          const particularContact = contacts.find(
-            i => i.ContactDetails.rawContactId == id,
-          );
-          if (particularContact) {
-            navigation.setOptions({
-              title: particularContact
-                ? particularContact.ContactDetails.displayName
-                : 'Message',
-            });
+          if (contacts) {
+            const particularContact = contacts.find(
+              i => i.ContactDetails.rawContactId == id,
+            );
+            if (particularContact) {
+              console.log(particularContact);
 
-            setformData({
-              ...formData,
-              recipient: particularContact?._id,
-              username: userData?._id,
-              user: userData,
-            });
-            getMessage().then(data => {
-              const filterID = [particularContact?._id, userData?._id];
+              setcontactDetails(particularContact);
+              navigation.setOptions({
+                title: particularContact
+                  ? particularContact.ContactDetails.displayName
+                  : 'Message',
+              });
 
-              const particularChats = data.filter(i =>
-                filterID.every(id => i.recipient == id || i.username == id),
-              );
-              setMessages(particularChats);
-              console.log(particularChats, 'TEST');
-            });
+              setformData({
+                ...formData,
+                recipient: particularContact?._id,
+                username: userData?._id,
+                user: userData,
+              });
+              getMessage().then(data => {
+                const filterID = [formData?.recipient, formData?.username];
+
+                const particularChats = data.filter(i =>
+                  filterID.every(id => i.recipient == id || i.username == id),
+                );
+                console.log(filterID);
+                setMessages(particularChats);
+              });
+            }
           }
         });
       }
@@ -85,6 +93,14 @@ export default function Message({route, navigation, ...props}) {
     setMessages(previousMessages =>
       GiftedChat.append(previousMessages, newMessages),
     );
+    if (userDetails && contactDetails) {
+      addContact(
+        contactDetails,
+        userDetails._id,
+        userDetails.name,
+        contactDetails.rawContactId,
+      );
+    }
     const socket = io(iprotecsLapIP);
 
     // Send private message

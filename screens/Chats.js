@@ -27,10 +27,10 @@ export default function Chats(props) {
   return (
     <ScrollView style={{padding: 10}}>
       {chats.length > 0 ? (
-        chats.map(elem => (
+        chats.map((elem, index) => (
           <MyComponent
             contact={elem?.ContactDetails}
-            key={elem?.ContactDetails.rawContactId}
+            key={index}
             onclick={() => {
               props.navigation.navigate('Message', {
                 id: elem?.ContactDetails.rawContactId,

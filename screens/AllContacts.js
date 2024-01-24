@@ -47,7 +47,6 @@ export default function AllContacts(props) {
       try {
         const storedData = await AsyncStorage.getItem('userData');
         const storedUserData = JSON.parse(storedData);
-
         if (storedUserData) {
           setUserData(storedUserData);
           await getContacts();
@@ -61,12 +60,14 @@ export default function AllContacts(props) {
   }, []);
 
   const handleClick = elem => {
-    addContact(elem, userData?._id, elem.displayName);
+    addContact(elem, userData?._id, elem.displayName, elem.rawContactId);
 
-    props.navigation.navigate('Message', {
-      id: elem?.rawContactId,
-      userID: userData?._id,
-    });
+    if (userData) {
+      props.navigation.navigate('Message', {
+        id: elem?.rawContactId,
+        userID: userData?._id,
+      });
+    }
   };
 
   if (loading) {

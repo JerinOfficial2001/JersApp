@@ -39,7 +39,7 @@ export const getContactByUserId = async id => {
     console.log(error);
   }
 };
-export const addContact = async (ContactDetails, user_id, name) => {
+export const addContact = async (ContactDetails, user_id, name, Contact_id) => {
   try {
     const response = await fetch(iprotecsLapIP + '/api/contact/add', {
       method: 'POST',
@@ -47,7 +47,7 @@ export const addContact = async (ContactDetails, user_id, name) => {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-      body: JSON.stringify({ContactDetails, user_id, name}),
+      body: JSON.stringify({ContactDetails, user_id, name, Contact_id}),
     }).then(res => res.json());
     if (response.status == 'error') {
       return response.data;
