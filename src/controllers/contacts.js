@@ -33,6 +33,7 @@ export const getContactByUserId = async id => {
         Accept: 'application/json',
       },
     }).then(res => res.json());
+
     return response;
   } catch (error) {
     console.log(error);

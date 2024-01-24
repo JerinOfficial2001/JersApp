@@ -3,75 +3,55 @@ import {
   FlatList,
   Image,
   ImageBackground,
-  ScrollView,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import {requestContactsPermission} from '../src/controllers/contacts';
-import {Searchbar, TextInput} from 'react-native-paper';
+import {
+  getContactByUserId,
+  requestContactsPermission,
+} from '../src/controllers/contacts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getMessage, sendMessage} from '../src/controllers/chats';
 import {io} from 'socket.io-client';
 import {iprotecsLapIP} from '../src/api';
-import {GiftedChat} from 'react-native-gifted-chat';
+import {Bubble, GiftedChat, Send} from 'react-native-gifted-chat';
 
 export default function Message({route, navigation, ...props}) {
   const {id} = route.params;
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
-    requestContactsPermission().then(res => {
-      if (res) {
-        const particularData = res.find(i => i.rawContactId == id);
-        navigation.setOptions({
-          title: particularData ? particularData.displayName : 'Message',
-        });
-        AsyncStorage.getItem('userData').then(data => {
-          const userData = data ? JSON.parse(data) : false;
-          setformData({
-            ...formData,
-            recipient: particularData?.rawContactId,
-            username: userData?._id,
-            user: userData,
-          });
-        });
-        getMessage().then(data => {
-          const particularChats = data.filter(
-            i => i.recipient == particularData.rawContactId,
+    AsyncStorage.getItem('userData').then(data => {
+      const userData = data ? JSON.parse(data) : false;
+      if (userData) {
+        getContactByUserId(userData?._id).then(contacts => {
+          const particularContact = contacts.find(
+            i => i.ContactDetails.rawContactId == id,
           );
-          // console.log(particularChats, 'CHAT');
-          // setMessages([
-          //   {
-          //     _id: 1,
-          //     text: 'Hello developer',
-          //     createdAt: new Date(),
-          //     user: {
-          //       _id: 2,
-          //       name: 'React Native',
-          //     },
-          //   },
-          //   {
-          //     _id: 2,
-          //     text: 'Hello',
-          //     createdAt: new Date(),
-          //     user: {
-          //       _id: 1,
-          //       name: 'React',
-          //     },
-          //   },
-          //   {
-          //     _id: 3,
-          //     text: 'Hello',
-          //     createdAt: new Date(),
-          //     user: {
-          //       _id: 1,
-          //       name: 'React',
-          //     },
-          //   },
-          // ]);
-          setMessages(particularChats);
+          if (particularContact) {
+            navigation.setOptions({
+              title: particularContact
+                ? particularContact.ContactDetails.displayName
+                : 'Message',
+            });
+
+            setformData({
+              ...formData,
+              recipient: particularContact?._id,
+              username: userData?._id,
+              user: userData,
+            });
+            getMessage().then(data => {
+              const filterID = [particularContact?._id, userData?._id];
+
+              const particularChats = data.filter(i =>
+                filterID.every(id => i.recipient == id || i.username == id),
+              );
+              setMessages(particularChats);
+              console.log(particularChats, 'TEST');
+            });
+          }
         });
       }
     });
@@ -118,22 +98,43 @@ export default function Message({route, navigation, ...props}) {
   const handleSubmit = () => {
     sendMessage(formData);
   };
+  const renderBubble = props => (
+    <Bubble
+      {...props}
+      textStyle={{
+        right: {
+          color: 'white', // Text color for messages sent by the current user
+        },
+        left: {
+          color: 'black', // Text color for messages sent by other users
+        },
+      }}
+    />
+  );
+  const textInputProps = {
+    style: styles.inputField,
+  };
 
+  const renderSend = props => (
+    <Send {...props}>
+      <TouchableOpacity>
+        <View style={styles.sendBtn}>
+          <Image
+            source={require('../src/assets/send.png')}
+            style={{height: 30, width: 30}}
+          />
+        </View>
+      </TouchableOpacity>
+    </Send>
+  );
   return (
     <ImageBackground
       source={require('../src/assets/chatBg.png')} // specify the path to your image
       style={styles.backgroundImage}>
-      {/* Your screen content goes here */}
-      {/* <FlatList
-        style={styles.content}
-        data={[1, 2, 3, 4, 5, 6]}
-        renderItem={({item}) => (
-          <View style={styles.messageCardContainer}>
-            <Text style={styles.messageCardtext}>{item}</Text>
-          </View>
-        )}
-      /> */}
       <GiftedChat
+        // renderSend={renderSend}
+        textInputProps={textInputProps}
+        renderBubble={renderBubble}
         messages={messages}
         onSend={onSend}
         user={{_id: formData?.username, name: formData?.username}}
@@ -142,45 +143,6 @@ export default function Message({route, navigation, ...props}) {
           setformData({...formData, text: val});
         }}
       />
-      {/* <View
-        style={{
-          padding: 10,
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-        }}>
-        <Searchbar
-          value={formData.text}
-          onChangeText={event => {
-            setformData({
-              ...formData,
-              text: event,
-            });
-          }}
-          placeholder="Message"
-          style={styles.inputField}
-          placeholderTextColor="#697279"
-          cursorColor="#008169"
-          icon={() => {
-            return (
-              <TouchableOpacity>
-                <Image
-                  source={require('../src/assets/emoji/happy.png')}
-                  style={{height: 20, width: 20}}
-                />
-              </TouchableOpacity>
-            );
-          }}
-        />
-        <TouchableOpacity onPress={handleSubmit}>
-          <View style={styles.sendBtn}>
-            <Image
-              source={require('../src/assets/send.png')}
-              style={{height: 30, width: 30}}
-            />
-          </View>
-        </TouchableOpacity>
-      </View> */}
     </ImageBackground>
   );
 }
@@ -197,7 +159,9 @@ const styles = StyleSheet.create({
   },
   inputField: {
     backgroundColor: '#2d383e',
-    width: '87%',
+    color: 'white',
+    borderRadius: 30,
+    flex: 1,
   },
   messageCardContainer: {
     marginVertical: 3,
