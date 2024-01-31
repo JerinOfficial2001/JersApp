@@ -8,7 +8,7 @@ mongoose.connect(db).then(() => {
 const socketAPI = process.env.SOCKET_API;
 const io = require('socket.io')(4000, {
   cors: {
-    origin: 'http://localhost:3000',
+    origin: socketAPI,
     methods: ['GET', 'POST'],
   },
 });
