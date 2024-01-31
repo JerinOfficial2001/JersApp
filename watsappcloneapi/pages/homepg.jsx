@@ -188,7 +188,7 @@ export default function Homepg() {
                 overflowY: 'auto', // Show overflow when hovering over the side menu
               },
               '&::-webkit-scrollbar': {
-                width: open ? '8px' : '3px',
+                width: '8px',
               },
               '&::-webkit-scrollbar-track': {
                 background: '#f5f5f5',
