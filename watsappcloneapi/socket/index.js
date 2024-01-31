@@ -5,9 +5,10 @@ const db = process.env.MONGO_DB;
 mongoose.connect(db).then(() => {
   console.log('DB Connected');
 });
+const socketAPI = process.env.SOCKET_API;
 const io = require('socket.io')(4000, {
   cors: {
-    origin: 'https://next-api-ruby.vercel.app',
+    origin: socketAPI,
     methods: ['GET', 'POST'],
   },
 });

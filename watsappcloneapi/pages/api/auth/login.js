@@ -40,7 +40,9 @@ export default async function handler(req, res) {
 
           res.status(200).json({status: 'ok', data: {token}});
         } else {
-          res.status(401).json({status: 'error', data: 'Invalid credentials'});
+          res
+            .status(401)
+            .json({status: 'error', message: 'Invalid credentials'});
         }
       } catch (error) {
         console.log(error);

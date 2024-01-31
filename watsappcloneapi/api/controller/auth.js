@@ -41,11 +41,12 @@ export const login = async (mobNum, password) => {
       } else {
         console.error('Error:', userData.data);
       }
-    } else if (data.status == 'error' && data.message == 'User not found') {
-      props.navigation.navigate('Register', {
-        mobNum: mobNum,
-        password: password,
-      });
+    } else if (data.status == 'error') {
+      // props.navigation.navigate('Register', {
+      //   mobNum: mobNum,
+      //   password: password,
+      // });
+      return data;
     } else {
       console.error('Error:', data.data);
     }

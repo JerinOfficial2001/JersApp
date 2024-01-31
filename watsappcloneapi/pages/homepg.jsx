@@ -1,6 +1,7 @@
 import {getAllUsers} from '@/api/controller/auth';
 import {createChat, getAllChats} from '@/api/controller/chats';
 import {getAllMessages} from '@/api/controller/message';
+import {Box} from '@mui/material';
 import {useRouter} from 'next/router';
 import React, {useEffect, useState} from 'react';
 import {io} from 'socket.io-client';
@@ -20,11 +21,12 @@ export default function Homepg() {
       [name]: value,
     });
   };
+  const SocketAPI = process.env.NEXT_PUBLIC_SOCKET_API;
   const [socket, setsocket] = useState(null);
   const [chatArray, setchatArray] = useState([]);
   const [currentChatPg, setcurrentChatPg] = useState({});
   const handleSocket = async () => {
-    const socketData = io('https://whatsapp-clone-socket-api.vercel.app');
+    const socketData = io(SocketAPI);
     if (socketData) {
       setsocket(socketData);
     }
@@ -57,7 +59,6 @@ export default function Homepg() {
   }, []);
   const [chatID, setchatID] = useState('');
 
-  console.log(chatID, 'ID');
   const handleSubmit = e => {
     e.preventDefault();
     if (formDatas.msg !== '') {
@@ -66,6 +67,10 @@ export default function Homepg() {
         sender: userData.name,
         receiver: currentChatPg?.receiver,
         message: formDatas.msg,
+      });
+      setformDatas({
+        msg: '',
+        userName: '',
       });
       handleSocket();
     }
@@ -166,44 +171,67 @@ export default function Homepg() {
           style={{
             minHeight: '90vh',
             width: '90%',
-            display: 'flex',
-            alignItems: 'end',
-            flexDirection: 'column',
             gap: 3,
             background: 'slategray',
             padding: 5,
             paddingBottom: 70,
-            overflowY: 'scroll',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
           }}>
-          {chatArray.map((chat, index) => {
-            const isCurrentUser = chat.sender === userData.name;
-            return (
-              <div
-                key={index}
-                style={{
-                  height: 'auto',
-                  width: '100%',
-                  display: 'flex',
-                  justifyContent: isCurrentUser ? 'flex-end' : 'flex-start',
-                  alignItems: 'center',
-                  padding: 3,
-                  gap: 3,
-                }}>
-                <p
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              '&:hover': {
+                overflowY: 'auto', // Show overflow when hovering over the side menu
+              },
+              '&::-webkit-scrollbar': {
+                width: open ? '8px' : '3px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: '#f5f5f5',
+                borderRadius: '4px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: '#bdbdbd',
+                borderRadius: '4px',
+                '&:hover': {
+                  background: '#a5a5a5',
+                },
+              },
+            }}>
+            {chatArray.map((chat, index) => {
+              const isCurrentUser = chat.sender === userData.name;
+              return (
+                <div
+                  key={index}
                   style={{
-                    borderRadius: isCurrentUser
-                      ? '10px 10px 0 10px'
-                      : '0 10px 10px 10px',
-                    border: '1px solid black',
-                    color: 'black',
-                    background: 'white',
-                    padding: 10,
+                    height: 'auto',
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: isCurrentUser ? 'flex-end' : 'flex-start',
+                    alignItems: 'center',
+                    padding: 3,
+                    gap: 3,
                   }}>
-                  {chat.message}
-                </p>
-              </div>
-            );
-          })}
+                  <p
+                    style={{
+                      borderRadius: isCurrentUser
+                        ? '10px 10px 0 10px'
+                        : '0 10px 10px 10px',
+                      border: '1px solid black',
+                      color: 'black',
+                      background: 'white',
+                      padding: 10,
+                    }}>
+                    {chat.message}
+                  </p>
+                </div>
+              );
+            })}
+          </Box>
         </div>
 
         <form style={{position: 'fixed', bottom: 10}} onSubmit={handleSubmit}>

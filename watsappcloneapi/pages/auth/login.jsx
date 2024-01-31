@@ -14,10 +14,21 @@ export default function Login() {
       [name]: value,
     });
   };
+  const [ErrMsg, setErrMsg] = useState({
+    state: false,
+    msg: '',
+  });
   const handleSubmit = e => {
     e.preventDefault();
     if (formData.password !== '' && formData.password !== '') {
-      login(formData.mobNum, formData.password);
+      login(formData.mobNum, formData.password).then(data => {
+        if (data?.status === 'error') {
+          setErrMsg({
+            state: true,
+            msg: data.message,
+          });
+        }
+      });
     }
   };
   return (
@@ -43,6 +54,7 @@ export default function Login() {
         onSubmit={handleSubmit}>
         <label htmlFor="mobNum"> Phone Number</label>
         <input
+          style={{padding: 10}}
           type="number"
           name="mobNum"
           value={formData.mobNum}
@@ -50,12 +62,18 @@ export default function Login() {
         />
         <label htmlFor="password">Password</label>
         <input
+          style={{padding: 10}}
           type="password"
           name="password"
           value={formData.password}
           onChange={handleOnchange}
         />
-        <button type="submit"> Login</button>
+        {ErrMsg.state && (
+          <p style={{color: 'red', fontWeight: 'bold'}}>{ErrMsg?.msg}</p>
+        )}
+        <button style={{padding: 10}} type="submit">
+          Login
+        </button>
       </form>
     </div>
   );
