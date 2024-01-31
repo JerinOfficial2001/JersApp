@@ -7,7 +7,7 @@ mongoose.connect(db).then(() => {
 });
 const io = require('socket.io')(4000, {
   cors: {
-    origin: 'http://localhost:3000',
+    origin: 'https://next-api-ruby.vercel.app',
     methods: ['GET', 'POST'],
   },
 });
