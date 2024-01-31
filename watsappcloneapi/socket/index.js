@@ -1,15 +1,20 @@
 const mongoose = require('mongoose');
+const http = require('http');
+const express = require('express');
+const app = express();
+const cors = require('cors');
+app.use(cors());
+const server = http.createServer(app);
 const {Message} = require('./model/message');
 require('dotenv').config();
 const db = process.env.MONGO_DB;
 mongoose.connect(db).then(() => {
   console.log('DB Connected');
 });
-const socketAPI = process.env.SOCKET_API;
 const PORT = process.env.PORT || 4000;
 const io = require('socket.io')(PORT, {
   cors: {
-    origin: socketAPI,
+    origin: server,
     methods: ['GET', 'POST'],
   },
 });
