@@ -6,7 +6,8 @@ mongoose.connect(db).then(() => {
   console.log('DB Connected');
 });
 const socketAPI = process.env.SOCKET_API;
-const io = require('socket.io')(4000, {
+const PORT = process.env.PORT || 4000;
+const io = require('socket.io')(PORT, {
   cors: {
     origin: socketAPI,
     methods: ['GET', 'POST'],

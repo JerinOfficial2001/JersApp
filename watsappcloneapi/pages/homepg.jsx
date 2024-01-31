@@ -26,7 +26,7 @@ export default function Homepg() {
   const [chatArray, setchatArray] = useState([]);
   const [currentChatPg, setcurrentChatPg] = useState({});
   const handleSocket = async () => {
-    const socketData = io('http://localhost:4000');
+    const socketData = io(SocketAPI);
     if (socketData) {
       setsocket(socketData);
     }
