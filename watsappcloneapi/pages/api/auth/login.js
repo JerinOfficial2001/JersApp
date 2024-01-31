@@ -1,43 +1,50 @@
 import connectToDatabase from '@/api/lib/db';
 import Auth from '@/api/model/auth';
 import jwt from 'jsonwebtoken';
-import cors from 'cors';
+import {Server} from 'socket.io';
 
 const SECRET_KEY = process.env.NEXT_PUBLIC_SECRET_KEY; // Replace with the same secret key used for signing tokens
-const corsMiddleware = cors({
-  origin: 'https://next-api-ruby.vercel.app', // Replace with the actual origin of your client app
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  credentials: true,
-});
+// const corsMiddleware = cors({
+//   origin: 'https://next-api-ruby.vercel.app', // Replace with the actual origin of your client app
+//   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+//   credentials: true,
+// });
 
 export default async function handler(req, res) {
+  // const array = [];
   await connectToDatabase();
+  // if (!res.socket.server.io) {
+  //   // Create a new Socket.IO server if it doesn't exist
+  //   const io = new Server(res.socket.server);
+  //   res.socket.server.io = io;
 
-  // Use cors middleware by including headers in the response
-
+  //   io.on('connection', socket => {
+  //     console.log('Connected');
+  //     socket.on('disconnect', () => {
+  //       console.log('Disconnected');
+  //     });
+  //   });
+  // }
   const {method} = req;
 
   switch (method) {
     case 'POST':
       try {
-        const {mobNum, password} = req.body;
-        const user = await Auth.findOne({mobNum});
-        if (user) {
-          if (user.mobNum == mobNum && user.password == password) {
-            res.json({status: 'ok', data: user});
-          } else if (user.password !== password) {
-            res.json({status: 'error', error: 'Invalid Password'});
-          } else if (user.mobNum !== mobNum) {
-            res.json({status: 'error', error: 'Invalid Mobile Number'});
-          }
+        const user = await Auth.findOne({mobNum: req.body.mobNum});
+        if (!user) {
+          res.status(200).json({status: 'error', message: 'User not found'});
+        } else if (user && user.password == req.body.password) {
+          const token = jwt.sign({userId: user._id}, SECRET_KEY, {
+            expiresIn: '24h',
+          });
+
+          res.status(200).json({status: 'ok', data: {token}});
         } else {
-          res.json({status: 'error', error: 'User Nottt Found'});
+          res.status(401).json({status: 'error', data: 'Invalid credentials'});
         }
       } catch (error) {
-        console.error('Error:', error);
-        res
-          .status(401)
-          .json({status: 'error', data: `Unauthorized - ${error.message}`});
+        console.log(error);
+        res.status(500).send(error);
       }
 
       break;

@@ -14,6 +14,8 @@
     "mongoose": "^8.1.0",
     "next": "14.0.4",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "socket.io": "^4.7.4",
+    "socket.io-client": "^4.7.4"
   }
 }

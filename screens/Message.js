@@ -163,7 +163,7 @@ export default function Message({route, navigation, ...props}) {
         renderBubble={renderBubble}
         messages={messages}
         onSend={onSend}
-        user={{_id: formData?.username, name: formData?.username}}
+        user={{_id: formData?.username}}
         placeholder="Message"
         onInputTextChanged={val => {
           setformData({...formData, text: val});
