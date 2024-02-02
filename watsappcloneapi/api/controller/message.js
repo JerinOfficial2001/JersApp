@@ -5,7 +5,7 @@ export const getAllMessages = async chatID => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        'Access-Control-Allow-Origin': true,
+        'Access-Control-Allow-Origin': *,
       },
     }).then(res => res.json());
     if (response.status == 'ok') {
