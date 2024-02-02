@@ -6,7 +6,9 @@ import { Server } from "socket.io";
 const httpServer = createServer();
 const app = express();
 const cors = require('cors');
-app.use(cors());
+app.use(cors({
+origin:"https://next-api-ruby.vercel.app"
+}));
 
 const {Message} = require('./model/message');
 require('dotenv').config();
