@@ -7,7 +7,7 @@ const app = express();
 const httpServer = createServer(app);
 const cors = require('cors');
 app.use(cors({
-origin:"https://next-api-ruby.vercel.app/homepg"
+origin:"https://next-api-ruby.vercel.app"
 }));
 
 const {Message} = require('./model/message');
