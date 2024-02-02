@@ -5,7 +5,7 @@ export const login = async (mobNum, password) => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        'Access-Control-Allow-Origin': true,
+        'Access-Control-Allow-Origin': *,
       },
       body: JSON.stringify({mobNum, password}),
     });
@@ -62,7 +62,7 @@ export const register = async (data, props) => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        'Access-Control-Allow-Origin': true,
+        'Access-Control-Allow-Origin': *,
       },
       body: JSON.stringify({
         mobNum: data.mobNum,
@@ -86,7 +86,7 @@ export const getAllUsers = async userID => {
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
-          'Access-Control-Allow-Origin': true,
+          'Access-Control-Allow-Origin': *,
         },
       }).then(res => res.json());
       if (response.status == 'ok') {
