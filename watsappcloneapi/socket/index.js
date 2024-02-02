@@ -17,8 +17,7 @@ mongoose.connect(db).then(() => {
 const PORT = process.env.PORT || 4000;
 const io = new Server(httpServer, {
   cors: {
-    origin: server,
-    credentials: true,
+    origin: *,
   },
 });
 io.on('connection', socket => {
