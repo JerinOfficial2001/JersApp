@@ -5,7 +5,7 @@ export const login = async (mobNum, password) => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        'Access-Control-Allow-Origin': *,
+        'Access-Control-Allow-Origin': "*",
       },
       body: JSON.stringify({mobNum, password}),
     });
