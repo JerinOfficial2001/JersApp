@@ -26,7 +26,9 @@ export default function Homepg() {
   const [chatArray, setchatArray] = useState([]);
   const [currentChatPg, setcurrentChatPg] = useState({});
   const handleSocket = async () => {
-    const socketData = io(SocketAPI);
+    const socketData = io(SocketAPI,{
+      withCredentials: true
+    });
     if (socketData) {
       setsocket(socketData);
     }
