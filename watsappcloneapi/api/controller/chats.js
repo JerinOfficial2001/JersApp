@@ -5,7 +5,7 @@ export const createChat = async data => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        'Access-Control-Allow-Origin': true,
+        'Access-Control-Allow-Origin': *,
       },
       body: JSON.stringify({
         receiver: data.receiver,
@@ -27,7 +27,7 @@ export const getAllChats = async (sender, receiver) => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        'Access-Control-Allow-Origin': true,
+        'Access-Control-Allow-Origin': *,
       },
     }).then(res => res.json());
     if (response.status == 'ok') {
