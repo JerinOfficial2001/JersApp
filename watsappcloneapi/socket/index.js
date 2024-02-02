@@ -3,8 +3,8 @@ const express = require('express');
 import { createServer } from "http";
 import { Server } from "socket.io";
 
-const httpServer = createServer();
 const app = express();
+const httpServer = createServer(app);
 const cors = require('cors');
 app.use(cors({
 origin:"https://next-api-ruby.vercel.app"
@@ -17,11 +17,7 @@ mongoose.connect(db).then(() => {
   console.log('DB Connected');
 });
 const PORT = process.env.PORT || 4000;
-const io = new Server(httpServer, {
-  cors: {
-    origin: *,
-  },
-});
+const io = new Server(httpServer);
 io.on('connection', socket => {
   console.log('User connected');
   socket.on('disconnect', () => {
