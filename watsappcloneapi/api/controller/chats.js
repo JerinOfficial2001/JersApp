@@ -22,7 +22,7 @@ export const createChat = async data => {
 };
 export const getAllChats = async (sender, receiver) => {
   try {
-    const response = await fetch('/api/chat', {
+    const response = await fetch(`/api/chat/?senderID=${sender}/&receiverID=${receiver}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -31,13 +31,7 @@ export const getAllChats = async (sender, receiver) => {
       },
     }).then(res => res.json());
     if (response.status == 'ok') {
-      const chatIDs = [sender, receiver];
-      const filteredChats = response.data.find(i =>
-        chatIDs.every(id => i.sender == id || i.receiver == id),
-      );
-      if (filteredChats) {
-        return filteredChats;
-      }
+      return response.data
     }
   } catch (error) {
     console.error('Error:', error.message);

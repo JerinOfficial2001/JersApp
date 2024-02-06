@@ -26,7 +26,7 @@ export default function Homepg() {
   const [chatArray, setchatArray] = useState([]);
   const [currentChatPg, setcurrentChatPg] = useState({});
   const handleSocket = async () => {
-    const socketData = io(SocketAPI);
+    const socketData = io("https://socket-server-lac.vercel.app");
     if (socketData) {
       setsocket(socketData);
     }

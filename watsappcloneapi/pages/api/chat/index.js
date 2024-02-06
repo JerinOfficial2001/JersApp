@@ -5,7 +5,7 @@ import Chats from '@/api/model/chats';
 
 export default async function handler(req, res) {
   await connectToDatabase();
-  const {method} = req;
+  const { method } = req;
   switch (method) {
     case 'POST':
       const {receiver, sender} = req.body;
@@ -31,9 +31,17 @@ export default async function handler(req, res) {
       }
       break;
     case 'GET':
+  const { receiverID, senderID } = req.query
+
       try {
         const response = await Chats.find({});
-        res.status(200).json({status: 'ok', data: response});
+        const chatIDs = [receiverID, senderID];
+      const filteredChats = response.find(i =>
+        chatIDs.every(id => i.sender == id || i.receiver == id),
+      );
+      if (filteredChats) {
+        return res.status(200).json({status: 'ok', data: filteredChats});
+      }
       } catch (error) {
         console.error('Error:', error);
         res.status(500).json({error: 'Internal Server Error'});
