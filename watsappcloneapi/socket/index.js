@@ -1,15 +1,12 @@
 const mongoose = require('mongoose');
 const express = require('express');
-import { createServer } from "http";
-import { Server } from "socket.io";
+const  { createServer } = require("http");
+const { Server } = require("socket.io");
 
 const app = express();
 const httpServer = createServer(app);
 const cors = require('cors');
-app.use(cors({
-origin:"https://next-api-ruby.vercel.app"
-}));
-
+app.use(cors());
 const {Message} = require('./model/message');
 require('dotenv').config();
 const db = process.env.MONGO_DB;
@@ -17,7 +14,15 @@ mongoose.connect(db).then(() => {
   console.log('DB Connected');
 });
 const PORT = process.env.PORT || 4000;
-const io = new Server(httpServer);
+httpServer.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+const io =new Server(httpServer, {
+  cors: {
+    origin: "https://next-api-ruby.vercel.app",
+ }
+
+});
 io.on('connection', socket => {
   console.log('User connected');
   socket.on('disconnect', () => {
