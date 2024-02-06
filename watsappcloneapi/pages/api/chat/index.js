@@ -31,14 +31,16 @@ export default async function handler(req, res) {
       }
       break;
     case 'GET':
-  const { receiverID, senderID } = req.query
-
+      const { receiverID, senderID } = req.query
+     
       try {
         const response = await Chats.find({});
         const chatIDs = [receiverID, senderID];
+         
       const filteredChats = response.find(i =>
         chatIDs.every(id => i.sender == id || i.receiver == id),
-      );
+        );
+        
       if (filteredChats) {
         return res.status(200).json({status: 'ok', data: filteredChats});
       }
