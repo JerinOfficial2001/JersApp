@@ -1,3 +1,5 @@
+import Cookies from "js-cookie";
+
 export const login = async (mobNum, password) => {
   try {
     const response = await fetch('/api/auth/login', {
@@ -28,6 +30,7 @@ export const login = async (mobNum, password) => {
       if (userData.status === 'ok') {
         // Store user data in AsyncStorage
         localStorage.setItem('userData', JSON.stringify(userData.data.user));
+        Cookies.set('token', JSON.stringify(token));
 
         // Check if 'userData' key exists before navigating
         const storedUserData = JSON.parse(localStorage.getItem('userData'));

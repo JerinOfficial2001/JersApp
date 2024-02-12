@@ -2,9 +2,11 @@ import {getAllUsers} from '@/api/controller/auth';
 import {createChat, getAllChats} from '@/api/controller/chats';
 import {getAllMessages} from '@/api/controller/message';
 import {Box} from '@mui/material';
+import Cookies from 'js-cookie';
 import {useRouter} from 'next/router';
 import React, {useEffect, useState} from 'react';
-import {io} from 'socket.io-client';
+import { io } from 'socket.io-client';
+
 
 export default function Homepg() {
   const router = useRouter();
@@ -21,15 +23,25 @@ export default function Homepg() {
       [name]: value,
     });
   };
+ const token = Cookies.get('token')
+
   const SocketAPI = process.env.NEXT_PUBLIC_SOCKET_API;
   const [socket, setsocket] = useState(null);
   const [chatArray, setchatArray] = useState([]);
   const [currentChatPg, setcurrentChatPg] = useState({});
-  const handleSocket = async () => {
-    const socketData = io("https://socket-server-lac.vercel.app");
+  useEffect(() => {
+    const socketData = io("http://localhost:4000", {
+      // query: {
+      //   token: token?JSON.parse(token):"Jerin@123"
+      // }
+    });
     if (socketData) {
       setsocket(socketData);
     }
+  }, [])
+  
+  const handleSocket = async () => {
+   
     if (socket) {
       socket.on('message', data => {
         if (chatID && data) {
@@ -56,6 +68,7 @@ export default function Homepg() {
       setuserData(userDetails);
       getUsers(userDetails);
     }
+   
   }, []);
   const [chatID, setchatID] = useState('');
 
