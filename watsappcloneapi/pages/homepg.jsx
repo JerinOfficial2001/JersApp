@@ -30,7 +30,7 @@ export default function Homepg() {
   const [chatArray, setchatArray] = useState([]);
   const [currentChatPg, setcurrentChatPg] = useState({});
   useEffect(() => {
-    const socketData = io("https://socket-server-lac.vercel.app", {
+    const socketData = io(SocketAPI, {
       // query: {
       //   token: token?JSON.parse(token):"Jerin@123"
       // }
