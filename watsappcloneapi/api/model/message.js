@@ -15,4 +15,4 @@ if (mongoose.models && mongoose.models.Message) {
   Message = mongoose.model('Message', messageSchema);
 }
 
-export default Message;
+export default Message
