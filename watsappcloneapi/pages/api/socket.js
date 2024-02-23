@@ -26,6 +26,6 @@ export default async function SocketHandler(req, res) {
     });
   });
 
-  console.log("Setting up socket");
+  // console.log("Setting up socket");
   res.end();
 }
