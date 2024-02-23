@@ -2,7 +2,6 @@
 
 import connectToDatabase from '@/api/lib/db';
 import Message from '@/api/model/message';
-
 export default async function handler(req, res) {
   await connectToDatabase();
   const {method} = req;
