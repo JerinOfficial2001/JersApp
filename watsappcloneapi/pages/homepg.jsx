@@ -7,6 +7,22 @@ import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
+function useSocket() {
+  const SocketAPI = process.env.NEXT_PUBLIC_SOCKET_API;
+
+  const [socketIo, setSocketIo] = useState(null);
+  useEffect(() => {
+    const socket = io(SocketAPI, {
+      path: "/api/socket",
+    });
+    setSocketIo(socket);
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+  return socketIo;
+}
+
 export default function Homepg() {
   const router = useRouter();
   const [users, setusers] = useState([]);
@@ -22,31 +38,22 @@ export default function Homepg() {
       [name]: value,
     });
   };
-  const token = Cookies.get("token");
 
-  const SocketAPI = process.env.NEXT_PUBLIC_SOCKET_API;
-  // const [socket, setsocket] = useState(null);
   const [chatArray, setchatArray] = useState([]);
   const [currentChatPg, setcurrentChatPg] = useState({});
-  const socket = io(SocketAPI, {
-    path: "/socket",
-    // reconnection: true,
-    transports: ["websocket", "polling"],
-    // reconnectionAttempts:5
-  });
-  // useEffect(() => {
-  //   if (socketData && token) {
-  //     setsocket(socketData);
 
-  //     return () => {
-  //     socketData.disconnect();
-  //     console.log('Disconnected from Socket.IO server');
-  //   };
-  //   }
+  const socket = useSocket();
 
-  //   // Clean up the socket connection when the component unmounts
-
-  // }, [])
+  useEffect(() => {
+    if (socket) {
+      socket.on("connection", () => {
+        console.log("connect");
+      });
+      socket.on("disconnect", () => {
+        console.log("disconnect");
+      });
+    }
+  }, [socket]);
 
   const handleSocket = async () => {
     if (socket) {
