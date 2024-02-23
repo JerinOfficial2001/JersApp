@@ -29,17 +29,27 @@ export default function Homepg() {
   const [socket, setsocket] = useState(null);
   const [chatArray, setchatArray] = useState([]);
   const [currentChatPg, setcurrentChatPg] = useState({});
+  const socketData = io(SocketAPI, {
+    path: '/socket',
+    reconnection: true,
+    transports: ['websocket', 'polling'],
+    reconnectionAttempts:5
+  });
   useEffect(() => {
-    const socketData = io(SocketAPI, {
-      // query: {
-      //   token: token?JSON.parse(token):"Jerin@123"
-      // }
-    });
-    if (socketData) {
+    if (socketData && token) {
       setsocket(socketData);
+     
+      return () => {
+      socketData.disconnect();
+      console.log('Disconnected from Socket.IO server');
+    };
     }
+
+    // Clean up the socket connection when the component unmounts
+    
   }, [])
-  
+ 
+
   const handleSocket = async () => {
    
     if (socket) {
