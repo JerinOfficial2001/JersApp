@@ -21,8 +21,8 @@ export default function AllContacts(props) {
         const dbContact = await getAllUsers();
 
         if (dbContact) {
-          const mobContacts = permissionsGranted.map(contact =>
-            contact.phoneNumbers[0]?.number.substring(3),
+          const mobContacts = permissionsGranted.map(
+            contact => contact.phoneNumbers[0]?.number,
           );
           const apiContacts = dbContact.map(contact => contact.mobNum);
           const commonMobNumbers = apiContacts.filter(contact =>
@@ -30,7 +30,8 @@ export default function AllContacts(props) {
           );
           const commonMobContacts = permissionsGranted.filter(contact =>
             commonMobNumbers.includes(
-              contact.phoneNumbers[0]?.number.substring(3),
+              contact.phoneNumbers[0]?.number ||
+                `+91${contact.phoneNumbers[0]?.number}`,
             ),
           );
           setContacts(commonMobContacts);
@@ -64,7 +65,7 @@ export default function AllContacts(props) {
       elem,
       userData?._id,
       elem.displayName,
-      elem.phoneNumbers[0]?.number.substring(3),
+      elem.phoneNumbers[0]?.number,
       props,
     );
   };

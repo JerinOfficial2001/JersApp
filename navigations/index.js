@@ -9,6 +9,7 @@ import AllContacts from '../screens/AllContacts';
 import Login from '../screens/auth/Login';
 import Register from '../screens/auth/Register';
 import Settings from '../screens/Settings';
+import QRScanner from '../screens/QRScanner';
 
 const Stack = createStackNavigator();
 
@@ -48,10 +49,11 @@ export default function Navigator() {
         />
         <Stack.Screen
           options={{
-            headerStyle: {
-              backgroundColor: '#008169',
-            },
-            headerTintColor: 'white',
+            // headerStyle: {
+            //   backgroundColor: '#008169',
+            // },
+            // headerTintColor: 'white',
+            headerShown: false,
           }}
           name="Message"
           component={Message}
@@ -76,6 +78,16 @@ export default function Navigator() {
           name="PlayStatus"
           component={PlayStatus}
         />
+        {/* <Stack.Screen
+          options={{
+            headerStyle: {
+              backgroundColor: '#008169',
+            },
+            headerTintColor: 'white',
+          }}
+          name="QRScanner"
+          component={QRScanner}
+        /> */}
       </Stack.Navigator>
 
       <AuthModal visible={visible} setVisible={setVisible} />

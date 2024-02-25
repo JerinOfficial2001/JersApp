@@ -3,8 +3,14 @@ import {
   FlatList,
   Image,
   ImageBackground,
+  Pressable,
+  ScrollView,
   StyleSheet,
+  Text,
+  TextInput,
+  ToastAndroid,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import {
@@ -13,168 +19,294 @@ import {
   requestContactsPermission,
 } from '../src/controllers/contacts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {getMessage, sendMessage} from '../src/controllers/chats';
+import {
+  createChat,
+  deleteMessageById,
+  getAllChats,
+  getMessage,
+  sendMessage,
+} from '../src/controllers/chats';
 import {io} from 'socket.io-client';
-import {iprotecsLapIP} from '../src/api';
+import {iprotecsLapIP, socketServerApi} from '../src/api';
 import {Bubble, GiftedChat, Send} from 'react-native-gifted-chat';
 import {getAllUsers} from '../src/controllers/auth';
+import {useFocusEffect} from '@react-navigation/native';
+import TopBar from '../src/components/TopBar';
+import DeleteModal from '../src/components/DeleteModel';
 
-export default function Message({route, navigation, ...props}) {
-  const {id} = route.params;
-  const [messages, setMessages] = useState([]);
-  const [userDetails, setuserDetails] = useState({});
-  const [contactDetails, setcontactDetails] = useState({});
+function useSocket() {
+  const SocketAPI = socketServerApi;
+
+  const [socketIo, setSocketIo] = useState(null);
   useEffect(() => {
-    AsyncStorage.getItem('userData').then(data => {
-      const userData = JSON.parse(data);
-      if (userData) {
-        setuserDetails(userData);
-        getContactByUserId(userData?._id).then(contacts => {
-          if (contacts) {
-            const particularContact = contacts.find(
-              i => i.ContactDetails.rawContactId == id,
-            );
-            if (particularContact) {
-              getAllUsers().then(user => {
-                if (user) {
-                  const currentUser = user.find(
-                    i => i.mobNum == particularContact.Contact_id,
-                  );
-                  if (currentUser) {
-                    setformData({
-                      ...formData,
-                      recipient: currentUser._id,
-                      username: userData?._id,
-                      user: userData,
-                    });
-                    getMessage().then(data => {
-                      const filterID = [currentUser?._id, userData?._id];
-                      console.log(filterID, 'MSG');
-                      const particularChats = data.filter(i =>
-                        filterID.every(
-                          id => i.recipient == id || i.username == id,
-                        ),
-                      );
-                      setMessages(particularChats);
-                    });
-                  }
-                }
-              });
-
-              setcontactDetails(particularContact);
-              navigation.setOptions({
-                title: particularContact
-                  ? particularContact.ContactDetails.displayName
-                  : 'Message',
-              });
-            }
-          }
-        });
-      }
+    const socket = io(SocketAPI, {
+      path: '/socket',
     });
-  }, []);
-
-  useEffect(() => {
-    const socket = io(iprotecsLapIP);
-
-    // Listen for incoming messages
-    socket.on('message', message => {
-      setMessages(previousMessages =>
-        GiftedChat.append(previousMessages, message),
-      );
-    });
-
-    // Listen for private messages
-    socket.on('privateMessage', message => {
-      setMessages(previousMessages =>
-        GiftedChat.append(previousMessages, message),
-      );
-    });
-
-    // Clean up on component unmount
+    setSocketIo(socket);
     return () => {
       socket.disconnect();
     };
   }, []);
+  return socketIo;
+}
 
-  const [formData, setformData] = useState({});
-  const onSend = (newMessages = []) => {
-    setMessages(previousMessages =>
-      GiftedChat.append(previousMessages, newMessages),
-    );
-    // if (userDetails && contactDetails) {
-    //   addContact(
-    //     contactDetails,
-    //     userDetails._id,
-    //     userDetails.name,
-    //     contactDetails.rawContactId,
-    //     props,
-    //   );
-    // }
-    const socket = io(iprotecsLapIP);
+export default function Message({route, navigation, ...props}) {
+  const [formDatas, setformDatas] = useState({
+    msg: '',
+    userName: '',
+  });
+  const [userData, setuserData] = useState({});
+  const [enableSendBtn, setenableSendBtn] = useState(false);
+  const [chatArray, setchatArray] = useState([]);
+  const [chatID, setchatID] = useState('');
+  const [isMsgLongPressed, setisMsgLongPressed] = useState([]);
+  const [isModelOpen, setisModelOpen] = useState(false);
+  const [receiverDetails, setreceiverDetails] = useState({});
+  const [msgID, setmsgID] = useState('');
+  const [isDelete, setisDelete] = useState(false);
+  const {id} = route.params;
+  const socket = useSocket();
+  const [isProcess, setisProcess] = useState(false);
 
-    // Send private message
-    socket.emit('privateMessage', {
-      ...newMessages[0],
-      from: formData?.username,
-      to: formData?.recipient,
-    });
-    handleSubmit();
-  };
-  const handleSubmit = () => {
-    sendMessage(formData);
-  };
-  const renderBubble = props => (
-    <Bubble
-      {...props}
-      textStyle={{
-        right: {
-          color: 'white', // Text color for messages sent by the current user
-        },
-        left: {
-          color: 'black', // Text color for messages sent by other users
-        },
-      }}
-    />
-  );
-  const textInputProps = {
-    style: styles.inputField,
-  };
-
-  const renderSend = props => (
-    <Send {...props}>
-      <TouchableOpacity>
-        <View style={styles.sendBtn}>
-          <Image
-            source={require('../src/assets/send.png')}
-            style={{height: 30, width: 30}}
-          />
+  const BubbleMsg = ({
+    text,
+    received,
+    isSelected,
+    handleLongPress,
+    handlePress,
+  }) => {
+    return (
+      <TouchableWithoutFeedback
+        onLongPress={handleLongPress}
+        onPress={handlePress}>
+        <View
+          style={{
+            minHeight: 60,
+            alignItems: received ? 'flex-start' : 'flex-end',
+            backgroundColor: isSelected ? '#e9edef0d' : '',
+            justifyContent: 'center',
+            padding: 5,
+            paddingHorizontal: 25,
+          }}>
+          <View
+            style={{
+              minWidth: 50,
+              backgroundColor: '#064e49',
+              borderRadius: 15,
+              padding: 5,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderTopLeftRadius: received ? 0 : 15,
+              borderTopEndRadius: received ? 15 : 0,
+              paddingVertical: 10,
+            }}>
+            <Text style={{color: 'white'}}>{text}</Text>
+          </View>
         </View>
-      </TouchableOpacity>
-    </Send>
+      </TouchableWithoutFeedback>
+    );
+  };
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('connection', () => {
+        console.log('connected');
+      });
+      socket.on('disconnect', () => {
+        console.log('disconnect');
+      });
+    }
+  }, [socket]);
+  useEffect(() => {
+    if (formDatas.msg !== '') {
+      setenableSendBtn(true);
+    } else {
+      setenableSendBtn(false);
+    }
+  }, [formDatas.msg]);
+
+  const fetchData = () => {
+    AsyncStorage.getItem('userData').then(data => {
+      if (data) {
+        const userDetails = JSON.parse(data);
+        setuserData(userDetails);
+        getContactByUserId(userDetails._id).then(users => {
+          if (users) {
+            const res = users.find(user => user._id === id);
+            if (res) {
+              setreceiverDetails(res);
+              // navigation.setOptions({
+              //   title: res ? res.ContactDetails.displayName : 'Message',
+              // });
+            }
+          }
+        });
+        getAllChats(userDetails._id, id).then(chat => {
+          if (chat) {
+            setchatID(chat._id);
+            getMessage(chat._id).then(msg => {
+              if (msg) {
+                setchatArray(msg);
+                setisMsgLongPressed(msg.map(item => ({isSelected: false})));
+              }
+            });
+          }
+        });
+      }
+    });
+  };
+  useFocusEffect(
+    React.useCallback(() => {
+      handleSocket();
+      fetchData();
+    }, []),
   );
+  const handleSubmit = e => {
+    e.preventDefault();
+    if (formDatas.msg !== '') {
+      socket.emit('message', {
+        chatID: chatID,
+        sender: userData._id,
+        receiver: id,
+        message: formDatas.msg,
+      });
+      setformDatas({
+        msg: '',
+        userName: '',
+      });
+      handleSocket();
+    }
+  };
+  const handleDeleteMsg = () => {
+    if (msgID) {
+      deleteMessageById(msgID).then(data => {
+        if (data.status == 'ok' && data.message == 'deleted') {
+          fetchData();
+          handlePress();
+          setisModelOpen(false);
+          ToastAndroid.show('Message Deleted', ToastAndroid.SHORT);
+        } else {
+          setisModelOpen(false);
+          ToastAndroid.show('Failed', ToastAndroid.SHORT);
+        }
+      });
+    }
+  };
+  const handleSocket = async () => {
+    if (socket) {
+      socket.on('message', data => {
+        if (chatID && data) {
+          const filteredMsg = data.filter(msg => msg.chatID == chatID);
+          if (filteredMsg) {
+            setchatArray(filteredMsg);
+          }
+        }
+      });
+    }
+  };
+  const handleOnchange = (value, name) => {
+    setformDatas(prev => ({...prev, [name]: value}));
+  };
+  const handleLongPress = (index, id) => {
+    const updatedStates = [...isMsgLongPressed];
+    updatedStates[index].isSelected = true;
+    setisMsgLongPressed(updatedStates);
+    setmsgID(id);
+    setisDelete(true);
+  };
+  const handlePress = () => {
+    const updatedStates = isMsgLongPressed?.map(() => ({isSelected: false}));
+    setisMsgLongPressed(updatedStates);
+    setisDelete(false);
+  };
+  const handleModelClose = () => {
+    setisModelOpen(false);
+    handlePress();
+  };
   return (
-    <ImageBackground
-      source={require('../src/assets/chatBg.png')} // specify the path to your image
-      style={styles.backgroundImage}>
-      <GiftedChat
-        // renderSend={renderSend}
-        textInputProps={textInputProps}
-        renderBubble={renderBubble}
-        messages={messages}
-        onSend={onSend}
-        user={{_id: formData?.username}}
-        placeholder="Message"
-        onInputTextChanged={val => {
-          setformData({...formData, text: val});
+    <View style={{flex: 1}}>
+      <TopBar
+        arrow={true}
+        title={
+          receiverDetails
+            ? receiverDetails.ContactDetails?.displayName
+            : 'Message'
+        }
+        lefOnPress={() => navigation.navigate('Home')}
+        rightOnPress={() => {
+          setisModelOpen(true);
         }}
+        isDelete={isDelete}
       />
-    </ImageBackground>
+      <Pressable style={{flex: 1}} onPress={handlePress}>
+        <ImageBackground
+          source={require('../src/assets/chatBg.png')} // specify the path to your image
+          style={styles.backgroundImage}>
+          <FlatList
+            style={{
+              flexDirection: 'column-reverse',
+            }}
+            data={chatArray}
+            renderItem={({item, index}) => (
+              <BubbleMsg
+                text={item.message}
+                received={item.sender !== userData._id}
+                isSelected={isMsgLongPressed[index]?.isSelected}
+                handlePress={handlePress}
+                handleLongPress={() => {
+                  handleLongPress(index, item._id);
+                }}
+              />
+            )}
+            keyExtractor={item => item._id}
+          />
+          {/* <ScrollView>
+          {chatArray.map((item, index) => {
+            return (
+              <BubbleMsg
+                key={index}
+                id={item._id}
+                text={item.message}
+                received={item.sender !== userData._id}
+              />
+            );
+          })}
+        </ScrollView> */}
+          <View style={styles.inputContainer}>
+            <TextInput
+              placeholder="Message"
+              style={{
+                backgroundColor: '#2d383e',
+                color: 'white',
+                borderRadius: 30,
+                width: enableSendBtn ? '80%' : '95%',
+                padding: 15,
+              }}
+              value={formDatas.msg ? formDatas.msg : ''}
+              onChangeText={value => {
+                handleOnchange(value, 'msg');
+              }}
+            />
+            {enableSendBtn && (
+              <TouchableOpacity onPress={handleSubmit} style={styles.sendBtn}>
+                <Image source={require('../src/assets/send.png')} />
+              </TouchableOpacity>
+            )}
+          </View>
+        </ImageBackground>
+        <DeleteModal
+          handleModelClose={handleModelClose}
+          visible={isModelOpen}
+          handleDelete={handleDeleteMsg}
+        />
+      </Pressable>
+    </View>
   );
 }
+
 const styles = StyleSheet.create({
   backgroundImage: {
-    flex: 1, // Make sure the image takes the entire screen
+    height: '100%', // Make sure the image takes the entire screen
     resizeMode: 'cover', // Resize the image to cover the entire container
     justifyContent: 'center', // Center the content inside the container
   },
@@ -183,11 +315,13 @@ const styles = StyleSheet.create({
     padding: 10,
     gap: 2,
   },
-  inputField: {
-    backgroundColor: '#2d383e',
-    color: 'white',
-    borderRadius: 30,
-    flex: 1,
+  inputContainer: {
+    marginBottom: 10,
+    marginTop: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 3,
   },
   messageCardContainer: {
     marginVertical: 3,
@@ -199,8 +333,9 @@ const styles = StyleSheet.create({
   },
   sendBtn: {
     backgroundColor: '#14a95f',
-    padding: 10,
+    padding: 15,
     borderRadius: 200,
-    marginLeft: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

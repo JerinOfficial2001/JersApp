@@ -26,15 +26,14 @@ export const requestContactsPermission = async () => {
 };
 export const getContactByUserId = async id => {
   try {
-    const response = await fetch(iprotecsLapIP + `/api/contact/get/${id}`, {
+    const response = await fetch(iprotecsLapIP + `/api/contact?user_id=${id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
     }).then(res => res.json());
-
-    return response;
+    return response.data;
   } catch (error) {
     console.log(error);
   }
@@ -47,7 +46,7 @@ export const addContact = async (
   props,
 ) => {
   try {
-    const response = await fetch(iprotecsLapIP + '/api/contact/add', {
+    const response = await fetch(iprotecsLapIP + '/api/contact', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -56,13 +55,38 @@ export const addContact = async (
       body: JSON.stringify({ContactDetails, user_id, name, Contact_id}),
     }).then(res => res.json());
     if (response.status == 'error') {
-      return response.data;
+      if (response.message === 'already registered') {
+        props.navigation.navigate('Message', {
+          id: response.data,
+        });
+      } else {
+        return response.data;
+      }
     } else {
-      props.navigation.navigate('Message', {
-        id: ContactDetails?.rawContactId,
-        userID: user_id,
-      });
+      if (response.status == 'ok') {
+        props.navigation.navigate('Home');
+      } else {
+        console.log(response);
+      }
     }
+  } catch (error) {
+    console.log(error);
+  }
+};
+export const deleteContactById = async (sender_id, receiver_id) => {
+  try {
+    const response = await fetch(
+      iprotecsLapIP +
+        `/api/contact?sender_id=${sender_id}&receiver_id=${receiver_id}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      },
+    ).then(res => res.json());
+    return response;
   } catch (error) {
     console.log(error);
   }

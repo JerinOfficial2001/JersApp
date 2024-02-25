@@ -19,15 +19,12 @@ export const login = async (mobNum, password, props) => {
     if (data.status === 'ok') {
       const {token} = data.data;
 
-      const userDataResponse = await fetch(
-        iprotecsLapIP + '/api/auth/getUserData',
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const userDataResponse = await fetch(iprotecsLapIP + '/api/auth/login', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
 
       const userData = await userDataResponse.json();
 
@@ -83,10 +80,10 @@ export const register = async (data, props) => {
     console.error('Error:', error.message);
   }
 };
-export const getAllUsers = async () => {
+export const getAllUsers = async userID => {
   try {
     try {
-      const response = await fetch(iprotecsLapIP + '/api/auth', {
+      const response = await fetch(iprotecsLapIP + '/api/auth/getUsers', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
