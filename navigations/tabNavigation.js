@@ -1,6 +1,6 @@
 import {NavigationContainer} from '@react-navigation/native';
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
-import {Image, TouchableOpacity, View, Text} from 'react-native';
+import {Image, TouchableOpacity, View, Text, ToastAndroid} from 'react-native';
 import React, {createContext, useState} from 'react';
 import AuthModal from '../src/components/AuthModal';
 import Chats from '../screens/Chats';
@@ -8,6 +8,7 @@ import Status from '../screens/Status';
 import TopBar from '../src/components/TopBar';
 import {Menu} from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {logoutWithToken} from '../src/controllers/auth';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -36,7 +37,18 @@ export default function TabNavigator({props}) {
   const handleCloseMenu = () => {
     setopenMenu(false);
   };
-
+  const logout = () => {
+    AsyncStorage.getItem('token').then(data => {
+      logoutWithToken(data).then(res => {
+        if (res.status == 'ok') {
+          AsyncStorage.removeItem('userData');
+          props.navigation.navigate('Login');
+          handleCloseMenu();
+          ToastAndroid.show(res.message, ToastAndroid.SHORT);
+        }
+      });
+    });
+  };
   return (
     <TopBarContext.Provider
       value={{setopenMenu, setisDelete, isModelOpen, setisModelOpen}}>
@@ -70,18 +82,13 @@ export default function TabNavigator({props}) {
             titleStyle={{color: 'black'}}
             onPress={() => {
               handleCloseMenu();
-
               props.navigation.navigate('QRScanner');
             }}
           />
           <Menu.Item
             title="Logout"
             titleStyle={{color: 'black'}}
-            onPress={() => {
-              AsyncStorage.removeItem('userData');
-              props.navigation.navigate('Login');
-              handleCloseMenu();
-            }}
+            onPress={logout}
           />
         </View>
         <Tab.Navigator

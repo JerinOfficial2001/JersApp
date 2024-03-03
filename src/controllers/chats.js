@@ -1,8 +1,8 @@
-import {iprotecsLapIP} from '../api';
+import {api} from '../api';
 
 export const sendMessage = async data => {
   try {
-    const response = await fetch(iprotecsLapIP + '/api/chat/add', {
+    const response = await fetch(api + '/api/chat/add', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -21,7 +21,7 @@ export const sendMessage = async data => {
 };
 export const getMessage = async chatID => {
   try {
-    const response = await fetch(iprotecsLapIP + '/api/message', {
+    const response = await fetch(api + '/api/message', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -41,7 +41,7 @@ export const getMessage = async chatID => {
 };
 export const createChat = async data => {
   try {
-    const response = await fetch(iprotecsLapIP + '/api/chat', {
+    const response = await fetch(api + '/api/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -63,7 +63,7 @@ export const createChat = async data => {
 export const getAllChats = async (sender, receiver) => {
   try {
     const response = await fetch(
-      `${iprotecsLapIP}/api/chat/?senderID=${sender}&receiverID=${receiver}`,
+      `${api}/api/chat/?senderID=${sender}&receiverID=${receiver}`,
       {
         method: 'GET',
         headers: {
@@ -81,7 +81,7 @@ export const getAllChats = async (sender, receiver) => {
 };
 export const deleteMessageById = async id => {
   try {
-    const response = await fetch(iprotecsLapIP + `/api/message?id=${id}`, {
+    const response = await fetch(api + `/api/message?id=${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

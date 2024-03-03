@@ -1,9 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {iprotecsLapIP} from '../api';
+import {api} from '../api';
 
 export const login = async (mobNum, password, props) => {
   try {
-    const response = await fetch(iprotecsLapIP + '/api/auth/login', {
+    const response = await fetch(api + '/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -11,7 +11,6 @@ export const login = async (mobNum, password, props) => {
       },
       body: JSON.stringify({mobNum, password}),
     });
-
     const data = await response.json();
 
     // Uncomment and modify the following based on your data structure
@@ -19,7 +18,7 @@ export const login = async (mobNum, password, props) => {
     if (data.status === 'ok') {
       const {token} = data.data;
 
-      const userDataResponse = await fetch(iprotecsLapIP + '/api/auth/login', {
+      const userDataResponse = await fetch(api + '/api/auth/login', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -27,10 +26,18 @@ export const login = async (mobNum, password, props) => {
       });
 
       const userData = await userDataResponse.json();
-
+      const tokenRes = await fetch(api + '/api/auth/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({token}),
+      }).then(res => res.json());
       if (userData.status === 'ok') {
         // Store user data in AsyncStorage
         AsyncStorage.setItem('userData', JSON.stringify(userData.data.user));
+        AsyncStorage.setItem('token', JSON.stringify(token));
 
         // Check if 'userData' key exists before navigating
         AsyncStorage.getItem('userData').then(storedUserData => {
@@ -60,7 +67,7 @@ export const login = async (mobNum, password, props) => {
 };
 export const register = async (data, props) => {
   try {
-    const response = await fetch(iprotecsLapIP + '/api/auth/register', {
+    const response = await fetch(api + '/api/auth/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -83,7 +90,7 @@ export const register = async (data, props) => {
 export const getAllUsers = async userID => {
   try {
     try {
-      const response = await fetch(iprotecsLapIP + '/api/auth/getUsers', {
+      const response = await fetch(api + '/api/auth/getUsers', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -95,6 +102,25 @@ export const getAllUsers = async userID => {
       }
     } catch (error) {
       console.error('Error:', error.message);
+    }
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
+};
+export const logoutWithToken = async token => {
+  try {
+    const response = await fetch(api + '/api/auth/logout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({token}),
+    }).then(res => res.json());
+    if (response.status == 'ok') {
+      return response;
+    } else {
+      return {status: 'ok', message: 'Logged out successfully'};
     }
   } catch (error) {
     console.error('Error:', error.message);

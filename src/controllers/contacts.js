@@ -1,6 +1,6 @@
 import {PermissionsAndroid} from 'react-native';
 import Contacts from 'react-native-contacts';
-import {iprotecsLapIP} from '../api';
+import {api} from '../api';
 
 export const requestContactsPermission = async () => {
   try {
@@ -26,7 +26,7 @@ export const requestContactsPermission = async () => {
 };
 export const getContactByUserId = async id => {
   try {
-    const response = await fetch(iprotecsLapIP + `/api/contact?user_id=${id}`, {
+    const response = await fetch(api + `/api/contact?user_id=${id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -46,7 +46,7 @@ export const addContact = async (
   props,
 ) => {
   try {
-    const response = await fetch(iprotecsLapIP + '/api/contact', {
+    const response = await fetch(api + '/api/contact', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -76,8 +76,7 @@ export const addContact = async (
 export const deleteContactById = async (sender_id, receiver_id) => {
   try {
     const response = await fetch(
-      iprotecsLapIP +
-        `/api/contact?sender_id=${sender_id}&receiver_id=${receiver_id}`,
+      api + `/api/contact?sender_id=${sender_id}&receiver_id=${receiver_id}`,
       {
         method: 'DELETE',
         headers: {
