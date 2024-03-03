@@ -51,6 +51,8 @@ function useSocket() {
 }
 
 export default function Message({route, navigation, ...props}) {
+  const {id} = route.params;
+
   const [formDatas, setformDatas] = useState({
     msg: '',
     userName: '',
@@ -64,16 +66,29 @@ export default function Message({route, navigation, ...props}) {
   const [receiverDetails, setreceiverDetails] = useState({});
   const [msgID, setmsgID] = useState('');
   const [isDelete, setisDelete] = useState(false);
-  const {id} = route.params;
+
   const socket = useSocket();
   const [isProcess, setisProcess] = useState(false);
-
+  const getTime = timeStamp => {
+    const date = new Date(timeStamp);
+    date.setHours(date.getDate() + 5);
+    date.setMinutes(date.getMinutes() + 60);
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const period = hours >= 12 ? 'AM' : 'PM';
+    const hours12 = hours % 12 || 12;
+    const formatedHour = hours12 < 10 ? '0' + hours12 : hours12;
+    const formatedMins = minutes < 10 ? '0' + minutes : minutes;
+    const time = `${formatedHour}:${formatedMins} ${period}`;
+    return time;
+  };
   const BubbleMsg = ({
     text,
     received,
     isSelected,
     handleLongPress,
     handlePress,
+    time,
   }) => {
     return (
       <TouchableWithoutFeedback
@@ -99,8 +114,18 @@ export default function Message({route, navigation, ...props}) {
               borderTopLeftRadius: received ? 0 : 15,
               borderTopEndRadius: received ? 15 : 0,
               paddingVertical: 10,
+              flexDirection: 'row',
+              gap: 8,
+              paddingHorizontal: 10,
             }}>
             <Text style={{color: 'white'}}>{text}</Text>
+            <View
+              style={{
+                justifyContent: 'flex-end',
+                height: 20,
+              }}>
+              <Text style={{color: 'slategray', fontSize: 10}}>{time}</Text>
+            </View>
           </View>
         </View>
       </TouchableWithoutFeedback>
@@ -132,7 +157,7 @@ export default function Message({route, navigation, ...props}) {
         setuserData(userDetails);
         getContactByUserId(userDetails._id).then(users => {
           if (users) {
-            const res = users.find(user => user._id === id);
+            const res = users.find(user => user.ContactDetails._id === id);
             if (res) {
               setreceiverDetails(res);
               // navigation.setOptions({
@@ -146,7 +171,9 @@ export default function Message({route, navigation, ...props}) {
             setchatID(chat._id);
             getMessage(chat._id).then(msg => {
               if (msg) {
-                setchatArray(msg);
+                setchatArray(
+                  msg.map(elem => ({...elem, time: getTime(elem.createdAt)})),
+                );
                 setisMsgLongPressed(msg.map(item => ({isSelected: false})));
               }
             });
@@ -198,7 +225,12 @@ export default function Message({route, navigation, ...props}) {
         if (chatID && data) {
           const filteredMsg = data.filter(msg => msg.chatID == chatID);
           if (filteredMsg) {
-            setchatArray(filteredMsg);
+            setchatArray(
+              filteredMsg.map(elem => ({
+                ...elem,
+                time: getTime(elem.createdAt),
+              })),
+            );
           }
         }
       });
@@ -227,11 +259,7 @@ export default function Message({route, navigation, ...props}) {
     <View style={{flex: 1}}>
       <TopBar
         arrow={true}
-        title={
-          receiverDetails
-            ? receiverDetails.ContactDetails?.displayName
-            : 'Message'
-        }
+        title={receiverDetails ? receiverDetails.name : 'Message'}
         lefOnPress={() => navigation.navigate('Home')}
         rightOnPress={() => {
           setisModelOpen(true);
@@ -250,6 +278,7 @@ export default function Message({route, navigation, ...props}) {
             renderItem={({item, index}) => (
               <BubbleMsg
                 text={item.message}
+                time={item.time}
                 received={item.sender !== userData._id}
                 isSelected={isMsgLongPressed[index]?.isSelected}
                 handlePress={handlePress}
