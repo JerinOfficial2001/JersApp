@@ -39,12 +39,20 @@ const MyComponent = ({
                 flexDirection: 'row',
               }}>
               <Text style={{color: 'black', fontWeight: 'bold'}}>
-                {contact ? contact.displayName : 'Name'}
+                {!contactPg
+                  ? contact.ContactDetails?.name
+                  : contact
+                  ? contact.name
+                  : 'Name'}
               </Text>
-              {!contactPg && <Text style={{color: 'black'}}>11/01/24</Text>}
+              {!contactPg && (
+                <Text style={{color: 'black'}}>{contact.date}</Text>
+              )}
             </View>
           )}
-          <Text style={{color: 'black'}}>Msg</Text>
+          <Text style={{color: 'black'}}>
+            {contactPg ? (contact ? contact.mobNum : 'Phone Number') : 'msg'}
+          </Text>
         </View>
       </View>
     </TouchableOpacity>
