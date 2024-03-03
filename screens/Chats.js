@@ -20,6 +20,17 @@ export default function Chats(props) {
   const [userDatas, setuserDatas] = useState({});
   const {setisDelete, isModelOpen, setisModelOpen, setopenMenu} =
     useContext(TopBarContext);
+  const getDate = timestamps => {
+    const date = new Date(timestamps);
+    const properDate =
+      date.getDate() < 10 ? '0' + date.getDate() : date.getDate();
+    const properMonth =
+      date.getMonth() < 10 ? '0' + date.getMonth() : date.getMonth();
+    const formatedDate = `${properDate}/${properMonth}/${
+      date.getFullYear() % 100
+    }`;
+    return formatedDate;
+  };
   const fetchData = async () => {
     try {
       const data = await AsyncStorage.getItem('userData');
@@ -28,7 +39,9 @@ export default function Chats(props) {
         setuserDatas(userData);
         const contacts = await getContactByUserId(userData?._id);
         if (contacts) {
-          setChats(contacts);
+          setChats(
+            contacts.map(item => ({...item, date: getDate(item.createdAt)})),
+          );
           setisMsgLongPressed(contacts.map(item => ({isSelected: false})));
         }
       }
@@ -44,7 +57,7 @@ export default function Chats(props) {
       createChat(data).then(res => {
         props.navigation.navigate('Message', {
           // id: data.elem?.ContactDetails.rawContactId,
-          id: data.elem?._id,
+          id: data.elem.ContactDetails?._id,
         });
       });
     }
@@ -57,7 +70,7 @@ export default function Chats(props) {
   const handleDeleteContact = () => {
     if (receiversId) {
       deleteContactById(userDatas._id, receiversId).then(data => {
-        if (data.status == 'ok') {
+        if (data.status == 'ok' && data.message !== 'failed') {
           fetchData();
           handlePress();
           setisModelOpen(false);
@@ -101,17 +114,17 @@ export default function Chats(props) {
                   borderRadius: 3,
                 }}>
                 <MyComponent
-                  contact={elem?.ContactDetails}
+                  contact={elem}
                   onclick={() => {
                     addChat({
                       sender: userDatas._id,
-                      receiver: elem._id,
+                      receiver: elem.ContactDetails._id,
                       elem: elem,
                     });
                     handlePress();
                   }}
                   onLongPress={() => {
-                    handleLongPress(index, elem._id);
+                    handleLongPress(index, elem.ContactDetails._id);
                   }}
                 />
               </View>
