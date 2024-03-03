@@ -25,16 +25,28 @@ export default function AllContacts(props) {
             contact => contact.phoneNumbers[0]?.number,
           );
           const apiContacts = dbContact.map(contact => contact.mobNum);
-          const commonMobNumbers = apiContacts.filter(contact =>
-            mobContacts.includes(contact),
+
+          let commonMobNumbers = apiContacts.filter(contact =>
+            mobContacts.includes(`+91${contact}`),
           );
-          const commonMobContacts = permissionsGranted.filter(contact =>
-            commonMobNumbers.includes(
-              contact.phoneNumbers[0]?.number ||
-                `+91${contact.phoneNumbers[0]?.number}`,
-            ),
-          );
-          setContacts(commonMobContacts);
+          if (commonMobNumbers.length == 0) {
+            commonMobNumbers = apiContacts.filter(contact =>
+              mobContacts.includes(contact),
+            );
+          }
+          const apiUserDatas = commonMobNumbers.map(num => {
+            const commonObj = dbContact.find(user => user.mobNum == num);
+            return commonObj;
+          });
+          // const commonMobContacts = permissionsGranted.filter(contact =>
+          //   commonMobNumbers.includes(
+          //     contact.phoneNumbers[0]?.number ||
+          //       `+91${contact.phoneNumbers[0]?.number}`,
+          //   ),
+          // );
+          // console.log(commonMobContacts);
+
+          setContacts(apiUserDatas);
           setLoading(false);
         }
       }
@@ -64,8 +76,10 @@ export default function AllContacts(props) {
     addContact(
       elem,
       userData?._id,
-      elem.displayName,
-      elem.phoneNumbers[0]?.number,
+      elem.name,
+      // elem.displayName,
+      elem.mobNum,
+      // elem.phoneNumbers[0]?.number,
       props,
     );
   };
