@@ -12,12 +12,12 @@ export const requestCameraPermission = async () => {
         buttonPositive: 'OK',
       },
     );
-    console.log(granted);
-    // if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-    //   console.log('Camera permission Granted');
-    // } else {
-    //   console.log('Camera permission denied');
-    // }
+
+    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+      return granted;
+    } else {
+      return granted;
+    }
   } catch (err) {
     console.warn(err);
   }

@@ -10,7 +10,6 @@ import {useFocusEffect} from '@react-navigation/native';
 import {createChat} from '../src/controllers/chats';
 import DeleteModal from '../src/components/DeleteModel';
 import {TopBarContext} from '../navigations/tabNavigation';
-import {requestCameraPermission} from '../src/controllers/permissions';
 
 export default function Chats(props) {
   const [chats, setChats] = useState([]);
@@ -64,8 +63,6 @@ export default function Chats(props) {
   useFocusEffect(
     React.useCallback(() => {
       fetchData();
-
-      requestCameraPermission();
     }, []),
   );
   const handleDeleteContact = () => {

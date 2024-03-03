@@ -78,7 +78,7 @@ export default function Navigator() {
           name="PlayStatus"
           component={PlayStatus}
         />
-        {/* <Stack.Screen
+        <Stack.Screen
           options={{
             headerStyle: {
               backgroundColor: '#008169',
@@ -87,7 +87,7 @@ export default function Navigator() {
           }}
           name="QRScanner"
           component={QRScanner}
-        /> */}
+        />
       </Stack.Navigator>
 
       <AuthModal visible={visible} setVisible={setVisible} />
