@@ -6,7 +6,7 @@ import AuthModal from '../src/components/AuthModal';
 import Chats from '../screens/Chats';
 import Status from '../screens/Status';
 import TopBar from '../src/components/TopBar';
-import {Menu} from 'react-native-paper';
+import {ActivityIndicator, MD2Colors, Menu} from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {logoutWithToken} from '../src/controllers/auth';
 
@@ -19,6 +19,7 @@ export default function TabNavigator({props}) {
   const [isDelete, setisDelete] = useState(false);
   const [isModelOpen, setisModelOpen] = useState(false);
   const [openMenu, setopenMenu] = useState(false);
+  const [isloading, setisloading] = useState(false);
   const renderRightHeaderComponent = () => (
     <TouchableOpacity
       style={{bottom: 10, position: 'absolute', right: 10}}
@@ -38,15 +39,23 @@ export default function TabNavigator({props}) {
     setopenMenu(false);
   };
   const logout = () => {
+    setisloading(true);
     AsyncStorage.getItem('token').then(data => {
-      logoutWithToken(data).then(res => {
-        if (res.status == 'ok') {
-          AsyncStorage.removeItem('userData');
-          props.navigation.navigate('Login');
-          handleCloseMenu();
-          ToastAndroid.show(res.message, ToastAndroid.SHORT);
-        }
-      });
+      const parsedToken = data ? JSON.parse(data) : false;
+      if (parsedToken) {
+        logoutWithToken(parsedToken).then(res => {
+          if (res.status == 'ok') {
+            AsyncStorage.removeItem('userData');
+            props.navigation.navigate('Login');
+            handleCloseMenu();
+            ToastAndroid.show(res.message, ToastAndroid.SHORT);
+          }
+          setisloading(false);
+        });
+      } else {
+        ToastAndroid.show('Logout Failed', ToastAndroid.SHORT);
+        setisloading(false);
+      }
     });
   };
   return (
@@ -78,6 +87,15 @@ export default function TabNavigator({props}) {
             shadowOpacity: 10,
           }}>
           <Menu.Item
+            leadingIcon={() => (
+              <Image
+                style={{
+                  height: 30,
+                  width: 30,
+                }}
+                source={require('../src/assets/qrscan.png')}
+              />
+            )}
             title="Whatsapp web"
             titleStyle={{color: 'black'}}
             onPress={() => {
@@ -86,6 +104,24 @@ export default function TabNavigator({props}) {
             }}
           />
           <Menu.Item
+            leadingIcon={() => (
+              <View>
+                {isloading ? (
+                  <ActivityIndicator
+                    animating={true}
+                    color={MD2Colors.greenA100}
+                  />
+                ) : (
+                  <Image
+                    style={{
+                      height: 30,
+                      width: 30,
+                    }}
+                    source={require('../src/assets/logout.png')}
+                  />
+                )}
+              </View>
+            )}
             title="Logout"
             titleStyle={{color: 'black'}}
             onPress={logout}

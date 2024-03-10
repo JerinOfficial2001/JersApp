@@ -1,8 +1,8 @@
-import {api} from '../api';
+import {nextApi, expressApi} from '../api';
 
 export const sendMessage = async data => {
   try {
-    const response = await fetch(api + '/api/chat/add', {
+    const response = await fetch(expressApi + '/api/chat/add', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -21,13 +21,14 @@ export const sendMessage = async data => {
 };
 export const getMessage = async chatID => {
   try {
-    const response = await fetch(api + '/api/message', {
+    const response = await fetch(expressApi + '/api/message', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
     }).then(res => res.json());
+
     if (response.status == 'ok') {
       const filteredMsg = response.data.filter(msg => msg.chatID == chatID);
 
@@ -41,7 +42,7 @@ export const getMessage = async chatID => {
 };
 export const createChat = async data => {
   try {
-    const response = await fetch(api + '/api/chat', {
+    const response = await fetch(nextApi + '/api/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -63,7 +64,7 @@ export const createChat = async data => {
 export const getAllChats = async (sender, receiver) => {
   try {
     const response = await fetch(
-      `${api}/api/chat/?senderID=${sender}&receiverID=${receiver}`,
+      `${nextApi}/api/chat/?senderID=${sender}&receiverID=${receiver}`,
       {
         method: 'GET',
         headers: {
@@ -72,6 +73,7 @@ export const getAllChats = async (sender, receiver) => {
         },
       },
     ).then(res => res.json());
+
     if (response.status == 'ok') {
       return response.data;
     }
@@ -81,7 +83,7 @@ export const getAllChats = async (sender, receiver) => {
 };
 export const deleteMessageById = async id => {
   try {
-    const response = await fetch(api + `/api/message?id=${id}`, {
+    const response = await fetch(expressApi + `/api/message?id=${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

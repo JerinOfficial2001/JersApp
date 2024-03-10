@@ -66,13 +66,15 @@ export default function Message({route, navigation, ...props}) {
   const [receiverDetails, setreceiverDetails] = useState({});
   const [msgID, setmsgID] = useState('');
   const [isDelete, setisDelete] = useState(false);
+  const [activeUsers, setactiveUsers] = useState([]);
+  const [MsgLength, setMsgLength] = useState([]);
 
   const socket = useSocket();
   const [isProcess, setisProcess] = useState(false);
   const getTime = timeStamp => {
     const date = new Date(timeStamp);
-    date.setHours(date.getDate() + 5);
-    date.setMinutes(date.getMinutes() + 60);
+    date.setHours(date.getDate());
+    date.setMinutes(date.getMinutes());
     const hours = date.getHours();
     const minutes = date.getMinutes();
     const period = hours >= 12 ? 'AM' : 'PM';
@@ -131,7 +133,7 @@ export default function Message({route, navigation, ...props}) {
       </TouchableWithoutFeedback>
     );
   };
-
+  console.log(activeUsers);
   useEffect(() => {
     if (socket) {
       socket.on('connection', () => {
@@ -139,6 +141,13 @@ export default function Message({route, navigation, ...props}) {
       });
       socket.on('disconnect', () => {
         console.log('disconnect');
+      });
+
+      socket.emit('set_user_id', userData._id);
+
+      socket.emit('user_connected', {id: userData._id, status: 'online'});
+      socket.on('user_connected', data => {
+        setactiveUsers(data);
       });
     }
   }, [socket]);
@@ -255,6 +264,7 @@ export default function Message({route, navigation, ...props}) {
     setisModelOpen(false);
     handlePress();
   };
+
   return (
     <View style={{flex: 1}}>
       <TopBar

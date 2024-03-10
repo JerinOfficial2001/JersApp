@@ -1,6 +1,6 @@
 import {PermissionsAndroid} from 'react-native';
 import Contacts from 'react-native-contacts';
-import {api} from '../api';
+import {expressApi} from '../api';
 
 export const requestContactsPermission = async () => {
   try {
@@ -26,7 +26,7 @@ export const requestContactsPermission = async () => {
 };
 export const getContactByUserId = async id => {
   try {
-    const response = await fetch(api + `/api/contact?user_id=${id}`, {
+    const response = await fetch(expressApi + `/api/contact?user_id=${id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -46,7 +46,7 @@ export const addContact = async (
   props,
 ) => {
   try {
-    const response = await fetch(api + '/api/contact', {
+    const response = await fetch(expressApi + '/api/contact', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -73,10 +73,11 @@ export const addContact = async (
     console.log(error);
   }
 };
-export const deleteContactById = async (sender_id, receiver_id) => {
+export const deleteContactById = async (sender_id, receiver_id, contact_id) => {
   try {
     const response = await fetch(
-      api + `/api/contact?sender_id=${sender_id}&receiver_id=${receiver_id}`,
+      expressApi +
+        `/api/contact?sender_id=${sender_id}&receiver_id=${receiver_id}&Contact_id=${contact_id}`,
       {
         method: 'DELETE',
         headers: {
@@ -85,6 +86,7 @@ export const deleteContactById = async (sender_id, receiver_id) => {
         },
       },
     ).then(res => res.json());
+
     return response;
   } catch (error) {
     console.log(error);

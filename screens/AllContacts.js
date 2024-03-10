@@ -7,6 +7,7 @@ import {
 } from '../src/controllers/contacts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getAllUsers} from '../src/controllers/auth';
+import {ActivityIndicator, MD2Colors} from 'react-native-paper';
 
 export default function AllContacts(props) {
   const [contacts, setContacts] = useState([]);
@@ -93,7 +94,11 @@ export default function AllContacts(props) {
           height: 700,
           justifyContent: 'center',
         }}>
-        <Text style={{color: 'black'}}>Loading...</Text>
+        <ActivityIndicator
+          animating={true}
+          color={MD2Colors.green400}
+          size="large"
+        />
       </View>
     );
   }

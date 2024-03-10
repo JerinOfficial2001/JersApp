@@ -10,12 +10,16 @@ import {useFocusEffect} from '@react-navigation/native';
 import {createChat} from '../src/controllers/chats';
 import DeleteModal from '../src/components/DeleteModel';
 import {TopBarContext} from '../navigations/tabNavigation';
+import {ActivityIndicator, MD2Colors} from 'react-native-paper';
 
 export default function Chats(props) {
   const [chats, setChats] = useState([]);
   const [isMsgLongPressed, setisMsgLongPressed] = useState([]);
   const [receiversId, setreceiversId] = useState('');
   const [userDatas, setuserDatas] = useState({});
+  const [Contact_id, setContact_id] = useState('');
+  const [isLoading, setisLoading] = useState(false);
+
   const {setisDelete, isModelOpen, setisModelOpen, setopenMenu} =
     useContext(TopBarContext);
   const getDate = timestamps => {
@@ -30,9 +34,11 @@ export default function Chats(props) {
     return formatedDate;
   };
   const fetchData = async () => {
+    setisLoading(true);
     try {
       const data = await AsyncStorage.getItem('userData');
       if (data) {
+        setisLoading(false);
         const userData = JSON.parse(data);
         setuserDatas(userData);
         const contacts = await getContactByUserId(userData?._id);
@@ -45,6 +51,7 @@ export default function Chats(props) {
       }
     } catch (error) {
       console.error('Error fetching data:', error);
+      setisLoading(false);
     }
   };
   useEffect(() => {
@@ -54,7 +61,6 @@ export default function Chats(props) {
     if (data.sender && data.receiver) {
       createChat(data).then(res => {
         props.navigation.navigate('Message', {
-          // id: data.elem?.ContactDetails.rawContactId,
           id: data.elem.ContactDetails?._id,
         });
       });
@@ -66,8 +72,8 @@ export default function Chats(props) {
     }, []),
   );
   const handleDeleteContact = () => {
-    if (receiversId) {
-      deleteContactById(userDatas._id, receiversId).then(data => {
+    if (receiversId && Contact_id) {
+      deleteContactById(userDatas._id, receiversId, Contact_id).then(data => {
         if (data.status == 'ok' && data.message !== 'failed') {
           fetchData();
           handlePress();
@@ -81,7 +87,8 @@ export default function Chats(props) {
     }
   };
 
-  const handleLongPress = (index, id) => {
+  const handleLongPress = (index, id, Contact_id) => {
+    setContact_id(Contact_id);
     const updatedStates = [...isMsgLongPressed];
     updatedStates[index].isSelected = true;
     setisMsgLongPressed(updatedStates);
@@ -101,7 +108,21 @@ export default function Chats(props) {
   return (
     <Pressable style={{flex: 1}} onPress={handlePress}>
       <ScrollView style={{padding: 10}}>
-        {chats?.length > 0 ? (
+        {isLoading ? (
+          <View
+            style={{
+              width: '100%',
+              alignItems: 'center',
+              height: 650,
+              justifyContent: 'center',
+            }}>
+            <ActivityIndicator
+              animating={true}
+              color={MD2Colors.green400}
+              size="large"
+            />
+          </View>
+        ) : chats?.length > 0 ? (
           chats?.map((elem, index) => {
             const isSelected = isMsgLongPressed[index]?.isSelected;
             return (
@@ -122,7 +143,11 @@ export default function Chats(props) {
                     handlePress();
                   }}
                   onLongPress={() => {
-                    handleLongPress(index, elem.ContactDetails._id);
+                    handleLongPress(
+                      index,
+                      elem.ContactDetails._id,
+                      elem.Contact_id,
+                    );
                   }}
                 />
               </View>

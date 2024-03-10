@@ -1,8 +1,8 @@
-import {api} from '../api';
+import {expressApi} from '../api';
 
 export const webAuthentication = async data => {
   try {
-    const response = await fetch(api + '/api/auth/getTokenByID', {
+    const response = await fetch(expressApi + '/api/auth/getTokenByID', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -10,11 +10,10 @@ export const webAuthentication = async data => {
       },
       body: JSON.stringify(data),
     }).then(res => res.json());
-    console.log(response);
     if (response.status == 'ok') {
       return response;
     }
   } catch (error) {
-    console.error('Error:', error.message);
+    console.error('Error at web Auth:', error.message);
   }
 };

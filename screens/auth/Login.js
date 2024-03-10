@@ -1,14 +1,22 @@
 import React, {useEffect, useState} from 'react';
 import {Text, View, StyleSheet, Image, TouchableOpacity} from 'react-native';
-import {Button, IconButton, TextInput} from 'react-native-paper';
+import {
+  ActivityIndicator,
+  Button,
+  IconButton,
+  MD2Colors,
+  TextInput,
+} from 'react-native-paper';
 import {login} from '../../src/controllers/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useFocusEffect} from '@react-navigation/native';
 
 export default function Login(props) {
-  useEffect(() => {
-    // Check for the token and navigate accordingly
-    checkToken();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      checkToken();
+    }, []),
+  );
 
   const checkToken = async () => {
     const token = await AsyncStorage.getItem('userData');
@@ -23,6 +31,7 @@ export default function Login(props) {
   const [errMsg, seterrMsg] = useState({});
   const [mobNubErr, setmobNubErr] = useState(false);
   const [passwordErr, setpasswordErr] = useState(false);
+  const [isLoading, setisLoading] = useState(false);
   const handleSubmit = () => {
     if (
       !mobNubErr &&
@@ -30,7 +39,10 @@ export default function Login(props) {
       formData.mobNum !== '' &&
       formData.password !== ''
     ) {
+      setisLoading(true);
+      AsyncStorage.removeItem('token');
       login(formData.mobNum, formData.password, props);
+      setisLoading(false);
     }
   };
   const handleValidation = (name, value) => {
@@ -126,11 +138,16 @@ export default function Login(props) {
         {passwordErr && <Text style={styles.errorText}>{errMsg.password}</Text>}
       </View>
       <Button
+        disabled={isLoading}
         onPress={handleSubmit}
         mode="contained"
         style={styles.button}
         textColor="white">
-        Next
+        {isLoading ? (
+          <ActivityIndicator animating={true} color={MD2Colors.greenA100} />
+        ) : (
+          'Next'
+        )}
       </Button>
     </View>
   );
@@ -167,5 +184,8 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#008069',
+    alignItems: 'center',
+    justifyContent: 'center',
+    display: 'flex',
   },
 });

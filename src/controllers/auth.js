@@ -1,9 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {api} from '../api';
+import {expressApi} from '../api';
+import {ToastAndroid} from 'react-native';
 
 export const login = async (mobNum, password, props) => {
   try {
-    const response = await fetch(api + '/api/auth/login', {
+    const response = await fetch(expressApi + '/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -12,13 +13,11 @@ export const login = async (mobNum, password, props) => {
       body: JSON.stringify({mobNum, password}),
     });
     const data = await response.json();
-
     // Uncomment and modify the following based on your data structure
-
     if (data.status === 'ok') {
       const {token} = data.data;
 
-      const userDataResponse = await fetch(api + '/api/auth/login', {
+      const userDataResponse = await fetch(expressApi + '/api/auth/login', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -26,7 +25,7 @@ export const login = async (mobNum, password, props) => {
       });
 
       const userData = await userDataResponse.json();
-      const tokenRes = await fetch(api + '/api/auth/token', {
+      const tokenRes = await fetch(expressApi + '/api/auth/token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -61,13 +60,13 @@ export const login = async (mobNum, password, props) => {
       console.error('Error:', data.data);
     }
   } catch (error) {
-    console.error('Error:', error.message);
+    console.error('Error at Login:', error.message);
     // Handle the error appropriately (e.g., show an error message to the user)
   }
 };
 export const register = async (data, props) => {
   try {
-    const response = await fetch(api + '/api/auth/register', {
+    const response = await fetch(expressApi + '/api/auth/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -79,18 +78,17 @@ export const register = async (data, props) => {
         name: data.name,
       }),
     }).then(res => res.json());
-    console.log(response);
     if (response.status == 'ok') {
       login(data.mobNum, data.password, props);
     }
   } catch (error) {
-    console.error('Error:', error.message);
+    console.error('Error at Register:', error.message);
   }
 };
 export const getAllUsers = async userID => {
   try {
     try {
-      const response = await fetch(api + '/api/auth/getUsers', {
+      const response = await fetch(expressApi + '/api/auth/getUsers', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -101,15 +99,16 @@ export const getAllUsers = async userID => {
         return response.data;
       }
     } catch (error) {
-      console.error('Error:', error.message);
+      console.error('Error at getAllUsers res:', error.message);
     }
   } catch (error) {
-    console.error('Error:', error.message);
+    console.error('Error at GetAllUsers:', error.message);
   }
 };
 export const logoutWithToken = async token => {
+  console.log(token);
   try {
-    const response = await fetch(api + '/api/auth/logout', {
+    const response = await fetch(expressApi + '/api/auth/logout', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -117,12 +116,14 @@ export const logoutWithToken = async token => {
       },
       body: JSON.stringify({token}),
     }).then(res => res.json());
+    console.log('logout', response);
     if (response.status == 'ok') {
+      AsyncStorage.removeItem('token');
       return response;
     } else {
-      return {status: 'ok', message: 'Logged out successfully'};
+      ToastAndroid.show(response.message, ToastAndroid.SHORT);
     }
   } catch (error) {
-    console.error('Error:', error.message);
+    console.error('Error logout:', error.message);
   }
 };
