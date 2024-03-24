@@ -11,8 +11,11 @@ import {createChat} from '../src/controllers/chats';
 import DeleteModal from '../src/components/DeleteModel';
 import {TopBarContext} from '../navigations/tabNavigation';
 import {ActivityIndicator, MD2Colors} from 'react-native-paper';
+import useSocket from '../utils/socketUtil';
+import {MyContext} from '../App';
 
 export default function Chats(props) {
+  const {Data} = useContext(MyContext);
   const [chats, setChats] = useState([]);
   const [isMsgLongPressed, setisMsgLongPressed] = useState([]);
   const [receiversId, setreceiversId] = useState('');
@@ -20,8 +23,9 @@ export default function Chats(props) {
   const [Contact_id, setContact_id] = useState('');
   const [isLoading, setisLoading] = useState(false);
 
-  const {setisDelete, isModelOpen, setisModelOpen, setopenMenu} =
+  const {setisDelete, isModelOpen, setisModelOpen, setopenMenu, setactiveTab} =
     useContext(TopBarContext);
+  const {socket, socketUserID, socketUserConnected} = useSocket();
   const getDate = timestamps => {
     const date = new Date(timestamps);
     const properDate =
@@ -62,6 +66,8 @@ export default function Chats(props) {
       createChat(data).then(res => {
         props.navigation.navigate('Message', {
           id: data.elem.ContactDetails?._id,
+          userID: userDatas._id,
+          receiverId: data.receiver,
         });
       });
     }
@@ -69,8 +75,29 @@ export default function Chats(props) {
   useFocusEffect(
     React.useCallback(() => {
       fetchData();
+      setactiveTab('CHATS');
     }, []),
   );
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (socket) {
+        socket.on('connection', () => {
+          console.log('connected');
+        });
+        socket.on('disconnect', () => {
+          console.log('disconnect');
+        });
+
+        socketUserID(Data._id ? Data._id : userDatas._id);
+        socketUserConnected({
+          id: Data._id ? Data._id : userDatas._id,
+          status: 'online',
+        });
+      }
+    }, [socket]),
+  );
+
   const handleDeleteContact = () => {
     if (receiversId && Contact_id) {
       deleteContactById(userDatas._id, receiversId, Contact_id).then(data => {

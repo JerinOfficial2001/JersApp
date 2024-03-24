@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {Image, TouchableOpacity, View} from 'react-native';
-import {Text} from 'react-native-paper';
+import {Avatar, Text} from 'react-native-paper';
 
 const MyComponent = ({
   onclick,
@@ -22,10 +22,23 @@ const MyComponent = ({
           alignItems: 'center',
           padding: 3,
         }}>
-        <Image
-          source={require('../assets/user.png')}
-          style={{height: 50, width: 50}}
-        />
+        {status && status.file ? (
+          <Avatar.Image size={50} source={{uri: status.file?.url}} />
+        ) : contact && contact.image ? (
+          <Avatar.Image size={50} source={{uri: contact.image?.url}} />
+        ) : contact &&
+          contact.ContactDetails &&
+          contact.ContactDetails.image ? (
+          <Avatar.Image
+            size={50}
+            source={{uri: contact.ContactDetails.image?.url}}
+          />
+        ) : (
+          <Image
+            source={require('../assets/user.png')}
+            style={{height: 50, width: 50}}
+          />
+        )}
         <View
           style={{
             gap: 7,

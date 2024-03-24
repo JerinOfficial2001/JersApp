@@ -3,8 +3,8 @@ import {
   FlatList,
   Image,
   ImageBackground,
+  Keyboard,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -13,46 +13,32 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import {
-  addContact,
-  getContactByUserId,
-  requestContactsPermission,
-} from '../src/controllers/contacts';
+import {addContact, getContactByUserId} from '../src/controllers/contacts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-  createChat,
   deleteMessageById,
   getAllChats,
   getMessage,
-  sendMessage,
 } from '../src/controllers/chats';
-import {io} from 'socket.io-client';
-import {iprotecsLapIP, socketServerApi} from '../src/api';
-import {Bubble, GiftedChat, Send} from 'react-native-gifted-chat';
-import {getAllUsers} from '../src/controllers/auth';
 import {useFocusEffect} from '@react-navigation/native';
 import TopBar from '../src/components/TopBar';
 import DeleteModal from '../src/components/DeleteModel';
-
-function useSocket() {
-  const SocketAPI = socketServerApi;
-
-  const [socketIo, setSocketIo] = useState(null);
-  useEffect(() => {
-    const socket = io(SocketAPI, {
-      path: '/socket',
-    });
-    setSocketIo(socket);
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
-  return socketIo;
-}
+import useSocket from '../utils/socketUtil';
 
 export default function Message({route, navigation, ...props}) {
-  const {id} = route.params;
-
+  const {id, userID, receiverId} = route.params;
+  const {
+    socket,
+    socketUserWatching,
+    socketUserTyping,
+    socketUserTyped,
+    socketUserWatched,
+    isOnline,
+    isWatching,
+    isTyping,
+    socketUserID,
+    socketUserConnected,
+  } = useSocket();
   const [formDatas, setformDatas] = useState({
     msg: '',
     userName: '',
@@ -66,18 +52,14 @@ export default function Message({route, navigation, ...props}) {
   const [receiverDetails, setreceiverDetails] = useState({});
   const [msgID, setmsgID] = useState('');
   const [isDelete, setisDelete] = useState(false);
-  const [activeUsers, setactiveUsers] = useState([]);
-  const [MsgLength, setMsgLength] = useState([]);
 
-  const socket = useSocket();
-  const [isProcess, setisProcess] = useState(false);
   const getTime = timeStamp => {
     const date = new Date(timeStamp);
     date.setHours(date.getDate());
     date.setMinutes(date.getMinutes());
-    const hours = date.getHours();
+    const hours = date.getHours() + 4;
     const minutes = date.getMinutes();
-    const period = hours >= 12 ? 'AM' : 'PM';
+    const period = hours >= 12 ? 'PM' : 'AM';
     const hours12 = hours % 12 || 12;
     const formatedHour = hours12 < 10 ? '0' + hours12 : hours12;
     const formatedMins = minutes < 10 ? '0' + minutes : minutes;
@@ -133,24 +115,36 @@ export default function Message({route, navigation, ...props}) {
       </TouchableWithoutFeedback>
     );
   };
-  console.log(activeUsers);
-  useEffect(() => {
-    if (socket) {
-      socket.on('connection', () => {
-        console.log('connected');
-      });
-      socket.on('disconnect', () => {
-        console.log('disconnect');
-      });
+  useFocusEffect(
+    React.useCallback(() => {
+      if (socket) {
+        socketUserID(userID ? userID : userData._id);
+        socketUserConnected({
+          id: userID ? userID : userData._id,
+          status: 'online',
+        });
+        socketUserWatching({
+          id: userID ? userID : userData._id,
+          status: 'online',
+        });
+        Keyboard.addListener('keyboardDidHide', () => {
+          socketUserTyped(userID ? userID : userData._id);
+        });
+        Keyboard.addListener('keyboardDidShow', () => {
+          socketUserTyping({
+            id: userID ? userID : userData._id,
+            status: 'online',
+          });
+        });
+      }
+      return () => {
+        if (socket) {
+          socketUserWatched(userID ? userID : userData._id);
+        }
+      };
+    }, [socket]),
+  );
 
-      socket.emit('set_user_id', userData._id);
-
-      socket.emit('user_connected', {id: userData._id, status: 'online'});
-      socket.on('user_connected', data => {
-        setactiveUsers(data);
-      });
-    }
-  }, [socket]);
   useEffect(() => {
     if (formDatas.msg !== '') {
       setenableSendBtn(true);
@@ -169,6 +163,7 @@ export default function Message({route, navigation, ...props}) {
             const res = users.find(user => user.ContactDetails._id === id);
             if (res) {
               setreceiverDetails(res);
+              console.log(res.userDetails);
               // navigation.setOptions({
               //   title: res ? res.ContactDetails.displayName : 'Message',
               // });
@@ -211,6 +206,7 @@ export default function Message({route, navigation, ...props}) {
         userName: '',
       });
       handleSocket();
+      Keyboard.dismiss();
     }
   };
   const handleDeleteMsg = () => {
@@ -268,6 +264,8 @@ export default function Message({route, navigation, ...props}) {
   return (
     <View style={{flex: 1}}>
       <TopBar
+        isTyping={isTyping(receiverId)}
+        subtitle={isOnline(receiverId)}
         arrow={true}
         title={receiverDetails ? receiverDetails.name : 'Message'}
         lefOnPress={() => navigation.navigate('Home')}
@@ -280,11 +278,24 @@ export default function Message({route, navigation, ...props}) {
         <ImageBackground
           source={require('../src/assets/chatBg.png')} // specify the path to your image
           style={styles.backgroundImage}>
+          {isWatching(receiverDetails?.ContactDetails?._id) && (
+            <Image
+              source={require('../src/assets/crossAvatar.png')}
+              style={{
+                height: 60,
+                width: 50,
+                position: 'absolute',
+                bottom: 70,
+                zIndex: 1,
+              }}
+            />
+          )}
           <FlatList
-            style={{
-              flexDirection: 'column-reverse',
-            }}
+            scrollEnabled
             data={chatArray}
+            contentContainerStyle={{
+              paddingBottom: isWatching(receiverId) ? 40 : 0,
+            }}
             renderItem={({item, index}) => (
               <BubbleMsg
                 text={item.message}
@@ -348,6 +359,7 @@ const styles = StyleSheet.create({
     height: '100%', // Make sure the image takes the entire screen
     resizeMode: 'cover', // Resize the image to cover the entire container
     justifyContent: 'center', // Center the content inside the container
+    position: 'relative',
   },
   content: {
     flexDirection: 'column-reverse',

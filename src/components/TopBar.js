@@ -7,6 +7,8 @@ export default function TopBar({
   isDelete,
   lefOnPress,
   arrow,
+  subtitle,
+  isTyping,
 }) {
   return (
     <View
@@ -31,9 +33,16 @@ export default function TopBar({
             />
           </TouchableOpacity>
         )}
-        <Text style={{color: 'white', fontWeight: 'bold', letterSpacing: 1}}>
-          {title}
-        </Text>
+        <View>
+          <Text style={{color: 'white', fontWeight: 'bold', letterSpacing: 1}}>
+            {title}
+          </Text>
+          {subtitle && (
+            <Text style={{color: 'white', letterSpacing: 1, fontSize: 10}}>
+              {isTyping ? 'typing...' : 'Online'}
+            </Text>
+          )}
+        </View>
       </View>
       <TouchableOpacity onPress={rightOnPress}>
         {isDelete ? (

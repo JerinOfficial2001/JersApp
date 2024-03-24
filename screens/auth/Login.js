@@ -21,9 +21,12 @@ export default function Login(props) {
   const checkToken = async () => {
     const token = await AsyncStorage.getItem('userData');
     // If a token exists, navigate to the home screen
-    if (token) {
+    const userData = token ? JSON.parse(token) : false;
+    if (userData) {
       // Navigate to the 'Home' screen
-      props.navigation.navigate('Home');
+      props.navigation.navigate('Home', {
+        userID: userData._id,
+      });
     }
   };
   const [formData, setformData] = useState({mobNum: '', password: ''});

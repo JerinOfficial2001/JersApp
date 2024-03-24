@@ -27,14 +27,16 @@ export default function AllContacts(props) {
           );
           const apiContacts = dbContact.map(contact => contact.mobNum);
 
-          let commonMobNumbers = apiContacts.filter(contact =>
-            mobContacts.includes(`+91${contact}`),
-          );
-          if (commonMobNumbers.length == 0) {
-            commonMobNumbers = apiContacts.filter(contact =>
+          let commonMobNumbers = apiContacts.filter(
+            contact =>
+              mobContacts.includes(`+91${contact}`) ||
               mobContacts.includes(contact),
-            );
-          }
+          );
+          // if (commonMobNumbers.length == 0) {
+          //   commonMobNumbers = apiContacts.filter(contact =>
+          //     mobContacts.includes(contact),
+          //   );
+          // }
           const apiUserDatas = commonMobNumbers.map(num => {
             const commonObj = dbContact.find(user => user.mobNum == num);
             return commonObj;

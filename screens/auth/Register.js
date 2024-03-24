@@ -1,14 +1,15 @@
 import React, {useEffect, useState} from 'react';
 import {Text, View, StyleSheet} from 'react-native';
-import {Button, TextInput} from 'react-native-paper';
+import {Avatar, Button, TextInput} from 'react-native-paper';
 import {register} from '../../src/controllers/auth';
-
+import DocumentPicker from 'react-native-document-picker';
 export default function Register({route, ...props}) {
   const {mobNum, password} = route.params;
   const [formData, setformData] = useState({
     mobNum: '',
     password: '',
     name: '',
+    image: null,
   });
   useEffect(() => {
     setformData({
@@ -20,6 +21,22 @@ export default function Register({route, ...props}) {
 
   const [err, seterr] = useState(false);
   const [errMsg, seterrMsg] = useState('');
+  const handleFormData = (key, value) => {
+    setformData(prev => ({...prev, [key]: value}));
+  };
+  const handlePick = async () => {
+    if (formData.image == null) {
+      const result = await DocumentPicker.pick({
+        mode: 'open',
+        presentationStyle: 'fullScreen',
+        type: [DocumentPicker.types.images],
+      });
+      handleFormData('image', result[0]);
+    } else {
+      handleFormData('image', null);
+    }
+  };
+
   const handleSubmit = () => {
     if (
       !err &&
@@ -27,7 +44,14 @@ export default function Register({route, ...props}) {
       formData.password !== '' &&
       formData.name !== ''
     ) {
-      register(formData, props);
+      const convertToMultipart = new FormData();
+      Object.entries(formData).forEach(([key, value]) =>
+        convertToMultipart.append(key, value),
+      );
+
+      register(formData, convertToMultipart, props);
+    } else {
+      handleValidation('name', formData.name);
     }
   };
   const handleValidation = (name, value) => {
@@ -52,21 +76,39 @@ export default function Register({route, ...props}) {
   return (
     <View style={styles.container}>
       <View style={styles.contentContainer}>
-        <Text style={styles.title}>Enter your phone number</Text>
-        <TextInput
-          value={formData.name}
-          onChangeText={value => {
-            handleOnchange('name', value);
-          }}
-          style={styles.input}
-          underlineColor="gray"
-          activeUnderlineColor="#92d4c7"
-          placeholder="Name"
-          keyboardType="default"
-          textColor="black"
-          error={err}
-        />
-        {err && <Text style={styles.errorText}>{errMsg}</Text>}
+        <View style={{position: 'relative'}}>
+          <Avatar.Image
+            size={200}
+            source={
+              formData.image != null
+                ? formData.image
+                : require('../../src/assets/user.png')
+            }
+          />
+          <Button
+            onPress={handlePick}
+            mode="outlined"
+            style={{}}
+            textColor={formData.image == null ? 'black' : 'red'}>
+            {formData.image == null ? ' Choose' : 'Remove'}
+          </Button>
+        </View>
+        <View style={{width: '100%', alignItems: 'center'}}>
+          <TextInput
+            value={formData.name}
+            onChangeText={value => {
+              handleOnchange('name', value);
+            }}
+            style={styles.input}
+            underlineColor="gray"
+            activeUnderlineColor="#92d4c7"
+            placeholder="Name"
+            keyboardType="default"
+            textColor="black"
+            error={err}
+          />
+          {err && <Text style={styles.errorText}>{errMsg}</Text>}
+        </View>
       </View>
       <Button
         onPress={handleSubmit}
@@ -95,8 +137,10 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    flex: 1,
     width: '100%',
+    gap: 90,
   },
   title: {
     fontSize: 20,

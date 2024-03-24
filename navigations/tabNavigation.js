@@ -1,12 +1,18 @@
 import {NavigationContainer} from '@react-navigation/native';
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
 import {Image, TouchableOpacity, View, Text, ToastAndroid} from 'react-native';
-import React, {createContext, useState} from 'react';
+import React, {createContext, useEffect, useState} from 'react';
 import AuthModal from '../src/components/AuthModal';
 import Chats from '../screens/Chats';
 import Status from '../screens/Status';
 import TopBar from '../src/components/TopBar';
-import {ActivityIndicator, MD2Colors, Menu} from 'react-native-paper';
+import {
+  ActivityIndicator,
+  Avatar,
+  IconButton,
+  MD2Colors,
+  Menu,
+} from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {logoutWithToken} from '../src/controllers/auth';
 
@@ -14,26 +20,54 @@ const Tab = createMaterialTopTabNavigator();
 
 export const TopBarContext = createContext();
 
-export default function TabNavigator({props}) {
+export default function TabNavigator({props, navigation}) {
   const [visible, setVisible] = useState(false);
   const [isDelete, setisDelete] = useState(false);
   const [isModelOpen, setisModelOpen] = useState(false);
   const [openMenu, setopenMenu] = useState(false);
   const [isloading, setisloading] = useState(false);
+  const [userData, setuserData] = useState({});
+  const [activeTab, setactiveTab] = useState('CHATS');
+  const [addStatus, setaddStatus] = useState(false);
+  useEffect(() => {
+    AsyncStorage.getItem('userData').then(res => {
+      const data = JSON.parse(res);
+      setuserData(data);
+    });
+  }, []);
+
   const renderRightHeaderComponent = () => (
-    <TouchableOpacity
-      style={{bottom: 10, position: 'absolute', right: 10}}
+    <IconButton
+      style={{
+        bottom: 10,
+        position: 'absolute',
+        right: 10,
+        backgroundColor: '#008069',
+        padding: 10,
+      }}
+      icon={() => (
+        <Image
+          style={{
+            height: 25,
+            width: 25,
+          }}
+          source={
+            activeTab == 'CHATS'
+              ? require('../src/assets/plus.png')
+              : require('../src/assets/camera.png')
+          }
+        />
+      )}
+      size={40}
       onPress={() => {
-        props.navigation.navigate('AllContacts');
-      }}>
-      <Image
-        style={{
-          height: 60,
-          width: 60,
-        }}
-        source={require('../src/assets/plus.png')}
-      />
-    </TouchableOpacity>
+        activeTab == 'CHATS'
+          ? props.navigation.navigate('AllContacts')
+          : props.navigation.navigate('AddStatus', {
+              onlyCamera: false,
+              id: userData._id,
+            });
+      }}
+    />
   );
   const handleCloseMenu = () => {
     setopenMenu(false);
@@ -60,7 +94,15 @@ export default function TabNavigator({props}) {
   };
   return (
     <TopBarContext.Provider
-      value={{setopenMenu, setisDelete, isModelOpen, setisModelOpen}}>
+      value={{
+        setopenMenu,
+        setisDelete,
+        isModelOpen,
+        setisModelOpen,
+        setactiveTab,
+        addStatus,
+        setaddStatus,
+      }}>
       <View style={{height: '100%'}}>
         <TopBar
           title={'Whatsapp Clone'}
@@ -86,6 +128,26 @@ export default function TabNavigator({props}) {
             shadowColor: 'gray',
             shadowOpacity: 10,
           }}>
+          <Menu.Item
+            leadingIcon={() =>
+              userData && userData.image ? (
+                <Avatar.Image size={30} source={{uri: userData.image.url}} />
+              ) : (
+                <Avatar.Image
+                  size={30}
+                  source={require('../src/assets/user.png')}
+                />
+              )
+            }
+            title={userData?.name}
+            titleStyle={{color: 'black'}}
+            onPress={() => {
+              handleCloseMenu();
+              props.navigation.navigate('MyProfile', {
+                id: userData._id,
+              });
+            }}
+          />
           <Menu.Item
             leadingIcon={() => (
               <Image

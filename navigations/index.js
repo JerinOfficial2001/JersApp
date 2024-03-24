@@ -10,6 +10,9 @@ import Login from '../screens/auth/Login';
 import Register from '../screens/auth/Register';
 import Settings from '../screens/Settings';
 import QRScanner from '../screens/QRScanner';
+import AddStatus from '../screens/AddStatus';
+import MyProfile from '../screens/MyProfile';
+import PreviewStatus from '../screens/PreviewStatus';
 
 const Stack = createStackNavigator();
 
@@ -28,7 +31,11 @@ export default function Navigator() {
         />
         <Stack.Screen
           options={{
-            headerShown: false,
+            headerStyle: {
+              backgroundColor: '#008169',
+            },
+            headerTintColor: 'white',
+            title: 'Add Personal Details',
           }}
           name="Register"
           component={Register}
@@ -49,10 +56,6 @@ export default function Navigator() {
         />
         <Stack.Screen
           options={{
-            // headerStyle: {
-            //   backgroundColor: '#008169',
-            // },
-            // headerTintColor: 'white',
             headerShown: false,
           }}
           name="Message"
@@ -87,6 +90,31 @@ export default function Navigator() {
           }}
           name="QRScanner"
           component={QRScanner}
+        />
+        <Stack.Screen
+          options={{
+            headerShown: false,
+          }}
+          name="AddStatus"
+          component={AddStatus}
+        />
+        <Stack.Screen
+          options={{
+            headerShown: false,
+          }}
+          name="PreviewStatus"
+          component={PreviewStatus}
+        />
+        <Stack.Screen
+          options={{
+            headerStyle: {
+              backgroundColor: '#008169',
+            },
+            title: 'My Profile',
+            headerTintColor: 'white',
+          }}
+          name="MyProfile"
+          component={MyProfile}
         />
       </Stack.Navigator>
 

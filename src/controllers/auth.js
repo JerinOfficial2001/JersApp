@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {expressApi} from '../api';
 import {ToastAndroid} from 'react-native';
+import axios from 'axios';
 
 export const login = async (mobNum, password, props) => {
   try {
@@ -64,22 +65,22 @@ export const login = async (mobNum, password, props) => {
     // Handle the error appropriately (e.g., show an error message to the user)
   }
 };
-export const register = async (data, props) => {
+export const register = async (Data, formData, props) => {
   try {
-    const response = await fetch(expressApi + '/api/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
+    const {data} = await axios.post(
+      `${expressApi}/api/auth/register`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       },
-      body: JSON.stringify({
-        mobNum: data.mobNum,
-        password: data.password,
-        name: data.name,
-      }),
-    }).then(res => res.json());
-    if (response.status == 'ok') {
-      login(data.mobNum, data.password, props);
+    );
+    if (data.status == 'ok') {
+      ToastAndroid.show('Registered Successfully', ToastAndroid.SHORT);
+      login(Data.mobNum, Data.password, props);
+    } else {
+      ToastAndroid.show(data.message, ToastAndroid.SHORT);
     }
   } catch (error) {
     console.error('Error at Register:', error.message);
@@ -87,22 +88,36 @@ export const register = async (data, props) => {
 };
 export const getAllUsers = async userID => {
   try {
-    try {
-      const response = await fetch(expressApi + '/api/auth/getUsers', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-      }).then(res => res.json());
-      if (response.status == 'ok') {
-        return response.data;
-      }
-    } catch (error) {
-      console.error('Error at getAllUsers res:', error.message);
+    const response = await fetch(expressApi + '/api/auth/getUsers', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    }).then(res => res.json());
+    if (response.status == 'ok') {
+      return response.data;
+    } else {
+      console.log('getAllUsers:', response);
     }
   } catch (error) {
-    console.error('Error at GetAllUsers:', error.message);
+    console.error('Error at getAllUsers res:', error.message);
+  }
+};
+export const GetUsersByID = async id => {
+  try {
+    const {data} = await axios.get(`${expressApi}/api/auth/get/${id}`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (data.status == 'ok') {
+      return data.data;
+    } else {
+      ToastAndroid.show(data.message, ToastAndroid.SHORT);
+    }
+  } catch (error) {
+    console.error('GetUsersByID Err:', error.message);
   }
 };
 export const logoutWithToken = async token => {
@@ -116,7 +131,6 @@ export const logoutWithToken = async token => {
       },
       body: JSON.stringify({token}),
     }).then(res => res.json());
-    console.log('logout', response);
     if (response.status == 'ok') {
       AsyncStorage.removeItem('token');
       return response;
@@ -125,5 +139,25 @@ export const logoutWithToken = async token => {
     }
   } catch (error) {
     console.error('Error logout:', error.message);
+  }
+};
+export const UpdateProfile = async DATA => {
+  const {formData, id} = DATA;
+  console.log(formData, 'FORM');
+  try {
+    const response = await fetch(`${expressApi}/api/auth/update/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      body: formData,
+    });
+    if (response.status == 'ok') {
+      ToastAndroid.show(response.message, ToastAndroid.SHORT);
+    } else {
+      ToastAndroid.show(response.message, ToastAndroid.SHORT);
+    }
+  } catch (error) {
+    console.error('Error at UpdateProfile:', error);
   }
 };
