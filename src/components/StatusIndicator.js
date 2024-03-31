@@ -1,31 +1,42 @@
-// import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, Text, Image, StyleSheet} from 'react-native';
+import {ProgressBar} from 'react-native-paper';
 
 const StatusIndicator = ({totalStatus, currentStatus}) => {
-  // Generate array of numbers from 1 to totalStatus
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (progress < 1) {
+        setProgress(prevProgress => prevProgress + 0.1);
+      } else {
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [progress]);
+
   const statusNumbers = Array.from(
     {length: totalStatus},
     (_, index) => index + 1,
   );
 
+  const statusNumberWidth = totalStatus > 5 ? 16 : 100 / totalStatus;
+
   return (
     <View style={styles.container}>
-      <View style={styles.centralStatus}>
-        <Image
-          source={require('../assets/user.png')}
-          style={styles.statusImage}
-        />
-      </View>
       <View style={styles.statusNumbersContainer}>
         {statusNumbers.map(number => (
           <View
             key={number}
             style={[
               styles.statusNumber,
-              number === currentStatus ? styles.currentStatus : null,
-            ]}>
-            <Text style={styles.statusNumberText}>{number}</Text>
-          </View>
+              {
+                width: `${statusNumberWidth}%`,
+                backgroundColor: number === currentStatus ? '#008169' : '#ccc',
+              },
+            ]}></View>
         ))}
       </View>
     </View>
@@ -36,34 +47,19 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  centralStatus: {
-    marginHorizontal: 10,
-  },
-  statusImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    resizeMode: 'cover',
+    width: '100%',
   },
   statusNumbersContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    width: '100%',
   },
   statusNumber: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#ccc',
+    height: 5,
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 5,
-  },
-  currentStatus: {
-    backgroundColor: '#007bff',
-  },
-  statusNumberText: {
-    color: 'white',
+    marginVertical: 5,
   },
 });
 

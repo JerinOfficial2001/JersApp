@@ -1,11 +1,18 @@
 import {useFocusEffect} from '@react-navigation/native';
 import React, {useEffect, useRef, useState} from 'react';
-import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {
+  Dimensions,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {GetStatusByID} from '../src/controllers/status';
 import Video from 'react-native-video';
 import {ActivityIndicator, MD2Colors} from 'react-native-paper';
 import {ScrollView} from 'react-native-gesture-handler';
-
+import Carousel from '../src/components/Carosel';
 export default function PlayStatus({route, ...props}) {
   const [isLoading, setisLoading] = useState(true);
   const {id} = route.params;
@@ -54,7 +61,6 @@ export default function PlayStatus({route, ...props}) {
       carouselRef.current.snapToNext();
     }
   };
-
   return (
     <View style={styles.content}>
       {
@@ -73,41 +79,7 @@ export default function PlayStatus({route, ...props}) {
             />
           </View>
         ) : (
-          // <Carousel
-          //   ref={carouselRef}
-          //   onSnapToItem={onSnapToItem}
-          //   data={status?.file}
-          //   scrollEnabled={false}
-          //   renderItem={img => {
-          //     return (
-          //       <TouchableOpacity onPress={() => handleImagePress(img.index)}>
-          //         <Image
-          //           alt="img"
-          //           source={{uri: img.item.url}}
-          //           style={{
-          //             width: 400,
-          //             height: 700,
-          //             objectFit: 'contain',
-          //           }}
-          //         />
-          //       </TouchableOpacity>
-          //     );
-          //   }}
-          //   sliderWidth={400}
-          //   itemWidth={400}
-          //   layout={'default'}
-          // />
-          <ScrollView>
-            {status?.file.length !== 0 &&
-              status?.file.map((img, index) => (
-                <Image
-                  key={index}
-                  alt="img"
-                  source={{uri: img.url}}
-                  style={{height: 400, width: '100%'}}
-                />
-              ))}
-          </ScrollView>
+          <Carousel data={status?.file} navigation={props.navigation} />
         )
 
         //   : (
