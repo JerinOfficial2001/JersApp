@@ -4,6 +4,7 @@ import MyComponent from '../src/components/MyComponent';
 import {useFocusEffect} from '@react-navigation/native';
 import {TopBarContext} from '../navigations/tabNavigation';
 import {GetAllStatus} from '../src/controllers/status';
+import StatusIndicator from '../src/components/StatusIndicator';
 
 export default function Status(props) {
   const {setactiveTab, addStatus, setaddStatus} = useContext(TopBarContext);
@@ -18,6 +19,14 @@ export default function Status(props) {
   );
   return (
     <ScrollView style={{padding: 10}}>
+      <MyComponent
+        status={{title: 'My status'}}
+        onclick={() => {
+          props.navigation.navigate('PlayStatus', {
+            id: elem._id,
+          });
+        }}
+      />
       {status?.map(elem => {
         return (
           <MyComponent

@@ -23,7 +23,13 @@ const MyComponent = ({
           padding: 3,
         }}>
         {status && status.file ? (
-          <Avatar.Image size={50} source={{uri: status.file?.url}} />
+          <View
+            style={{backgroundColor: 'green', padding: 5, borderRadius: 100}}>
+            <Avatar.Image
+              size={50}
+              source={{uri: status.file[status.file.length - 1]?.url}}
+            />
+          </View>
         ) : contact && contact.image ? (
           <Avatar.Image size={50} source={{uri: contact.image?.url}} />
         ) : contact &&
@@ -64,7 +70,15 @@ const MyComponent = ({
             </View>
           )}
           <Text style={{color: 'black'}}>
-            {contactPg ? (contact ? contact.mobNum : 'Phone Number') : 'msg'}
+            {contactPg
+              ? contact
+                ? contact.mobNum
+                : 'Phone Number'
+              : status
+              ? status?.title
+                ? status?.title
+                : status?.userName
+              : 'msg'}
           </Text>
         </View>
       </View>

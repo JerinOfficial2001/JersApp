@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {Image, StyleSheet, TextInput, View} from 'react-native';
+import {Image, ScrollView, StyleSheet, TextInput, View} from 'react-native';
 import {ActivityIndicator, IconButton, MD2Colors} from 'react-native-paper';
 import Video from 'react-native-video';
 import {AddStatus} from '../src/controllers/status';
@@ -10,11 +10,11 @@ export default function PreviewStatus({route, ...props}) {
   const [inputDatas, setinputDatas] = useState({
     file:
       image !== null
-        ? {
-            uri: image?.uri,
+        ? image.map(img => ({
+            uri: img?.uri,
             type: 'image/jpeg',
             name: 'image.jpg',
-          }
+          }))
         : {
             uri: video?.uri,
             type: 'video/mp4',
@@ -30,8 +30,14 @@ export default function PreviewStatus({route, ...props}) {
     setisLoading(true);
     if (inputDatas.video !== null || inputDatas.image !== null) {
       const formData = new FormData();
-
-      Object.entries(inputDatas).forEach(([key, value]) =>
+      inputDatas.file.forEach(image => {
+        formData.append('file', image);
+      });
+      const data = {
+        text: inputDatas.text,
+        userID: id,
+      };
+      Object.entries(data).forEach(([key, value]) =>
         formData.append(key, value),
       );
       AddStatus(formData).then(data => {
@@ -43,7 +49,12 @@ export default function PreviewStatus({route, ...props}) {
     }
   };
   return (
-    <View style={{flex: 1}}>
+    <View
+      style={{
+        flex: 1,
+        flexDirection: 'column',
+        backgroundColor: '#3D3D3DD1',
+      }}>
       {isLoading ? (
         <View
           style={{
@@ -60,58 +71,85 @@ export default function PreviewStatus({route, ...props}) {
         </View>
       ) : (
         <View style={styles.content}>
-          {image && (
-            <Image
-              alt="img"
-              source={{uri: inputDatas.file.uri}}
-              style={{width: '100%', height: '80%'}}
-            />
-          )}
-          {video && (
-            <Video
-              source={{uri: video.uri}}
-              style={{width: '100%', height: '80%'}}
-              // resizeMode="cover"
-              controls
-              paused={false}
-            />
-          )}
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="Message"
-              style={{
-                backgroundColor: '#2d383e',
-                color: 'white',
-                borderRadius: 30,
-                width: '80%',
-                padding: 15,
-              }}
-              value={inputDatas.text ? inputDatas.text : ''}
-              onChangeText={value => {
-                handleFormData('text', value);
-              }}
-            />
-
-            <IconButton
-              onPress={handleSubmit}
-              style={{backgroundColor: '#008069', padding: 10}}
-              size={38}
-              icon={() => <Image source={require('../src/assets/send.png')} />}
-            />
-          </View>
+          <ScrollView>
+            {inputDatas?.file?.length !== 0 &&
+              inputDatas?.file.map((img, index) => {
+                return (
+                  <Image
+                    key={index}
+                    alt="img"
+                    source={{uri: img.uri}}
+                    style={{
+                      width: 400,
+                      height: 800,
+                      objectFit: 'contain',
+                    }}
+                  />
+                );
+              })}
+          </ScrollView>
+          {/* <Carousel
+            data={inputDatas.file}
+            renderItem={img => {
+              return (
+                <Image
+                  alt="img"
+                  source={{uri: img.item.uri}}
+                  style={{
+                    width: 400,
+                    height: 800,
+                    objectFit: 'contain',
+                  }}
+                />
+              );
+            }}
+            sliderWidth={400}
+            itemWidth={400}
+            layout={'default'}
+          /> */}
         </View>
+
+        // {video && (
+        //   <Video
+        //     source={{uri: video.uri}}
+        //     style={{width: '100%', height: '80%'}}
+        //     // resizeMode="cover"
+        //     controls
+        //     paused={false}
+        //   />
+        // )}
       )}
+      <View style={styles.inputContainer}>
+        <TextInput
+          placeholder="Message"
+          style={{
+            backgroundColor: '#2d383e',
+            color: 'white',
+            borderRadius: 30,
+            width: '80%',
+            padding: 15,
+          }}
+          value={inputDatas.text ? inputDatas.text : ''}
+          onChangeText={value => {
+            handleFormData('text', value);
+          }}
+        />
+
+        <IconButton
+          onPress={handleSubmit}
+          style={{backgroundColor: '#008069', padding: 10}}
+          size={38}
+          icon={() => <Image source={require('../src/assets/send.png')} />}
+        />
+      </View>
     </View>
   );
 }
 const styles = StyleSheet.create({
   content: {
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    padding: 10,
-    gap: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
     flex: 1,
-    backgroundColor: '#3D3D3DD1',
   },
   imgContainer: {
     width: '100%',

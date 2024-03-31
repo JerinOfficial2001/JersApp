@@ -20,22 +20,22 @@ export default function AddStatus({route, ...props}) {
   };
   const handlePick = async () => {
     if (inputDatas.image == null) {
-      const result = await DocumentPicker.pick({
-        mode: 'open',
-        presentationStyle: 'fullScreen',
+      const results = await DocumentPicker.pick({
         type: [DocumentPicker.types.images],
+        allowMultiSelection: true,
       });
-      handleFormData('image', result[0]);
+      const result = results.map(img => img);
+      handleFormData('image', result);
       if (result) {
         if (!onlyCamera) {
           props.navigation.navigate('PreviewStatus', {
-            image: result[0],
+            image: result,
             id,
             video: null,
           });
         } else {
           props.navigation.navigate('MyProfile', {
-            image: result[0],
+            image: result,
             id,
           });
         }
