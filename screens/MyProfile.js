@@ -1,19 +1,27 @@
 import React, {useEffect, useState} from 'react';
-import {Text, View, StyleSheet, Image} from 'react-native';
-import {Avatar, Button, IconButton, TextInput} from 'react-native-paper';
+import {Text, View, StyleSheet, Image, ToastAndroid} from 'react-native';
+import {
+  ActivityIndicator,
+  Avatar,
+  Button,
+  IconButton,
+  MD2Colors,
+  TextInput,
+} from 'react-native-paper';
 import DocumentPicker from 'react-native-document-picker';
 import ProfilePicModel from '../src/components/ProfilePicModel';
 import {useFocusEffect} from '@react-navigation/native';
 import {GetUsersByID, UpdateProfile} from '../src/controllers/auth';
 export default function MyProfile({route, ...props}) {
+  const [isProcessing, setisProcessing] = useState(false);
   const {id, image} = route.params;
-
   const [openImageModel, setopenImageModel] = useState(false);
   const [formData, setformData] = useState({
     mobNum: '',
     password: '',
     name: '',
     image: null,
+    public_id: '',
   });
   const [err, seterr] = useState(false);
   const [errMsg, seterrMsg] = useState('');
@@ -40,6 +48,8 @@ export default function MyProfile({route, ...props}) {
       formData.password !== '' &&
       formData.name !== ''
     ) {
+      setisProcessing(true);
+
       Object.entries(formData).forEach(([key, value]) =>
         convertToMultipart.append(key, value),
       );
@@ -47,7 +57,14 @@ export default function MyProfile({route, ...props}) {
         id,
         formData: convertToMultipart,
       };
-      UpdateProfile(DATA);
+      UpdateProfile(DATA).then(response => {
+        if (response.status == 'ok') {
+          ToastAndroid.show(response.message, ToastAndroid.SHORT);
+        } else {
+          ToastAndroid.show(response.message, ToastAndroid.SHORT);
+        }
+        setisProcessing(false);
+      });
     } else {
       handleValidation('name', formData.name);
     }
@@ -74,11 +91,6 @@ export default function MyProfile({route, ...props}) {
   const handleFormDatas = (name, value) => {
     setformData(prev => ({...prev, [name]: value}));
   };
-  // useFocusEffect(
-  //   React.useCallback(() => {
-
-  //   }, []),
-  // );
 
   useEffect(() => {
     GetUsersByID(id).then(data => {
@@ -88,6 +100,7 @@ export default function MyProfile({route, ...props}) {
           password: data.password,
           name: data.name,
           image: data.image,
+          public_id: data.image.public_id,
         });
       } else {
         setformData({
@@ -106,6 +119,7 @@ export default function MyProfile({route, ...props}) {
                   ...image,
                 }
               : null,
+          public_id: data.image.public_id,
         });
       }
     });
@@ -175,7 +189,11 @@ export default function MyProfile({route, ...props}) {
         mode="contained"
         style={styles.button}
         textColor="white">
-        Submit
+        {isProcessing ? (
+          <ActivityIndicator animating={true} color={MD2Colors.greenA100} />
+        ) : (
+          'Submit'
+        )}
       </Button>
       <ProfilePicModel
         handleDltProfilePic={() => {

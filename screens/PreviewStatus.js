@@ -3,6 +3,7 @@ import {Image, ScrollView, StyleSheet, TextInput, View} from 'react-native';
 import {ActivityIndicator, IconButton, MD2Colors} from 'react-native-paper';
 import Video from 'react-native-video';
 import {AddStatus} from '../src/controllers/status';
+import Carousel from '../src/components/Carosel';
 
 export default function PreviewStatus({route, ...props}) {
   const {image, video, id} = route.params;
@@ -44,6 +45,8 @@ export default function PreviewStatus({route, ...props}) {
         if (data.status == 'ok') {
           props.navigation.navigate('Home');
           setisLoading(false);
+        } else {
+          setisLoading(false);
         }
       });
     }
@@ -71,42 +74,11 @@ export default function PreviewStatus({route, ...props}) {
         </View>
       ) : (
         <View style={styles.content}>
-          <ScrollView>
-            {inputDatas?.file?.length !== 0 &&
-              inputDatas?.file.map((img, index) => {
-                return (
-                  <Image
-                    key={index}
-                    alt="img"
-                    source={{uri: img.uri}}
-                    style={{
-                      width: 400,
-                      height: 800,
-                      objectFit: 'contain',
-                    }}
-                  />
-                );
-              })}
-          </ScrollView>
-          {/* <Carousel
-            data={inputDatas.file}
-            renderItem={img => {
-              return (
-                <Image
-                  alt="img"
-                  source={{uri: img.item.uri}}
-                  style={{
-                    width: 400,
-                    height: 800,
-                    objectFit: 'contain',
-                  }}
-                />
-              );
-            }}
-            sliderWidth={400}
-            itemWidth={400}
-            layout={'default'}
-          /> */}
+          <Carousel
+            data={inputDatas?.file}
+            preview={true}
+            navigation={props.navigation}
+          />
         </View>
 
         // {video && (

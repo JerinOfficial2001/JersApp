@@ -14,7 +14,7 @@ import {
   Menu,
 } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {logoutWithToken} from '../src/controllers/auth';
+import {GetUsersByID, logoutWithToken} from '../src/controllers/auth';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -29,13 +29,16 @@ export default function TabNavigator({props, navigation}) {
   const [userData, setuserData] = useState({});
   const [activeTab, setactiveTab] = useState('CHATS');
   const [addStatus, setaddStatus] = useState(false);
+  const [userProfile, setuserProfile] = useState(null);
   useEffect(() => {
     AsyncStorage.getItem('userData').then(res => {
       const data = JSON.parse(res);
       setuserData(data);
+      GetUsersByID(data._id).then(res => {
+        setuserProfile(res.image.url);
+      });
     });
   }, []);
-
   const renderRightHeaderComponent = () => (
     <IconButton
       style={{
@@ -130,8 +133,8 @@ export default function TabNavigator({props, navigation}) {
           }}>
           <Menu.Item
             leadingIcon={() =>
-              userData && userData.image ? (
-                <Avatar.Image size={30} source={{uri: userData.image.url}} />
+              userProfile ? (
+                <Avatar.Image size={30} source={{uri: userProfile}} />
               ) : (
                 <Avatar.Image
                   size={30}

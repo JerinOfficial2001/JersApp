@@ -121,7 +121,6 @@ export const GetUsersByID = async id => {
   }
 };
 export const logoutWithToken = async token => {
-  console.log(token);
   try {
     const response = await fetch(expressApi + '/api/auth/logout', {
       method: 'POST',
@@ -143,7 +142,6 @@ export const logoutWithToken = async token => {
 };
 export const UpdateProfile = async DATA => {
   const {formData, id} = DATA;
-  console.log(formData, 'FORM');
   try {
     const response = await fetch(`${expressApi}/api/auth/update/${id}`, {
       method: 'PUT',
@@ -151,12 +149,9 @@ export const UpdateProfile = async DATA => {
         'Content-Type': 'multipart/form-data',
       },
       body: formData,
-    });
-    if (response.status == 'ok') {
-      ToastAndroid.show(response.message, ToastAndroid.SHORT);
-    } else {
-      ToastAndroid.show(response.message, ToastAndroid.SHORT);
-    }
+    }).then(res => res.json());
+
+    return response;
   } catch (error) {
     console.error('Error at UpdateProfile:', error);
   }

@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import StatusIndicator from './StatusIndicator';
 
-const Carousel = ({navigation, data}) => {
+const Carousel = ({navigation, data, preview}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLastImage, setIsLastImage] = useState(false);
   const carouselRef = useRef(null);
@@ -22,13 +22,15 @@ const Carousel = ({navigation, data}) => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (currentIndex === data.length - 1) {
+      if (currentIndex === data.length - 1 && !preview) {
         setIsLastImage(true);
       } else {
-        setIsLastImage(false);
-        carouselRef.current.scrollTo({
-          x: (currentIndex + 1) * Dimensions.get('window').width,
-        });
+        if (!preview) {
+          setIsLastImage(false);
+          carouselRef.current.scrollTo({
+            x: (currentIndex + 1) * Dimensions.get('window').width,
+          });
+        }
       }
     }, 5000);
 
@@ -60,10 +62,12 @@ const Carousel = ({navigation, data}) => {
         alignItems: 'center',
         justifyContent: 'space-between',
       }}>
-      <StatusIndicator
-        currentStatus={currentIndex + 1}
-        totalStatus={data.length}
-      />
+      {!preview && (
+        <StatusIndicator
+          currentStatus={currentIndex + 1}
+          totalStatus={data.length}
+        />
+      )}
       <ScrollView
         ref={carouselRef}
         horizontal
@@ -73,16 +77,16 @@ const Carousel = ({navigation, data}) => {
         scrollEventThrottle={200}>
         {data?.map((item, index) => (
           <View
+            key={index}
             style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
             <TouchableOpacity
-              key={index}
               onPress={() => handleImagePress(index)}
               style={styles.touchableOpacity}
               activeOpacity={1} // Adjust the opacity when pressed
             >
               <Image
                 key={index}
-                source={{uri: item.url}}
+                source={{uri: preview ? item.uri : item.url}}
                 style={styles.image}
               />
             </TouchableOpacity>

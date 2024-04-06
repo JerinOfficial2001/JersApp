@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {Image, TouchableOpacity, View} from 'react-native';
 import {Avatar, Text} from 'react-native-paper';
+import DonutChart from './DonutChart';
 
 const MyComponent = ({
   onclick,
@@ -23,12 +24,12 @@ const MyComponent = ({
           padding: 3,
         }}>
         {status && status.file ? (
-          <View
-            style={{backgroundColor: 'green', padding: 5, borderRadius: 100}}>
+          <View style={{position: 'relative'}}>
             <Avatar.Image
               size={50}
               source={{uri: status.file[status.file.length - 1]?.url}}
             />
+            <DonutChart width={175} height={50} data={status?.file} />
           </View>
         ) : contact && contact.image ? (
           <Avatar.Image size={50} source={{uri: contact.image?.url}} />
