@@ -1,5 +1,6 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {Image, Text, TouchableOpacity, View} from 'react-native';
+import {DarkThemeSchema} from '../../utils/theme';
 
 export default function TopBar({
   title,
@@ -10,10 +11,12 @@ export default function TopBar({
   subtitle,
   isTyping,
 }) {
+  const [theme, settheme] = useState(DarkThemeSchema);
+
   return (
     <View
       style={{
-        backgroundColor: '#008169',
+        backgroundColor: theme.appBar,
         padding: 15,
         justifyContent: 'space-between',
         flexDirection: 'row',

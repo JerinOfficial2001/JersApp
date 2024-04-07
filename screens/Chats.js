@@ -13,6 +13,7 @@ import {TopBarContext} from '../navigations/tabNavigation';
 import {ActivityIndicator, MD2Colors} from 'react-native-paper';
 import useSocket from '../utils/socketUtil';
 import {MyContext} from '../App';
+import {DarkThemeSchema} from '../utils/theme';
 
 export default function Chats(props) {
   const {Data} = useContext(MyContext);
@@ -22,6 +23,7 @@ export default function Chats(props) {
   const [userDatas, setuserDatas] = useState({});
   const [Contact_id, setContact_id] = useState('');
   const [isLoading, setisLoading] = useState(false);
+  const [theme, settheme] = useState(DarkThemeSchema);
 
   const {setisDelete, isModelOpen, setisModelOpen, setopenMenu, setactiveTab} =
     useContext(TopBarContext);
@@ -134,7 +136,7 @@ export default function Chats(props) {
   };
   return (
     <Pressable style={{flex: 1}} onPress={handlePress}>
-      <ScrollView style={{padding: 10}}>
+      <ScrollView style={{padding: 10, backgroundColor: theme.main}}>
         {isLoading ? (
           <View
             style={{

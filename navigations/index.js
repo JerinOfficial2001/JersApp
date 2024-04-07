@@ -14,11 +14,13 @@ import AddStatus from '../screens/AddStatus';
 import MyProfile from '../screens/MyProfile';
 import PreviewStatus from '../screens/PreviewStatus';
 import InitialPage from '../screens/InitialPage';
+import {DarkThemeSchema} from '../utils/theme';
 
 const Stack = createStackNavigator();
 
 export default function Navigator() {
   const [visible, setVisible] = useState(false);
+  const [theme, settheme] = useState(DarkThemeSchema);
 
   return (
     <NavigationContainer>
@@ -40,7 +42,7 @@ export default function Navigator() {
         <Stack.Screen
           options={{
             headerStyle: {
-              backgroundColor: '#008169',
+              backgroundColor: theme.appBar,
             },
             headerTintColor: 'white',
             title: 'Add Personal Details',
@@ -72,7 +74,7 @@ export default function Navigator() {
         <Stack.Screen
           options={{
             headerStyle: {
-              backgroundColor: '#008169',
+              backgroundColor: theme.appBar,
             },
             headerTintColor: 'white',
           }}
@@ -82,7 +84,7 @@ export default function Navigator() {
         <Stack.Screen
           options={{
             headerStyle: {
-              backgroundColor: '#008169',
+              backgroundColor: theme.appBar,
             },
             headerTintColor: 'white',
           }}
@@ -92,7 +94,7 @@ export default function Navigator() {
         <Stack.Screen
           options={{
             headerStyle: {
-              backgroundColor: '#008169',
+              backgroundColor: theme.appBar,
             },
             headerTintColor: 'white',
           }}
@@ -116,7 +118,7 @@ export default function Navigator() {
         <Stack.Screen
           options={{
             headerStyle: {
-              backgroundColor: '#008169',
+              backgroundColor: theme.appBar,
             },
             title: 'My Profile',
             headerTintColor: 'white',

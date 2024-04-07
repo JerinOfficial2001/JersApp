@@ -12,7 +12,9 @@ import DocumentPicker from 'react-native-document-picker';
 import ProfilePicModel from '../src/components/ProfilePicModel';
 import {useFocusEffect} from '@react-navigation/native';
 import {GetUsersByID, UpdateProfile} from '../src/controllers/auth';
+import {DarkThemeSchema} from '../utils/theme';
 export default function MyProfile({route, ...props}) {
+  const [theme, settheme] = useState(DarkThemeSchema);
   const [isProcessing, setisProcessing] = useState(false);
   const {id, image} = route.params;
   const [openImageModel, setopenImageModel] = useState(false);
@@ -127,6 +129,40 @@ export default function MyProfile({route, ...props}) {
   const handleCloseModel = () => {
     setopenImageModel(false);
   };
+  const styles = StyleSheet.create({
+    container: {
+      height: '100%',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 10,
+      marginBottom: 20,
+      backgroundColor: theme.main,
+    },
+    errorText: {
+      color: 'red',
+      fontSize: 12,
+      alignSelf: 'flex-start',
+      marginLeft: 20,
+    },
+    contentContainer: {
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      width: '100%',
+      gap: 90,
+    },
+    title: {
+      fontSize: 20,
+      color: theme.themeText,
+      fontWeight: '500',
+    },
+    input: {
+      backgroundColor: 'transparent',
+      width: '90%',
+    },
+    button: {
+      backgroundColor: theme.themeText,
+    },
+  });
   return (
     <View style={styles.container}>
       <View style={styles.contentContainer}>
@@ -178,7 +214,7 @@ export default function MyProfile({route, ...props}) {
             activeUnderlineColor="#92d4c7"
             placeholder="Name"
             keyboardType="default"
-            textColor="black"
+            textColor={theme.title}
             error={err}
           />
           {err && <Text style={styles.errorText}>{errMsg}</Text>}
@@ -188,7 +224,7 @@ export default function MyProfile({route, ...props}) {
         onPress={handleSubmit}
         mode="contained"
         style={styles.button}
-        textColor="white">
+        textColor={theme.main}>
         {isProcessing ? (
           <ActivityIndicator animating={true} color={MD2Colors.greenA100} />
         ) : (
@@ -214,37 +250,3 @@ export default function MyProfile({route, ...props}) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 10,
-    marginBottom: 20, // Add marginBottom to create space between inputs and button
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 12,
-    alignSelf: 'flex-start',
-    marginLeft: 20,
-  },
-  contentContainer: {
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    gap: 90,
-  },
-  title: {
-    fontSize: 20,
-    color: '#008069',
-    fontWeight: '500',
-  },
-  input: {
-    backgroundColor: 'transparent',
-    width: '90%',
-  },
-  button: {
-    backgroundColor: '#008069',
-  },
-});

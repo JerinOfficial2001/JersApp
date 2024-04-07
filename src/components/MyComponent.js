@@ -4,6 +4,7 @@ import {Avatar, Text} from 'react-native-paper';
 import DonutChart from './DonutChart';
 import {getLastMsg} from '../controllers/chats';
 import {GetUsersByID} from '../controllers/auth';
+import {DarkThemeSchema} from '../../utils/theme';
 
 const MyComponent = ({
   onclick,
@@ -13,6 +14,8 @@ const MyComponent = ({
   contactPg,
   onLongPress,
 }) => {
+  const [theme, settheme] = useState(DarkThemeSchema);
+
   const [lastMsgUserName, setlastMsgUserName] = useState('');
   const [lastMsg, setlastMsg] = useState(null);
   useEffect(() => {
@@ -75,7 +78,7 @@ const MyComponent = ({
                 justifyContent: 'space-between',
                 flexDirection: 'row',
               }}>
-              <Text style={{color: 'black', fontWeight: 'bold'}}>
+              <Text style={{color: theme.headerText, fontWeight: 'bold'}}>
                 {!contactPg
                   ? contact.ContactDetails?.name
                   : contact
@@ -83,11 +86,17 @@ const MyComponent = ({
                   : 'Name'}
               </Text>
               {!contactPg && (
-                <Text style={{color: 'black'}}>{contact.date}</Text>
+                <Text style={{color: theme.subText}}>{contact.date}</Text>
               )}
             </View>
           )}
-          <Text style={{color: 'black'}}>
+          <Text
+            style={{
+              color:
+                status?.title || status?.userName
+                  ? theme.headerText
+                  : theme.subText,
+            }}>
             {contactPg
               ? contact
                 ? contact.mobNum

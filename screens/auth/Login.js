@@ -10,6 +10,7 @@ import {
 import {login} from '../../src/controllers/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useFocusEffect} from '@react-navigation/native';
+import {DarkThemeSchema} from '../../utils/theme';
 
 export default function Login(props) {
   useFocusEffect(
@@ -29,6 +30,7 @@ export default function Login(props) {
       });
     }
   };
+  const [theme, settheme] = useState(DarkThemeSchema);
   const [formData, setformData] = useState({mobNum: '', password: ''});
   const [isHide, setisHide] = useState(false);
   const [errMsg, seterrMsg] = useState({});
@@ -81,6 +83,44 @@ export default function Login(props) {
       }
     }
   };
+
+  const styles = StyleSheet.create({
+    container: {
+      height: '100%',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 10,
+      marginBottom: 20,
+      backgroundColor: theme.main,
+    },
+    errorText: {
+      color: 'red',
+      fontSize: 12,
+      alignSelf: 'flex-start',
+      marginLeft: 20,
+    },
+    contentContainer: {
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      width: '100%',
+    },
+    title: {
+      fontSize: 20,
+      color: theme.themeText,
+      fontWeight: '500',
+    },
+    input: {
+      backgroundColor: 'transparent',
+      width: '90%',
+      marginBottom: 10,
+    },
+    button: {
+      backgroundColor: theme.themeText,
+      alignItems: 'center',
+      justifyContent: 'center',
+      display: 'flex',
+    },
+  });
   const handleOnchange = (name, value) => {
     handleValidation(name, value);
     setformData({...formData, [name]: value});
@@ -99,7 +139,7 @@ export default function Login(props) {
           activeUnderlineColor="#92d4c7"
           placeholder="Phone number"
           keyboardType="numeric"
-          textColor="black"
+          textColor={theme.title}
           error={mobNubErr}
         />
         {mobNubErr && <Text style={styles.errorText}>{errMsg.mobNum}</Text>}
@@ -114,7 +154,7 @@ export default function Login(props) {
           underlineColor="gray"
           activeUnderlineColor="#92d4c7"
           placeholder="Password"
-          textColor="black"
+          textColor={theme.title}
           right={
             <TextInput.Icon
               icon={() => (
@@ -145,7 +185,7 @@ export default function Login(props) {
         onPress={handleSubmit}
         mode="contained"
         style={styles.button}
-        textColor="white">
+        textColor={theme.main}>
         {isLoading ? (
           <ActivityIndicator animating={true} color={MD2Colors.greenA100} />
         ) : (
@@ -155,40 +195,3 @@ export default function Login(props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 10,
-    marginBottom: 20, // Add marginBottom to create space between inputs and button
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 12,
-    alignSelf: 'flex-start',
-    marginLeft: 20,
-  },
-  contentContainer: {
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  title: {
-    fontSize: 20,
-    color: '#008069',
-    fontWeight: '500',
-  },
-  input: {
-    backgroundColor: 'transparent',
-    width: '90%',
-    marginBottom: 10,
-  },
-  button: {
-    backgroundColor: '#008069',
-    alignItems: 'center',
-    justifyContent: 'center',
-    display: 'flex',
-  },
-});

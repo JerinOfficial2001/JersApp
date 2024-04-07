@@ -7,8 +7,11 @@ import {GetAllStatus} from '../src/controllers/status';
 import StatusIndicator from '../src/components/StatusIndicator';
 import DonutChart from '../src/components/DonutChart';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {DarkThemeSchema} from '../utils/theme';
 
 export default function Status(props) {
+  const [theme, settheme] = useState(DarkThemeSchema);
+
   const {setactiveTab, addStatus, setaddStatus, setopenMenu} =
     useContext(TopBarContext);
   const [status, setstatus] = useState([]);
@@ -31,7 +34,7 @@ export default function Status(props) {
   const otherUserStatus = status?.filter(data => data.userID !== userData._id);
   return (
     <Pressable style={{flex: 1}} onPress={handlePress}>
-      <ScrollView style={{padding: 10}}>
+      <ScrollView style={{padding: 10, backgroundColor: theme.main}}>
         <MyComponent
           status={{
             title: 'My status',

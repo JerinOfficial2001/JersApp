@@ -8,11 +8,13 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getAllUsers} from '../src/controllers/auth';
 import {ActivityIndicator, MD2Colors} from 'react-native-paper';
+import {DarkThemeSchema} from '../utils/theme';
 
 export default function AllContacts(props) {
   const [contacts, setContacts] = useState([]);
   const [userData, setUserData] = useState({});
   const [loading, setLoading] = useState(true);
+  const [theme, settheme] = useState(DarkThemeSchema);
 
   const getContacts = async () => {
     try {
@@ -95,6 +97,7 @@ export default function AllContacts(props) {
           alignItems: 'center',
           height: 700,
           justifyContent: 'center',
+          backgroundColor: theme.main,
         }}>
         <ActivityIndicator
           animating={true}
@@ -106,7 +109,7 @@ export default function AllContacts(props) {
   }
 
   return (
-    <ScrollView>
+    <ScrollView style={{backgroundColor: theme.main}}>
       {contacts.length > 0 ? (
         contacts.map((elem, index) => (
           <MyComponent

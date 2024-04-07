@@ -6,8 +6,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useFocusEffect} from '@react-navigation/native';
 import {Button} from 'react-native-paper';
 import {webAuthentication} from '../src/controllers/token';
+import {DarkThemeSchema} from '../utils/theme';
 export default function QRScanner() {
   const [QRdata, setQRdata] = useState([]);
+  const [theme, settheme] = useState(DarkThemeSchema);
+
   const [isQRenabled, setisQRenabled] = useState(false);
   // useFocusEffect(
   //   React.useCallback(() => {
@@ -36,12 +39,23 @@ export default function QRScanner() {
   useEffect(() => {
     requestCameraPermission();
   }, []);
-
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.main,
+    },
+    camera: {
+      flex: 1,
+      width: '100%',
+    },
+  });
   return (
     <View style={styles.container}>
       {!isQRenabled ? (
         <View>
-          <Text style={{color: 'black'}}>{QRdata}</Text>
+          <Text style={{color: theme.title}}>{QRdata}</Text>
           <Button
             onPress={() => {
               setisQRenabled(true);
@@ -70,14 +84,3 @@ export default function QRScanner() {
     </View>
   );
 }
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  camera: {
-    flex: 1,
-    width: '100%',
-  },
-});

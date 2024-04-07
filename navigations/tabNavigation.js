@@ -15,6 +15,7 @@ import {
 } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {GetUsersByID, logoutWithToken} from '../src/controllers/auth';
+import {DarkThemeSchema} from '../utils/theme';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -30,6 +31,7 @@ export default function TabNavigator({props, navigation}) {
   const [activeTab, setactiveTab] = useState('CHATS');
   const [addStatus, setaddStatus] = useState(false);
   const [userProfile, setuserProfile] = useState(null);
+  const [jersApptheme, setjersApptheme] = useState(DarkThemeSchema);
   useEffect(() => {
     AsyncStorage.getItem('userData').then(res => {
       const data = JSON.parse(res);
@@ -108,7 +110,7 @@ export default function TabNavigator({props, navigation}) {
       }}>
       <View style={{height: '100%'}}>
         <TopBar
-          title={'Jersapp Black'}
+          title={'JersApp Black'}
           rightOnPress={() => {
             if (isDelete) {
               setisModelOpen(true);
@@ -126,9 +128,9 @@ export default function TabNavigator({props, navigation}) {
             right: 5,
             top: 40,
             zIndex: 2,
-            backgroundColor: 'white',
+            backgroundColor: jersApptheme.model,
             borderRadius: 10,
-            shadowColor: 'gray',
+            shadowColor: jersApptheme.shadows,
             shadowOpacity: 10,
           }}>
           <Menu.Item
@@ -143,7 +145,7 @@ export default function TabNavigator({props, navigation}) {
               )
             }
             title={userData?.name}
-            titleStyle={{color: 'black'}}
+            titleStyle={{color: jersApptheme.headerText}}
             onPress={() => {
               handleCloseMenu();
               props.navigation.navigate('MyProfile', {
@@ -162,7 +164,7 @@ export default function TabNavigator({props, navigation}) {
               />
             )}
             title="Whatsapp web"
-            titleStyle={{color: 'black'}}
+            titleStyle={{color: jersApptheme.headerText}}
             onPress={() => {
               handleCloseMenu();
               props.navigation.navigate('QRScanner');
@@ -188,7 +190,7 @@ export default function TabNavigator({props, navigation}) {
               </View>
             )}
             title="Logout"
-            titleStyle={{color: 'black'}}
+            titleStyle={{color: jersApptheme.headerText}}
             onPress={logout}
           />
         </View>
@@ -206,7 +208,7 @@ export default function TabNavigator({props, navigation}) {
               borderRadius: 5,
             },
             tabBarStyle: {
-              backgroundColor: '#008169',
+              backgroundColor: jersApptheme.appBar,
             },
           }}>
           <Tab.Screen props={props} name="Chats" component={Chats} />
