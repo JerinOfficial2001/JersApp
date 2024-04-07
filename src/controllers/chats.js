@@ -81,6 +81,26 @@ export const getAllChats = async (sender, receiver) => {
     console.error('Error:', error.message);
   }
 };
+export const getLastMsg = async (sender, receiver) => {
+  try {
+    const response = await fetch(
+      `${expressApi}/api/lastMsg/${sender}/${receiver}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      },
+    ).then(res => res.json());
+
+    if (response.status == 'ok') {
+      return response.data;
+    }
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
+};
 export const deleteMessageById = async id => {
   try {
     const response = await fetch(expressApi + `/api/message?id=${id}`, {

@@ -16,6 +16,7 @@ export default function useSocket() {
       });
       setSocketIo(socketIO);
       socketIO.on('user_connected', data => {
+        console.log(data);
         setactiveUsers(data);
       });
       socketIO.on('user_watching', data => {

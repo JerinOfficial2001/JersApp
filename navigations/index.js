@@ -13,6 +13,7 @@ import QRScanner from '../screens/QRScanner';
 import AddStatus from '../screens/AddStatus';
 import MyProfile from '../screens/MyProfile';
 import PreviewStatus from '../screens/PreviewStatus';
+import InitialPage from '../screens/InitialPage';
 
 const Stack = createStackNavigator();
 
@@ -22,6 +23,13 @@ export default function Navigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
+        <Stack.Screen
+          options={{
+            headerShown: false,
+          }}
+          name="InitialPage"
+          component={InitialPage}
+        />
         <Stack.Screen
           options={{
             headerShown: false,

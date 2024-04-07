@@ -111,6 +111,7 @@ export const GetUsersByID = async id => {
         'Content-Type': 'application/json',
       },
     });
+
     if (data.status == 'ok') {
       return data.data;
     } else {

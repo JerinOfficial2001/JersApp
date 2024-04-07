@@ -1,7 +1,9 @@
-import * as React from 'react';
+import React, {useEffect, useState} from 'react';
 import {Image, TouchableOpacity, View} from 'react-native';
 import {Avatar, Text} from 'react-native-paper';
 import DonutChart from './DonutChart';
+import {getLastMsg} from '../controllers/chats';
+import {GetUsersByID} from '../controllers/auth';
 
 const MyComponent = ({
   onclick,
@@ -11,6 +13,21 @@ const MyComponent = ({
   contactPg,
   onLongPress,
 }) => {
+  const [lastMsgUserName, setlastMsgUserName] = useState('');
+  const [lastMsg, setlastMsg] = useState(null);
+  useEffect(() => {
+    if (contact?.user_id && contact?.ContactDetails._id) {
+      getLastMsg(contact?.user_id, contact?.ContactDetails._id).then(data => {
+        setlastMsg(data);
+        getUser(data.sender);
+      });
+    }
+  }, [contact]);
+  const getUser = async id => {
+    const response = await GetUsersByID(id).then(data => data.name);
+    setlastMsgUserName(response);
+  };
+
   return (
     <TouchableOpacity onLongPress={onLongPress} onPress={onclick}>
       <View
@@ -79,7 +96,11 @@ const MyComponent = ({
               ? status?.title
                 ? status?.title
                 : status?.userName
-              : 'msg'}
+              : lastMsg?.message
+              ? lastMsg?.sender == contact?.user_id
+                ? lastMsg?.message
+                : `${lastMsgUserName}:` + lastMsg.message
+              : ''}
           </Text>
         </View>
       </View>

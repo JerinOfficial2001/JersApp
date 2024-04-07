@@ -108,7 +108,7 @@ export default function TabNavigator({props, navigation}) {
       }}>
       <View style={{height: '100%'}}>
         <TopBar
-          title={'Whatsapp Clone'}
+          title={'Jersapp Black'}
           rightOnPress={() => {
             if (isDelete) {
               setisModelOpen(true);
