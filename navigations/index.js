@@ -1,6 +1,6 @@
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import AuthModal from '../src/components/AuthModal';
 import Home from '../screens/Home';
 import Message from '../screens/Message';
@@ -14,13 +14,16 @@ import AddStatus from '../screens/AddStatus';
 import MyProfile from '../screens/MyProfile';
 import PreviewStatus from '../screens/PreviewStatus';
 import InitialPage from '../screens/InitialPage';
-import {DarkThemeSchema} from '../utils/theme';
+import {DarkThemeSchema, JersAppThemeSchema} from '../utils/theme';
+import Themes from '../screens/Themes';
+import {MyContext} from '../App';
 
 const Stack = createStackNavigator();
 
 export default function Navigator() {
   const [visible, setVisible] = useState(false);
-  const [theme, settheme] = useState(DarkThemeSchema);
+  // const [theme, settheme] = useState(JersAppThemeSchema);
+  const {jersAppTheme, setpageName} = useContext(MyContext);
 
   return (
     <NavigationContainer>
@@ -42,7 +45,7 @@ export default function Navigator() {
         <Stack.Screen
           options={{
             headerStyle: {
-              backgroundColor: theme.appBar,
+              backgroundColor: jersAppTheme.appBar,
             },
             headerTintColor: 'white',
             title: 'Add Personal Details',
@@ -74,7 +77,7 @@ export default function Navigator() {
         <Stack.Screen
           options={{
             headerStyle: {
-              backgroundColor: theme.appBar,
+              backgroundColor: jersAppTheme.appBar,
             },
             headerTintColor: 'white',
           }}
@@ -84,7 +87,7 @@ export default function Navigator() {
         <Stack.Screen
           options={{
             headerStyle: {
-              backgroundColor: theme.appBar,
+              backgroundColor: jersAppTheme.appBar,
             },
             headerTintColor: 'white',
           }}
@@ -94,7 +97,7 @@ export default function Navigator() {
         <Stack.Screen
           options={{
             headerStyle: {
-              backgroundColor: theme.appBar,
+              backgroundColor: jersAppTheme.appBar,
             },
             headerTintColor: 'white',
           }}
@@ -118,13 +121,24 @@ export default function Navigator() {
         <Stack.Screen
           options={{
             headerStyle: {
-              backgroundColor: theme.appBar,
+              backgroundColor: jersAppTheme.appBar,
             },
             title: 'My Profile',
             headerTintColor: 'white',
           }}
           name="MyProfile"
           component={MyProfile}
+        />
+        <Stack.Screen
+          options={{
+            headerStyle: {
+              backgroundColor: jersAppTheme.appBar,
+            },
+            title: 'Theme',
+            headerTintColor: 'white',
+          }}
+          name="Themes"
+          component={Themes}
         />
       </Stack.Navigator>
 

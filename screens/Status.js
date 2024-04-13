@@ -7,13 +7,15 @@ import {GetAllStatus} from '../src/controllers/status';
 import StatusIndicator from '../src/components/StatusIndicator';
 import DonutChart from '../src/components/DonutChart';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {DarkThemeSchema} from '../utils/theme';
+import {DarkThemeSchema, JersAppThemeSchema} from '../utils/theme';
+import {MyContext} from '../App';
 
 export default function Status(props) {
-  const [theme, settheme] = useState(DarkThemeSchema);
+  // const [theme, settheme] = useState(JersAppThemeSchema);
 
   const {setactiveTab, addStatus, setaddStatus, setopenMenu} =
     useContext(TopBarContext);
+  const {jersAppTheme} = useContext(MyContext);
   const [status, setstatus] = useState([]);
   const [userData, setuserData] = useState(null);
   useFocusEffect(
@@ -34,7 +36,7 @@ export default function Status(props) {
   const otherUserStatus = status?.filter(data => data.userID !== userData._id);
   return (
     <Pressable style={{flex: 1}} onPress={handlePress}>
-      <ScrollView style={{padding: 10, backgroundColor: theme.main}}>
+      <ScrollView style={{padding: 10, backgroundColor: jersAppTheme.main}}>
         <MyComponent
           status={{
             title: 'My status',

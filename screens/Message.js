@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {
   FlatList,
   Image,
@@ -24,6 +24,9 @@ import {useFocusEffect} from '@react-navigation/native';
 import TopBar from '../src/components/TopBar';
 import DeleteModal from '../src/components/DeleteModel';
 import useSocket from '../utils/socketUtil';
+import Send from '../src/assets/svg/send';
+import {JersAppThemeSchema} from '../utils/theme';
+import {MyContext} from '../App';
 
 export default function Message({route, navigation, ...props}) {
   const {id, userID, receiverId} = route.params;
@@ -52,6 +55,8 @@ export default function Message({route, navigation, ...props}) {
   const [receiverDetails, setreceiverDetails] = useState({});
   const [msgID, setmsgID] = useState('');
   const [isDelete, setisDelete] = useState(false);
+  // const [jersAppTheme, setjersAppTheme] = useState(JersAppThemeSchema);
+  const {jersAppTheme, setpageName} = useContext(MyContext);
 
   const getTime = timeStamp => {
     const date = new Date(timeStamp);
@@ -190,6 +195,7 @@ export default function Message({route, navigation, ...props}) {
     React.useCallback(() => {
       handleSocket();
       fetchData();
+      setpageName('Message');
     }, []),
   );
   const handleSubmit = e => {
@@ -260,7 +266,42 @@ export default function Message({route, navigation, ...props}) {
     setisModelOpen(false);
     handlePress();
   };
-
+  const styles = StyleSheet.create({
+    backgroundImage: {
+      height: '100%', // Make sure the image takes the entire screen
+      resizeMode: 'cover', // Resize the image to cover the entire container
+      justifyContent: 'center', // Center the content inside the container
+      position: 'relative',
+    },
+    content: {
+      flexDirection: 'column-reverse',
+      padding: 10,
+      gap: 2,
+    },
+    inputContainer: {
+      marginBottom: 10,
+      marginTop: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: 3,
+    },
+    messageCardContainer: {
+      marginVertical: 3,
+      width: 'auto',
+    },
+    messageCardtext: {
+      backgroundColor: '#064e49',
+      width: 'auto',
+    },
+    sendBtn: {
+      backgroundColor: jersAppTheme.appBar,
+      padding: 15,
+      borderRadius: 200,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  });
   return (
     <View style={{flex: 1}}>
       <TopBar
@@ -339,7 +380,7 @@ export default function Message({route, navigation, ...props}) {
             />
             {enableSendBtn && (
               <TouchableOpacity onPress={handleSubmit} style={styles.sendBtn}>
-                <Image source={require('../src/assets/send.png')} />
+                <Send color={jersAppTheme.title} />
               </TouchableOpacity>
             )}
           </View>
@@ -353,40 +394,3 @@ export default function Message({route, navigation, ...props}) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  backgroundImage: {
-    height: '100%', // Make sure the image takes the entire screen
-    resizeMode: 'cover', // Resize the image to cover the entire container
-    justifyContent: 'center', // Center the content inside the container
-    position: 'relative',
-  },
-  content: {
-    flexDirection: 'column-reverse',
-    padding: 10,
-    gap: 2,
-  },
-  inputContainer: {
-    marginBottom: 10,
-    marginTop: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 3,
-  },
-  messageCardContainer: {
-    marginVertical: 3,
-    width: 'auto',
-  },
-  messageCardtext: {
-    backgroundColor: '#064e49',
-    width: 'auto',
-  },
-  sendBtn: {
-    backgroundColor: '#14a95f',
-    padding: 15,
-    borderRadius: 200,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

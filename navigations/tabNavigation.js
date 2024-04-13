@@ -1,7 +1,7 @@
 import {NavigationContainer} from '@react-navigation/native';
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
 import {Image, TouchableOpacity, View, Text, ToastAndroid} from 'react-native';
-import React, {createContext, useEffect, useState} from 'react';
+import React, {createContext, useContext, useEffect, useState} from 'react';
 import AuthModal from '../src/components/AuthModal';
 import Chats from '../screens/Chats';
 import Status from '../screens/Status';
@@ -15,7 +15,10 @@ import {
 } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {GetUsersByID, logoutWithToken} from '../src/controllers/auth';
-import {DarkThemeSchema} from '../utils/theme';
+import {DarkThemeSchema, JersAppThemeSchema} from '../utils/theme';
+import Plus from '../src/assets/svg/plus';
+import Camera from '../src/assets/svg/camera';
+import {MyContext} from '../App';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -31,7 +34,8 @@ export default function TabNavigator({props, navigation}) {
   const [activeTab, setactiveTab] = useState('CHATS');
   const [addStatus, setaddStatus] = useState(false);
   const [userProfile, setuserProfile] = useState(null);
-  const [jersApptheme, setjersApptheme] = useState(DarkThemeSchema);
+  // const [jersAppTheme, setjersApptheme] = useState(JersAppThemeSchema);
+  const {jersAppTheme, setpageName} = useContext(MyContext);
   useEffect(() => {
     AsyncStorage.getItem('userData').then(res => {
       const data = JSON.parse(res);
@@ -40,6 +44,7 @@ export default function TabNavigator({props, navigation}) {
         setuserProfile(res.image.url);
       });
     });
+    setpageName('Home');
   }, []);
   const renderRightHeaderComponent = () => (
     <IconButton
@@ -47,21 +52,17 @@ export default function TabNavigator({props, navigation}) {
         bottom: 10,
         position: 'absolute',
         right: 10,
-        backgroundColor: '#008069',
+        backgroundColor: jersAppTheme.appBar,
         padding: 10,
       }}
       icon={() => (
-        <Image
-          style={{
-            height: 25,
-            width: 25,
-          }}
-          source={
-            activeTab == 'CHATS'
-              ? require('../src/assets/plus.png')
-              : require('../src/assets/camera.png')
-          }
-        />
+        <View>
+          {activeTab == 'CHATS' ? (
+            <Plus color={jersAppTheme.title} />
+          ) : (
+            <Camera color={jersAppTheme.title} />
+          )}
+        </View>
       )}
       size={40}
       onPress={() => {
@@ -110,7 +111,7 @@ export default function TabNavigator({props, navigation}) {
       }}>
       <View style={{height: '100%'}}>
         <TopBar
-          title={'JersApp Black'}
+          title={'JersApp'}
           rightOnPress={() => {
             if (isDelete) {
               setisModelOpen(true);
@@ -128,9 +129,9 @@ export default function TabNavigator({props, navigation}) {
             right: 5,
             top: 40,
             zIndex: 2,
-            backgroundColor: jersApptheme.model,
+            backgroundColor: jersAppTheme.model,
             borderRadius: 10,
-            shadowColor: jersApptheme.shadows,
+            shadowColor: jersAppTheme.shadows,
             shadowOpacity: 10,
           }}>
           <Menu.Item
@@ -145,7 +146,7 @@ export default function TabNavigator({props, navigation}) {
               )
             }
             title={userData?.name}
-            titleStyle={{color: jersApptheme.headerText}}
+            titleStyle={{color: jersAppTheme.title}}
             onPress={() => {
               handleCloseMenu();
               props.navigation.navigate('MyProfile', {
@@ -163,11 +164,28 @@ export default function TabNavigator({props, navigation}) {
                 source={require('../src/assets/qrscan.png')}
               />
             )}
-            title="Whatsapp web"
-            titleStyle={{color: jersApptheme.headerText}}
+            title="JersApp web"
+            titleStyle={{color: jersAppTheme.title}}
             onPress={() => {
               handleCloseMenu();
               props.navigation.navigate('QRScanner');
+            }}
+          />
+          <Menu.Item
+            leadingIcon={() => (
+              <Image
+                style={{
+                  height: 30,
+                  width: 30,
+                }}
+                source={require('../src/assets/logo.png')}
+              />
+            )}
+            title="Theme"
+            titleStyle={{color: jersAppTheme.title}}
+            onPress={() => {
+              handleCloseMenu();
+              props.navigation.navigate('Themes');
             }}
           />
           <Menu.Item
@@ -176,7 +194,7 @@ export default function TabNavigator({props, navigation}) {
                 {isloading ? (
                   <ActivityIndicator
                     animating={true}
-                    color={MD2Colors.greenA100}
+                    color={jersAppTheme.appBar}
                   />
                 ) : (
                   <Image
@@ -190,7 +208,7 @@ export default function TabNavigator({props, navigation}) {
               </View>
             )}
             title="Logout"
-            titleStyle={{color: jersApptheme.headerText}}
+            titleStyle={{color: jersAppTheme.title}}
             onPress={logout}
           />
         </View>
@@ -203,12 +221,12 @@ export default function TabNavigator({props, navigation}) {
               fontWeight: 'bold',
             },
             tabBarIndicatorStyle: {
-              backgroundColor: 'white',
+              backgroundColor: jersAppTheme.tabBarIndicator,
               height: 3,
               borderRadius: 5,
             },
             tabBarStyle: {
-              backgroundColor: jersApptheme.appBar,
+              backgroundColor: jersAppTheme.appBar,
             },
           }}>
           <Tab.Screen props={props} name="Chats" component={Chats} />

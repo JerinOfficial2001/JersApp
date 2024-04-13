@@ -1,8 +1,10 @@
 // components/DonutChart.js
-import React from 'react';
+import React, {useState} from 'react';
 import {View} from 'react-native';
 import {Path, Svg} from 'react-native-svg';
+import {JersAppThemeSchema} from '../../utils/theme';
 const DonutChart = ({data, width, height}) => {
+  const [jersAppTheme, setjersAppTheme] = useState(JersAppThemeSchema);
   const total = data.reduce((acc, {value}) => acc + 2, 0);
   const innerRadius = width / 7;
   const outerRadius = width / 8;
@@ -63,7 +65,7 @@ const DonutChart = ({data, width, height}) => {
       width={width}
       height={height}>
       {chartData.map(({path, color}, index) => (
-        <Path key={index} d={path} fill={'#14ff56'} />
+        <Path key={index} d={path} fill={jersAppTheme.statusIndicator} />
       ))}
     </Svg>
   );

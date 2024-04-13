@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Image, View} from 'react-native';
-import React, {useCallback, useEffect, useState} from 'react';
-import {DarkThemeSchema} from '../utils/theme';
+import React, {useCallback, useContext, useEffect, useState} from 'react';
+import {DarkThemeSchema, JersAppThemeSchema} from '../utils/theme';
+import {MyContext} from '../App';
 export default function InitialPage(props) {
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -15,7 +16,8 @@ export default function InitialPage(props) {
     }, 2000);
     return () => clearTimeout(timer);
   }, []);
-  const [theme, settheme] = useState(DarkThemeSchema);
+  // const [theme, settheme] = useState(JersAppThemeSchema);
+  const {jersAppTheme} = useContext(MyContext);
 
   return (
     <View
@@ -23,7 +25,7 @@ export default function InitialPage(props) {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: theme.main,
+        backgroundColor: jersAppTheme.main,
       }}>
       <Image
         alt="LOGO"

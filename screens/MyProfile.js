@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {Text, View, StyleSheet, Image, ToastAndroid} from 'react-native';
 import {
   ActivityIndicator,
@@ -10,11 +10,11 @@ import {
 } from 'react-native-paper';
 import DocumentPicker from 'react-native-document-picker';
 import ProfilePicModel from '../src/components/ProfilePicModel';
-import {useFocusEffect} from '@react-navigation/native';
 import {GetUsersByID, UpdateProfile} from '../src/controllers/auth';
-import {DarkThemeSchema} from '../utils/theme';
+import {MyContext} from '../App';
 export default function MyProfile({route, ...props}) {
-  const [theme, settheme] = useState(DarkThemeSchema);
+  // const [theme, settheme] = useState(JersAppThemeSchema);
+  const {jersAppTheme} = useContext(MyContext);
   const [isProcessing, setisProcessing] = useState(false);
   const {id, image} = route.params;
   const [openImageModel, setopenImageModel] = useState(false);
@@ -136,7 +136,7 @@ export default function MyProfile({route, ...props}) {
       justifyContent: 'space-between',
       padding: 10,
       marginBottom: 20,
-      backgroundColor: theme.main,
+      backgroundColor: jersAppTheme.main,
     },
     errorText: {
       color: 'red',
@@ -152,7 +152,7 @@ export default function MyProfile({route, ...props}) {
     },
     title: {
       fontSize: 20,
-      color: theme.themeText,
+      color: jersAppTheme.themeText,
       fontWeight: '500',
     },
     input: {
@@ -160,7 +160,7 @@ export default function MyProfile({route, ...props}) {
       width: '90%',
     },
     button: {
-      backgroundColor: theme.themeText,
+      backgroundColor: jersAppTheme.themeText,
     },
   });
   return (
@@ -214,7 +214,7 @@ export default function MyProfile({route, ...props}) {
             activeUnderlineColor="#92d4c7"
             placeholder="Name"
             keyboardType="default"
-            textColor={theme.title}
+            textColor={jersAppTheme.title}
             error={err}
           />
           {err && <Text style={styles.errorText}>{errMsg}</Text>}
@@ -224,7 +224,7 @@ export default function MyProfile({route, ...props}) {
         onPress={handleSubmit}
         mode="contained"
         style={styles.button}
-        textColor={theme.main}>
+        textColor={jersAppTheme.main}>
         {isProcessing ? (
           <ActivityIndicator animating={true} color={MD2Colors.greenA100} />
         ) : (

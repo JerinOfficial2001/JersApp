@@ -1,5 +1,5 @@
 import {useFocusEffect} from '@react-navigation/native';
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useContext, useEffect, useRef, useState} from 'react';
 import {
   Dimensions,
   Image,
@@ -13,7 +13,10 @@ import Video from 'react-native-video';
 import {ActivityIndicator, MD2Colors} from 'react-native-paper';
 import {ScrollView} from 'react-native-gesture-handler';
 import Carousel from '../src/components/Carosel';
+import {MyContext} from '../App';
 export default function PlayStatus({route, ...props}) {
+  const {jersAppTheme} = useContext(MyContext);
+
   const [isLoading, setisLoading] = useState(true);
   const {id} = route.params;
   const [status, setstatus] = useState({});
@@ -61,6 +64,29 @@ export default function PlayStatus({route, ...props}) {
       carouselRef.current.snapToNext();
     }
   };
+  const styles = StyleSheet.create({
+    content: {
+      flexDirection: 'column',
+      justifyContent: 'center',
+      padding: 10,
+      gap: 2,
+      flex: 1,
+      backgroundColor: jersAppTheme.main,
+    },
+    imgContainer: {
+      width: '100%',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'transparent',
+    },
+    sendBtn: {
+      backgroundColor: jersAppTheme.appBar,
+      padding: 15,
+      borderRadius: 200,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  });
   return (
     <View style={styles.content}>
       {
@@ -69,12 +95,12 @@ export default function PlayStatus({route, ...props}) {
             style={{
               width: '100%',
               alignItems: 'center',
-              height: 650,
+              flex: 1,
               justifyContent: 'center',
             }}>
             <ActivityIndicator
               animating={true}
-              color={MD2Colors.green400}
+              color={jersAppTheme.appBar}
               size="large"
             />
           </View>
@@ -111,26 +137,3 @@ export default function PlayStatus({route, ...props}) {
     </View>
   );
 }
-const styles = StyleSheet.create({
-  content: {
-    flexDirection: 'column',
-    justifyContent: 'center',
-    padding: 10,
-    gap: 2,
-    flex: 1,
-    backgroundColor: '#3D3D3DD1',
-  },
-  imgContainer: {
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
-  },
-  sendBtn: {
-    backgroundColor: '#14a95f',
-    padding: 15,
-    borderRadius: 200,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

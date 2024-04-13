@@ -1,13 +1,19 @@
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import {Image, ScrollView, StyleSheet, TextInput, View} from 'react-native';
 import {ActivityIndicator, IconButton, MD2Colors} from 'react-native-paper';
 import Video from 'react-native-video';
 import {AddStatus} from '../src/controllers/status';
 import Carousel from '../src/components/Carosel';
+import {JersAppThemeSchema} from '../utils/theme';
+import Send from '../src/assets/svg/send';
+import {MyContext} from '../App';
 
 export default function PreviewStatus({route, ...props}) {
   const {image, video, id} = route.params;
   const [isLoading, setisLoading] = useState(false);
+  // const [jersAppTheme, setjersAppTheme] = useState(JersAppThemeSchema);
+  const {jersAppTheme} = useContext(MyContext);
+
   const [inputDatas, setinputDatas] = useState({
     file:
       image !== null
@@ -56,7 +62,7 @@ export default function PreviewStatus({route, ...props}) {
       style={{
         flex: 1,
         flexDirection: 'column',
-        backgroundColor: '#3D3D3DD1',
+        backgroundColor: jersAppTheme.main,
       }}>
       {isLoading ? (
         <View
@@ -109,9 +115,9 @@ export default function PreviewStatus({route, ...props}) {
 
         <IconButton
           onPress={handleSubmit}
-          style={{backgroundColor: '#008069', padding: 10}}
+          style={{backgroundColor: jersAppTheme.appBar, padding: 10}}
           size={38}
-          icon={() => <Image source={require('../src/assets/send.png')} />}
+          icon={() => <Send color={jersAppTheme.title} />}
         />
       </View>
     </View>

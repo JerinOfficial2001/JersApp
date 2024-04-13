@@ -13,17 +13,17 @@ import {TopBarContext} from '../navigations/tabNavigation';
 import {ActivityIndicator, MD2Colors} from 'react-native-paper';
 import useSocket from '../utils/socketUtil';
 import {MyContext} from '../App';
-import {DarkThemeSchema} from '../utils/theme';
+import {DarkThemeSchema, JersAppThemeSchema} from '../utils/theme';
 
 export default function Chats(props) {
-  const {Data} = useContext(MyContext);
+  const {Data, jersAppTheme, setpageName} = useContext(MyContext);
   const [chats, setChats] = useState([]);
   const [isMsgLongPressed, setisMsgLongPressed] = useState([]);
   const [receiversId, setreceiversId] = useState('');
   const [userDatas, setuserDatas] = useState({});
   const [Contact_id, setContact_id] = useState('');
   const [isLoading, setisLoading] = useState(false);
-  const [theme, settheme] = useState(DarkThemeSchema);
+  // const [theme, settheme] = useState(JersAppThemeSchema);
 
   const {setisDelete, isModelOpen, setisModelOpen, setopenMenu, setactiveTab} =
     useContext(TopBarContext);
@@ -62,6 +62,7 @@ export default function Chats(props) {
   };
   useEffect(() => {
     fetchData();
+    setpageName('Chats');
   }, []);
   const addChat = data => {
     if (data.sender && data.receiver) {
@@ -76,11 +77,9 @@ export default function Chats(props) {
   };
   useFocusEffect(
     React.useCallback(() => {
-      fetchData();
       setactiveTab('CHATS');
     }, []),
   );
-
   useFocusEffect(
     React.useCallback(() => {
       if (socket) {
@@ -136,7 +135,7 @@ export default function Chats(props) {
   };
   return (
     <Pressable style={{flex: 1}} onPress={handlePress}>
-      <ScrollView style={{padding: 10, backgroundColor: theme.main}}>
+      <ScrollView style={{padding: 10, backgroundColor: jersAppTheme.main}}>
         {isLoading ? (
           <View
             style={{

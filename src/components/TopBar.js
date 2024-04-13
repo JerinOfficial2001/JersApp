@@ -1,6 +1,7 @@
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import {Image, Text, TouchableOpacity, View} from 'react-native';
-import {DarkThemeSchema} from '../../utils/theme';
+import {DarkThemeSchema, JersAppThemeSchema} from '../../utils/theme';
+import {MyContext} from '../../App';
 
 export default function TopBar({
   title,
@@ -11,12 +12,13 @@ export default function TopBar({
   subtitle,
   isTyping,
 }) {
-  const [theme, settheme] = useState(DarkThemeSchema);
+  // const [theme, settheme] = useState(JersAppThemeSchema);
+  const {jersAppTheme, setpageName} = useContext(MyContext);
 
   return (
     <View
       style={{
-        backgroundColor: theme.appBar,
+        backgroundColor: jersAppTheme.appBar,
         padding: 15,
         justifyContent: 'space-between',
         flexDirection: 'row',

@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {ScrollView, Text, View} from 'react-native';
 import MyComponent from '../src/components/MyComponent';
 import {
@@ -8,13 +8,13 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getAllUsers} from '../src/controllers/auth';
 import {ActivityIndicator, MD2Colors} from 'react-native-paper';
-import {DarkThemeSchema} from '../utils/theme';
+import {MyContext} from '../App';
 
 export default function AllContacts(props) {
   const [contacts, setContacts] = useState([]);
   const [userData, setUserData] = useState({});
   const [loading, setLoading] = useState(true);
-  const [theme, settheme] = useState(DarkThemeSchema);
+  const {jersAppTheme} = useContext(MyContext);
 
   const getContacts = async () => {
     try {
@@ -95,13 +95,13 @@ export default function AllContacts(props) {
         style={{
           width: '100%',
           alignItems: 'center',
-          height: 700,
+          flex: 1,
           justifyContent: 'center',
-          backgroundColor: theme.main,
+          backgroundColor: jersAppTheme.main,
         }}>
         <ActivityIndicator
           animating={true}
-          color={MD2Colors.green400}
+          color={jersAppTheme.appBar}
           size="large"
         />
       </View>
@@ -109,7 +109,7 @@ export default function AllContacts(props) {
   }
 
   return (
-    <ScrollView style={{backgroundColor: theme.main}}>
+    <ScrollView style={{backgroundColor: jersAppTheme.main}}>
       {contacts.length > 0 ? (
         contacts.map((elem, index) => (
           <MyComponent

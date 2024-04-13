@@ -1,10 +1,11 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {Image, TouchableOpacity, View} from 'react-native';
 import {Avatar, Text} from 'react-native-paper';
 import DonutChart from './DonutChart';
 import {getLastMsg} from '../controllers/chats';
 import {GetUsersByID} from '../controllers/auth';
-import {DarkThemeSchema} from '../../utils/theme';
+import {DarkThemeSchema, JersAppThemeSchema} from '../../utils/theme';
+import {MyContext} from '../../App';
 
 const MyComponent = ({
   onclick,
@@ -14,7 +15,8 @@ const MyComponent = ({
   contactPg,
   onLongPress,
 }) => {
-  const [theme, settheme] = useState(DarkThemeSchema);
+  // const [theme, settheme] = useState(JersAppThemeSchema);
+  const {jersAppTheme, setpageName} = useContext(MyContext);
 
   const [lastMsgUserName, setlastMsgUserName] = useState('');
   const [lastMsg, setlastMsg] = useState(null);
@@ -78,7 +80,7 @@ const MyComponent = ({
                 justifyContent: 'space-between',
                 flexDirection: 'row',
               }}>
-              <Text style={{color: theme.headerText, fontWeight: 'bold'}}>
+              <Text style={{color: jersAppTheme.title, fontWeight: 'bold'}}>
                 {!contactPg
                   ? contact.ContactDetails?.name
                   : contact
@@ -86,7 +88,9 @@ const MyComponent = ({
                   : 'Name'}
               </Text>
               {!contactPg && (
-                <Text style={{color: theme.subText}}>{contact.date}</Text>
+                <Text style={{color: jersAppTheme.subText}}>
+                  {contact.date}
+                </Text>
               )}
             </View>
           )}
@@ -94,8 +98,8 @@ const MyComponent = ({
             style={{
               color:
                 status?.title || status?.userName
-                  ? theme.headerText
-                  : theme.subText,
+                  ? jersAppTheme.title
+                  : jersAppTheme.subText,
             }}>
             {contactPg
               ? contact
