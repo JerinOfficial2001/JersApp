@@ -10,10 +10,11 @@ import {useFocusEffect} from '@react-navigation/native';
 import {createChat} from '../src/controllers/chats';
 import DeleteModal from '../src/components/DeleteModel';
 import {TopBarContext} from '../navigations/tabNavigation';
-import {ActivityIndicator, MD2Colors} from 'react-native-paper';
+import {ActivityIndicator, Button, MD2Colors} from 'react-native-paper';
 import useSocket from '../utils/socketUtil';
 import {MyContext} from '../App';
 import {DarkThemeSchema, JersAppThemeSchema} from '../utils/theme';
+import {showNotification} from '../src/notification.android';
 
 export default function Chats(props) {
   const {Data, jersAppTheme, setpageName} = useContext(MyContext);
@@ -197,6 +198,12 @@ export default function Chats(props) {
           visible={isModelOpen}
           handleDelete={handleDeleteContact}
         />
+        <Button
+          onPress={() => {
+            showNotification('bdhfghj', 'kajsfhad');
+          }}>
+          Get Notification
+        </Button>
       </ScrollView>
     </Pressable>
   );
