@@ -3,7 +3,12 @@ import Navigator from './navigations';
 import {Provider} from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {themeSchema} from './utils/theme';
+import {QueryClientProvider, QueryClient} from '@tanstack/react-query';
+import {SocketProvider} from './utils/socket';
+
 export const MyContext = createContext({});
+
+const queryClient = new QueryClient();
 export default function App() {
   const [Data, setuserData] = useState({});
   const [themeHandler, setthemeHandler] = useState('JersApp');
@@ -12,7 +17,6 @@ export default function App() {
   useEffect(() => {
     setjersAppTheme(themeSchema[themeHandler]);
   }, [themeHandler, pageName]);
-  console.log(themeHandler);
 
   useEffect(() => {
     AsyncStorage.getItem('userData').then(res => {
@@ -24,18 +28,22 @@ export default function App() {
   }, []);
 
   return (
-    <MyContext.Provider
-      value={{
-        Data,
-        themeHandler,
-        setthemeHandler,
-        jersAppTheme,
-        pageName,
-        setpageName,
-      }}>
-      <Provider>
-        <Navigator />
-      </Provider>
-    </MyContext.Provider>
+    <QueryClientProvider client={queryClient}>
+      <SocketProvider>
+        <MyContext.Provider
+          value={{
+            Data,
+            themeHandler,
+            setthemeHandler,
+            jersAppTheme,
+            pageName,
+            setpageName,
+          }}>
+          <Provider>
+            <Navigator />
+          </Provider>
+        </MyContext.Provider>
+      </SocketProvider>
+    </QueryClientProvider>
   );
 }

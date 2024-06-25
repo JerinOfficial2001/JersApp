@@ -1,7 +1,7 @@
-import {NavigationContainer} from '@react-navigation/native';
-import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
-import {Image, TouchableOpacity, View, Text, ToastAndroid} from 'react-native';
-import React, {createContext, useContext, useEffect, useState} from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import { Image, TouchableOpacity, View, Text, ToastAndroid } from 'react-native';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import AuthModal from '../src/components/AuthModal';
 import Chats from '../screens/Chats';
 import Status from '../screens/Status';
@@ -14,17 +14,17 @@ import {
   Menu,
 } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {GetUsersByID, logoutWithToken} from '../src/controllers/auth';
-import {DarkThemeSchema, JersAppThemeSchema} from '../utils/theme';
+import { GetUsersByID, logoutWithToken } from '../src/controllers/auth';
+import { DarkThemeSchema, JersAppThemeSchema } from '../utils/theme';
 import Plus from '../src/assets/svg/plus';
 import Camera from '../src/assets/svg/camera';
-import {MyContext} from '../App';
+import { MyContext } from '../App';
 
 const Tab = createMaterialTopTabNavigator();
 
 export const TopBarContext = createContext();
 
-export default function TabNavigator({props, navigation}) {
+export default function TabNavigator({ props, navigation }) {
   const [visible, setVisible] = useState(false);
   const [isDelete, setisDelete] = useState(false);
   const [isModelOpen, setisModelOpen] = useState(false);
@@ -35,13 +35,13 @@ export default function TabNavigator({props, navigation}) {
   const [addStatus, setaddStatus] = useState(false);
   const [userProfile, setuserProfile] = useState(null);
   // const [jersAppTheme, setjersApptheme] = useState(JersAppThemeSchema);
-  const {jersAppTheme, setpageName} = useContext(MyContext);
+  const { jersAppTheme, setpageName } = useContext(MyContext);
   useEffect(() => {
     AsyncStorage.getItem('userData').then(res => {
       const data = JSON.parse(res);
       setuserData(data);
       GetUsersByID(data._id).then(res => {
-        setuserProfile(res.image.url);
+        setuserProfile(res?.image?.url);
       });
     });
     setpageName('Home');
@@ -69,9 +69,9 @@ export default function TabNavigator({props, navigation}) {
         activeTab == 'CHATS'
           ? props.navigation.navigate('AllContacts')
           : props.navigation.navigate('AddStatus', {
-              onlyCamera: false,
-              id: userData._id,
-            });
+            onlyCamera: false,
+            id: userData._id,
+          });
       }}
     />
   );
@@ -109,7 +109,7 @@ export default function TabNavigator({props, navigation}) {
         addStatus,
         setaddStatus,
       }}>
-      <View style={{height: '100%'}}>
+      <View style={{ height: '100%' }}>
         <TopBar
           title={'JersApp'}
           rightOnPress={() => {
@@ -137,7 +137,7 @@ export default function TabNavigator({props, navigation}) {
           <Menu.Item
             leadingIcon={() =>
               userProfile ? (
-                <Avatar.Image size={30} source={{uri: userProfile}} />
+                <Avatar.Image size={30} source={{ uri: userProfile }} />
               ) : (
                 <Avatar.Image
                   size={30}
@@ -146,7 +146,7 @@ export default function TabNavigator({props, navigation}) {
               )
             }
             title={userData?.name}
-            titleStyle={{color: jersAppTheme.title}}
+            titleStyle={{ color: jersAppTheme.title }}
             onPress={() => {
               handleCloseMenu();
               props.navigation.navigate('MyProfile', {
@@ -165,7 +165,7 @@ export default function TabNavigator({props, navigation}) {
               />
             )}
             title="JersApp web"
-            titleStyle={{color: jersAppTheme.title}}
+            titleStyle={{ color: jersAppTheme.title }}
             onPress={() => {
               handleCloseMenu();
               props.navigation.navigate('QRScanner');
@@ -182,7 +182,7 @@ export default function TabNavigator({props, navigation}) {
               />
             )}
             title="Theme"
-            titleStyle={{color: jersAppTheme.title}}
+            titleStyle={{ color: jersAppTheme.title }}
             onPress={() => {
               handleCloseMenu();
               props.navigation.navigate('Themes');
@@ -208,7 +208,7 @@ export default function TabNavigator({props, navigation}) {
               </View>
             )}
             title="Logout"
-            titleStyle={{color: jersAppTheme.title}}
+            titleStyle={{ color: jersAppTheme.title }}
             onPress={logout}
           />
         </View>

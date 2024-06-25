@@ -5,15 +5,9 @@ import PushNotification, { Importance } from 'react-native-push-notification';
 // Function to create a notification channel
 const createNotificationChannel = () => {
   if (Platform.OS === 'android') {
-    // PushNotification.checkPermissions(permissions => {
-    //   if (!permissions.alert) {
-    //     // Notifications are not enabled, ask user for permission
-    //     PushNotification.requestPermissions();
-    //   }
-    // });
     PushNotification.createChannel(
       {
-        channelId: 'JersApp', // (required)
+        channelId: 'JersApp241323', // (required)
         channelName: 'Default Channel', // (required)
         channelDescription: 'A default channel', // (optional) default: undefined.
         playSound: true, // (optional) default: true
@@ -57,7 +51,7 @@ PushNotification.configure({
 export const showNotification = (title, message) => {
   console.log('logged:', title, message);
   PushNotification.localNotification({
-    channelId: 'JersApp',
+    channelId: 'JersApp241323',
     title: title,
     message: message,
   });

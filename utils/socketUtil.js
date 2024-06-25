@@ -1,42 +1,40 @@
-import { useEffect, useState } from 'react';
-import { socketServerApi } from '../src/api';
-import { io } from 'socket.io-client';
-import { showNotification } from '../src/notification.android';
+import {useEffect, useState} from 'react';
+import {socketServerApi} from '../src/api';
+import {io} from 'socket.io-client';
+import {showNotification} from '../src/notification.android';
+import {useSocketHook} from './socket';
 
 export default function useSocket() {
   const SocketAPI = socketServerApi;
+  const {socket, typingUsers, watchingUsers, activeUsers} = useSocketHook();
 
-  const [socket, setSocketIo] = useState(null);
-  const [activeUsers, setactiveUsers] = useState([]);
-  const [watchingUsers, setwatchingUsers] = useState([]);
-  const [typingUsers, settypingUsers] = useState([]);
-  useEffect(() => {
-    if (!socket) {
-      const socketIO = io(SocketAPI, {
-        //   path: '/socket',
-      });
-      setSocketIo(socketIO);
-      socketIO.on('notification', (data) => {
-        showNotification(data.name, data.msg);
-      })
-      socketIO.on('user_connected', data => {
-        console.log(data);
-        setactiveUsers(data);
-      });
-      socketIO.on('user_watching', data => {
-        setwatchingUsers(data);
-      });
-      socketIO.on('user_typing', data => {
-        console.log(data, 'user_typing');
-        settypingUsers(data);
-      });
-    }
-    return () => {
-      if (socket) {
-        socket.disconnect();
-      }
-    };
-  }, []);
+  // useEffect(() => {
+  //   if (!socket) {
+  //     const socketIO = io(SocketAPI, {
+  //       //   path: '/socket',
+  //     });
+  //     setSocketIo(socketIO);
+  //     socketIO.on('notification', (data) => {
+  //       showNotification(data.name, data.msg);
+  //     })
+  //     socketIO.on('user_connected', data => {
+  //       console.log(data);
+  //       setactiveUsers(data);
+  //     });
+  //     socketIO.on('user_watching', data => {
+  //       setwatchingUsers(data);
+  //     });
+  //     socketIO.on('user_typing', data => {
+  //       console.log(data, 'user_typing');
+  //       settypingUsers(data);
+  //     });
+  //   }
+  //   return () => {
+  //     if (socket) {
+  //       socket.disconnect();
+  //     }
+  //   };
+  // }, []);
   const socketUserID = data => {
     socket?.emit('set_user_id', data);
   };
