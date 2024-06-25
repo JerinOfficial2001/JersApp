@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useState} from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   FlatList,
   Image,
@@ -13,23 +13,23 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import {addContact, getContactByUserId} from '../src/controllers/contacts';
+import { addContact, getContactByUserId } from '../src/controllers/contacts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   deleteMessageById,
   getAllChats,
   getMessage,
 } from '../src/controllers/chats';
-import {useFocusEffect} from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import TopBar from '../src/components/TopBar';
 import DeleteModal from '../src/components/DeleteModel';
 import useSocket from '../utils/socketUtil';
 import Send from '../src/assets/svg/send';
-import {JersAppThemeSchema} from '../utils/theme';
-import {MyContext} from '../App';
+import { JersAppThemeSchema } from '../utils/theme';
+import { MyContext } from '../App';
 
-export default function Message({route, navigation, ...props}) {
-  const {id, userID, receiverId} = route.params;
+export default function Message({ route, navigation, ...props }) {
+  const { id, userID, receiverId, roomID } = route.params;
   const {
     socket,
     socketUserWatching,
@@ -56,7 +56,7 @@ export default function Message({route, navigation, ...props}) {
   const [msgID, setmsgID] = useState('');
   const [isDelete, setisDelete] = useState(false);
   // const [jersAppTheme, setjersAppTheme] = useState(JersAppThemeSchema);
-  const {jersAppTheme, setpageName} = useContext(MyContext);
+  const { jersAppTheme, setpageName } = useContext(MyContext);
 
   const getTime = timeStamp => {
     const date = new Date(timeStamp);
@@ -107,13 +107,13 @@ export default function Message({route, navigation, ...props}) {
               gap: 8,
               paddingHorizontal: 10,
             }}>
-            <Text style={{color: 'white'}}>{text}</Text>
+            <Text style={{ color: 'white' }}>{text}</Text>
             <View
               style={{
                 justifyContent: 'flex-end',
                 height: 20,
               }}>
-              <Text style={{color: 'slategray', fontSize: 10}}>{time}</Text>
+              <Text style={{ color: 'slategray', fontSize: 10 }}>{time}</Text>
             </View>
           </View>
         </View>
@@ -131,20 +131,22 @@ export default function Message({route, navigation, ...props}) {
         socketUserWatching({
           id: userID ? userID : userData._id,
           status: 'online',
+          roomID
         });
         Keyboard.addListener('keyboardDidHide', () => {
-          socketUserTyped(userID ? userID : userData._id);
+          socketUserTyped({ id: userID ? userID : userData._id, roomID });
         });
         Keyboard.addListener('keyboardDidShow', () => {
           socketUserTyping({
             id: userID ? userID : userData._id,
             status: 'online',
+            roomID
           });
         });
       }
       return () => {
         if (socket) {
-          socketUserWatched(userID ? userID : userData._id);
+          socketUserWatched({ id: userID ? userID : userData._id, roomID });
         }
       };
     }, [socket]),
@@ -181,9 +183,9 @@ export default function Message({route, navigation, ...props}) {
             getMessage(chat._id).then(msg => {
               if (msg) {
                 setchatArray(
-                  msg.map(elem => ({...elem, time: getTime(elem.createdAt)})),
+                  msg.map(elem => ({ ...elem, time: getTime(elem.createdAt) })),
                 );
-                setisMsgLongPressed(msg.map(item => ({isSelected: false})));
+                setisMsgLongPressed(msg.map(item => ({ isSelected: false })));
               }
             });
           }
@@ -206,7 +208,9 @@ export default function Message({route, navigation, ...props}) {
         sender: userData._id,
         receiver: id,
         message: formDatas.msg,
+        name: userData.name
       });
+
       setformDatas({
         msg: '',
         userName: '',
@@ -248,7 +252,7 @@ export default function Message({route, navigation, ...props}) {
     }
   };
   const handleOnchange = (value, name) => {
-    setformDatas(prev => ({...prev, [name]: value}));
+    setformDatas(prev => ({ ...prev, [name]: value }));
   };
   const handleLongPress = (index, id) => {
     const updatedStates = [...isMsgLongPressed];
@@ -258,7 +262,7 @@ export default function Message({route, navigation, ...props}) {
     setisDelete(true);
   };
   const handlePress = () => {
-    const updatedStates = isMsgLongPressed?.map(() => ({isSelected: false}));
+    const updatedStates = isMsgLongPressed?.map(() => ({ isSelected: false }));
     setisMsgLongPressed(updatedStates);
     setisDelete(false);
   };
@@ -303,7 +307,7 @@ export default function Message({route, navigation, ...props}) {
     },
   });
   return (
-    <View style={{flex: 1}}>
+    <View style={{ flex: 1 }}>
       <TopBar
         isTyping={isTyping(receiverId)}
         subtitle={isOnline(receiverId)}
@@ -315,7 +319,7 @@ export default function Message({route, navigation, ...props}) {
         }}
         isDelete={isDelete}
       />
-      <Pressable style={{flex: 1}} onPress={handlePress}>
+      <Pressable style={{ flex: 1 }} onPress={handlePress}>
         <ImageBackground
           source={require('../src/assets/chatBg.png')} // specify the path to your image
           style={styles.backgroundImage}>
@@ -337,7 +341,7 @@ export default function Message({route, navigation, ...props}) {
             contentContainerStyle={{
               paddingBottom: isWatching(receiverId) ? 40 : 0,
             }}
-            renderItem={({item, index}) => (
+            renderItem={({ item, index }) => (
               <BubbleMsg
                 text={item.message}
                 time={item.time}

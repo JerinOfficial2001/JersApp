@@ -1,6 +1,7 @@
-import {useEffect, useState} from 'react';
-import {socketServerApi} from '../src/api';
-import {io} from 'socket.io-client';
+import { useEffect, useState } from 'react';
+import { socketServerApi } from '../src/api';
+import { io } from 'socket.io-client';
+import { showNotification } from '../src/notification.android';
 
 export default function useSocket() {
   const SocketAPI = socketServerApi;
@@ -15,6 +16,9 @@ export default function useSocket() {
         //   path: '/socket',
       });
       setSocketIo(socketIO);
+      socketIO.on('notification', (data) => {
+        showNotification(data.name, data.msg);
+      })
       socketIO.on('user_connected', data => {
         console.log(data);
         setactiveUsers(data);

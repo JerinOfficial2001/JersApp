@@ -1,6 +1,6 @@
 // NotificationService.js
-import {Platform} from 'react-native';
-import PushNotification, {Importance} from 'react-native-push-notification';
+import { Platform } from 'react-native';
+import PushNotification, { Importance } from 'react-native-push-notification';
 
 // Function to create a notification channel
 const createNotificationChannel = () => {

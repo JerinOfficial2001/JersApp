@@ -1,23 +1,24 @@
-import React, {useContext, useEffect, useState} from 'react';
-import {Pressable, ScrollView, Text, ToastAndroid, View} from 'react-native';
+import React, { useContext, useEffect, useState } from 'react';
+import { Pressable, ScrollView, Text, ToastAndroid, View } from 'react-native';
 import MyComponent from '../src/components/MyComponent';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   deleteContactById,
   getContactByUserId,
 } from '../src/controllers/contacts';
-import {useFocusEffect} from '@react-navigation/native';
-import {createChat} from '../src/controllers/chats';
+import { useFocusEffect } from '@react-navigation/native';
+import { createChat } from '../src/controllers/chats';
 import DeleteModal from '../src/components/DeleteModel';
-import {TopBarContext} from '../navigations/tabNavigation';
-import {ActivityIndicator, Button, MD2Colors} from 'react-native-paper';
+import { TopBarContext } from '../navigations/tabNavigation';
+import { ActivityIndicator, Button, MD2Colors } from 'react-native-paper';
 import useSocket from '../utils/socketUtil';
-import {MyContext} from '../App';
-import {DarkThemeSchema, JersAppThemeSchema} from '../utils/theme';
-import {showNotification} from '../src/notification.android';
+import { MyContext } from '../App';
+import { DarkThemeSchema, JersAppThemeSchema } from '../utils/theme';
+import { showNotification } from '../src/notification.android';
+import { checkApplicationPermission } from '../src/controllers/permissions';
 
 export default function Chats(props) {
-  const {Data, jersAppTheme, setpageName} = useContext(MyContext);
+  const { Data, jersAppTheme, setpageName } = useContext(MyContext);
   const [chats, setChats] = useState([]);
   const [isMsgLongPressed, setisMsgLongPressed] = useState([]);
   const [receiversId, setreceiversId] = useState('');
@@ -26,34 +27,35 @@ export default function Chats(props) {
   const [isLoading, setisLoading] = useState(false);
   // const [theme, settheme] = useState(JersAppThemeSchema);
 
-  const {setisDelete, isModelOpen, setisModelOpen, setopenMenu, setactiveTab} =
+  const { setisDelete, isModelOpen, setisModelOpen, setopenMenu, setactiveTab } =
     useContext(TopBarContext);
-  const {socket, socketUserID, socketUserConnected} = useSocket();
+  const { socket, socketUserID, socketUserConnected } = useSocket();
   const getDate = timestamps => {
     const date = new Date(timestamps);
     const properDate =
       date.getDate() < 10 ? '0' + date.getDate() : date.getDate();
     const properMonth =
       date.getMonth() < 10 ? '0' + date.getMonth() : date.getMonth();
-    const formatedDate = `${properDate}/${properMonth}/${
-      date.getFullYear() % 100
-    }`;
+    const formatedDate = `${properDate}/${properMonth}/${date.getFullYear() % 100
+      }`;
     return formatedDate;
   };
   const fetchData = async () => {
+    checkApplicationPermission();
     setisLoading(true);
     try {
       const data = await AsyncStorage.getItem('userData');
       if (data) {
         setisLoading(false);
         const userData = JSON.parse(data);
+        socket.emit('me', userData._id)
         setuserDatas(userData);
         const contacts = await getContactByUserId(userData?._id);
         if (contacts) {
           setChats(
-            contacts.map(item => ({...item, date: getDate(item.createdAt)})),
+            contacts.map(item => ({ ...item, date: getDate(item.createdAt) })),
           );
-          setisMsgLongPressed(contacts.map(item => ({isSelected: false})));
+          setisMsgLongPressed(contacts.map(item => ({ isSelected: false })));
         }
       }
     } catch (error) {
@@ -67,11 +69,13 @@ export default function Chats(props) {
   }, []);
   const addChat = data => {
     if (data.sender && data.receiver) {
+      socket.emit('roomID', data.roomID)
       createChat(data).then(res => {
         props.navigation.navigate('Message', {
           id: data.elem.ContactDetails?._id,
           userID: userDatas._id,
           receiverId: data.receiver,
+          roomID: data.roomID
         });
       });
     }
@@ -125,7 +129,7 @@ export default function Chats(props) {
     setreceiversId(id);
   };
   const handlePress = () => {
-    const updatedStates = isMsgLongPressed?.map(() => ({isSelected: false}));
+    const updatedStates = isMsgLongPressed?.map(() => ({ isSelected: false }));
     setisMsgLongPressed(updatedStates);
     setisDelete(false);
     setopenMenu(false);
@@ -135,8 +139,8 @@ export default function Chats(props) {
     handlePress();
   };
   return (
-    <Pressable style={{flex: 1}} onPress={handlePress}>
-      <ScrollView style={{padding: 10, backgroundColor: jersAppTheme.main}}>
+    <Pressable style={{ flex: 1 }} onPress={handlePress}>
+      <ScrollView style={{ padding: 10, backgroundColor: jersAppTheme.main }}>
         {isLoading ? (
           <View
             style={{
@@ -164,12 +168,16 @@ export default function Chats(props) {
                 <MyComponent
                   contact={elem}
                   onclick={() => {
+                    const Ids = [userDatas._id, elem.ContactDetails._id].sort().join('_')
+
                     addChat({
                       sender: userDatas._id,
                       receiver: elem.ContactDetails._id,
                       elem: elem,
+                      roomID: Ids
                     });
                     handlePress();
+
                   }}
                   onLongPress={() => {
                     handleLongPress(
@@ -190,7 +198,7 @@ export default function Chats(props) {
               flex: 1,
               height: 600,
             }}>
-            <Text style={{color: 'gray'}}>No Chats</Text>
+            <Text style={{ color: 'gray' }}>No Chats</Text>
           </View>
         )}
         <DeleteModal

@@ -109,7 +109,6 @@ dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
     implementation("com.facebook.react:flipper-integration")
-    implementation project(':react-native-push-notification')
     implementation project(':react-native-contacts')
     implementation project(':react-native-camera')
     if (hermesEnabled.toBoolean()) {
