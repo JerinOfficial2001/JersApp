@@ -16,7 +16,7 @@ import {DarkThemeSchema, JersAppThemeSchema} from '../utils/theme';
 import {showNotification} from '../src/notification.android';
 import {checkApplicationPermission} from '../src/controllers/permissions';
 import {useQueryClient} from '@tanstack/react-query';
-import useSocket from '../utils/socketUtil';
+import {useSocketHook} from '../utils/socket';
 
 export default function Chats(props) {
   const queryClient = useQueryClient();
@@ -32,7 +32,13 @@ export default function Chats(props) {
 
   const {setisDelete, isModelOpen, setisModelOpen, setopenMenu, setactiveTab} =
     useContext(TopBarContext);
-  const {socket, socketUserID, socketUserConnected} = useSocket();
+  const {
+    newMsgCount,
+    setnewMsgCount,
+    socket,
+    socketUserID,
+    socketUserConnected,
+  } = useSocketHook();
   const getDate = timestamps => {
     const date = new Date(timestamps);
     const properDate =
@@ -100,10 +106,6 @@ export default function Chats(props) {
         socket.on('connection', () => {
           console.log('connected');
         });
-        socket.on('disconnect', () => {
-          console.log('disconnect');
-        });
-
         socketUserID(Data._id ? Data._id : userDatas._id);
         socketUserConnected({
           id: Data._id ? Data._id : userDatas._id,
@@ -167,6 +169,8 @@ export default function Chats(props) {
         ) : chats?.length > 0 ? (
           chats?.map((elem, index) => {
             const isSelected = isMsgLongPressed[index]?.isSelected;
+            const msgCount = newMsgCount ? newMsgCount?.length : '';
+
             return (
               <View
                 key={index}
@@ -175,6 +179,7 @@ export default function Chats(props) {
                   borderRadius: 3,
                 }}>
                 <MyComponent
+                  newMsgcount={msgCount}
                   contact={elem}
                   onclick={() => {
                     const Ids = [userDatas._id, elem.ContactDetails._id]
@@ -188,6 +193,13 @@ export default function Chats(props) {
                       roomID: Ids,
                     });
                     handlePress();
+                    if (newMsgCount?.length > 0) {
+                      socket.emit('clearNewMsg', {
+                        id: userDatas._id,
+                        receiverID: elem.ContactDetails._id,
+                      });
+                      setnewMsgCount([]);
+                    }
                   }}
                   onLongPress={() => {
                     handleLongPress(
@@ -216,12 +228,6 @@ export default function Chats(props) {
           visible={isModelOpen}
           handleDelete={handleDeleteContact}
         />
-        <Button
-          onPress={() => {
-            showNotification('bdhfghj', 'kajsfhad');
-          }}>
-          Get Notification
-        </Button>
       </ScrollView>
     </Pressable>
   );

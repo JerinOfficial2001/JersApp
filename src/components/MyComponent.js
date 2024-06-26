@@ -14,18 +14,18 @@ const MyComponent = ({
   contact,
   contactPg,
   onLongPress,
+  newMsgcount,
 }) => {
   // const [theme, settheme] = useState(JersAppThemeSchema);
   const {jersAppTheme, setpageName} = useContext(MyContext);
 
   const [lastMsgUserName, setlastMsgUserName] = useState('');
-  const [lastMsg, setlastMsg] = useState(null);
   useEffect(() => {
     if (contact?.user_id && contact?.ContactDetails._id) {
-      getLastMsg(contact?.user_id, contact?.ContactDetails._id).then(data => {
-        setlastMsg(data);
-        getUser(data.sender);
-      });
+      getUser(contact?.user_id);
+      // getLastMsg(contact?.user_id, contact?.ContactDetails._id).then(data => {
+      //   setlastMsg(data);
+      // });
     }
   }, [contact]);
   const getUser = async id => {
@@ -88,9 +88,40 @@ const MyComponent = ({
                   : 'Name'}
               </Text>
               {!contactPg && (
-                <Text style={{color: jersAppTheme.subText}}>
-                  {contact.date}
-                </Text>
+                <View
+                  style={{
+                    position: 'absolute',
+                    right: 0,
+                    gap: 10,
+                    alignItems: 'center',
+                  }}>
+                  <Text style={{color: jersAppTheme.subText}}>
+                    {contact?.date}
+                  </Text>
+                  {newMsgcount !== 0 &&
+                    newMsgcount !== '0' &&
+                    newMsgcount !== '' && (
+                      <View
+                        style={{
+                          backgroundColor: 'green',
+                          padding: 3,
+                          height: 25,
+                          width: 25,
+                          borderRadius: 100,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}>
+                        <Text
+                          style={{
+                            color: 'white',
+                            fontWeight: 'bold',
+                            fontSize: newMsgcount > '99' ? 10 : 15,
+                          }}>
+                          {newMsgcount > '99' ? '99+' : newMsgcount}
+                        </Text>
+                      </View>
+                    )}
+                </View>
               )}
             </View>
           )}
@@ -109,10 +140,10 @@ const MyComponent = ({
               ? status?.title
                 ? status?.title
                 : status?.userName
-              : lastMsg?.message
-              ? lastMsg?.sender == contact?.user_id
-                ? lastMsg?.message
-                : `${lastMsgUserName}:` + lastMsg.message
+              : contact?.lastMsg?.msg
+              ? contact?.lastMsg?.id == contact?.user_id
+                ? contact?.lastMsg?.msg
+                : `${lastMsgUserName}:` + contact.lastMsg?.msg
               : ''}
           </Text>
         </View>

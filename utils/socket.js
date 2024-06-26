@@ -10,8 +10,9 @@ export const useSocketHook = () => {
 export const SocketProvider = ({children}) => {
   const [socket, setsocket] = useState(null);
   const [activeUsers, setactiveUsers] = useState([]);
-  const [watchingUsers, setwatchingUsers] = useState([]);
-  const [typingUsers, settypingUsers] = useState([]);
+  const [isWatching, setisWatching] = useState(false);
+  const [isTyping, setisTyping] = useState(false);
+  const [newMsgCount, setnewMsgCount] = useState([]);
   useEffect(() => {
     const connection = io(socketServerApi);
     setsocket(connection);
@@ -23,10 +24,15 @@ export const SocketProvider = ({children}) => {
       setactiveUsers(data);
     });
     connection.on('user_watching', data => {
-      setwatchingUsers(data);
+      setisWatching(data.isWatching);
     });
     connection.on('user_typing', data => {
-      settypingUsers(data);
+      console.log(data, 'isTyping');
+      setisTyping(data.isTyping);
+    });
+    connection.on('newMsgs', data => {
+      console.log('newMsgs-socket', data);
+      setnewMsgCount(data);
     });
     return () => {
       if (socket) {
@@ -34,10 +40,46 @@ export const SocketProvider = ({children}) => {
       }
     };
   }, []);
+  const socketUserID = data => {
+    socket?.emit('set_user_id', data);
+  };
+  const socketUserConnected = data => {
+    socket?.emit('user_connected', data);
+  };
+  const socketUserWatching = data => {
+    socket?.emit('user_watching', data);
+  };
+  const socketUserTyping = data => {
+    socket?.emit('user_typing', data);
+  };
+  const socketUserTyped = data => {
+    socket?.emit('user_typed', data);
+  };
+  const socketUserWatched = data => {
+    socket?.emit('user_watchout', data);
+  };
+  const isOnline = id => {
+    const isActive = activeUsers?.find(res => res.id == id);
+    return isActive;
+  };
 
   return (
     <SocketContext.Provider
-      value={{socket, typingUsers, watchingUsers, activeUsers}}>
+      value={{
+        socketUserWatching,
+        socketUserTyping,
+        socketUserTyped,
+        socketUserWatched,
+        socketUserID,
+        socketUserConnected,
+        isOnline,
+        isTyping,
+        isWatching,
+        socket,
+        activeUsers,
+        newMsgCount,
+        setnewMsgCount,
+      }}>
       {children}
     </SocketContext.Provider>
   );

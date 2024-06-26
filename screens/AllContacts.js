@@ -16,19 +16,22 @@ export default function AllContacts(props) {
   const [loading, setLoading] = useState(true);
   const {jersAppTheme} = useContext(MyContext);
 
+  function cleanPhoneNumber(phoneNumber) {
+    const cleanedNumber = phoneNumber.replace(/\D/g, '');
+    return cleanedNumber;
+  }
+
   const getContacts = async () => {
     try {
       const permissionsGranted = await requestContactsPermission();
 
       if (permissionsGranted) {
         const dbContact = await getAllUsers();
-
         if (dbContact) {
-          const mobContacts = permissionsGranted.map(
-            contact => contact.phoneNumbers[0]?.number,
+          const mobContacts = permissionsGranted.map(contact =>
+            cleanPhoneNumber(contact.phoneNumbers[0]?.number),
           );
           const apiContacts = dbContact.map(contact => contact.mobNum);
-
           let commonMobNumbers = apiContacts.filter(
             contact =>
               mobContacts.includes(`+91${contact}`) ||

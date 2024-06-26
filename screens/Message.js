@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, {useContext, useEffect, useState, useRef} from 'react';
 import {
   FlatList,
   Image,
@@ -13,23 +13,23 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import { addContact, getContactByUserId } from '../src/controllers/contacts';
+import {addContact, getContactByUserId} from '../src/controllers/contacts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   deleteMessageById,
   getAllChats,
   getMessage,
 } from '../src/controllers/chats';
-import { useFocusEffect } from '@react-navigation/native';
+import {useFocusEffect} from '@react-navigation/native';
 import TopBar from '../src/components/TopBar';
 import DeleteModal from '../src/components/DeleteModel';
-import useSocket from '../utils/socketUtil';
 import Send from '../src/assets/svg/send';
-import { JersAppThemeSchema } from '../utils/theme';
-import { MyContext } from '../App';
+import {JersAppThemeSchema} from '../utils/theme';
+import {MyContext} from '../App';
+import {useSocketHook} from '../utils/socket';
 
-export default function Message({ route, navigation, ...props }) {
-  const { id, userID, receiverId, roomID } = route.params;
+export default function Message({route, navigation, ...props}) {
+  const {id, userID, receiverId, roomID} = route.params;
   const {
     socket,
     socketUserWatching,
@@ -41,7 +41,7 @@ export default function Message({ route, navigation, ...props }) {
     isTyping,
     socketUserID,
     socketUserConnected,
-  } = useSocket();
+  } = useSocketHook();
   const [formDatas, setformDatas] = useState({
     msg: '',
     userName: '',
@@ -56,8 +56,8 @@ export default function Message({ route, navigation, ...props }) {
   const [msgID, setmsgID] = useState('');
   const [isDelete, setisDelete] = useState(false);
   // const [jersAppTheme, setjersAppTheme] = useState(JersAppThemeSchema);
-  const { jersAppTheme, setpageName } = useContext(MyContext);
-
+  const {jersAppTheme, setpageName} = useContext(MyContext);
+  const scrollViewRef = useRef();
   const getTime = timeStamp => {
     const date = new Date(timeStamp);
     date.setHours(date.getDate());
@@ -107,13 +107,13 @@ export default function Message({ route, navigation, ...props }) {
               gap: 8,
               paddingHorizontal: 10,
             }}>
-            <Text style={{ color: 'white' }}>{text}</Text>
+            <Text style={{color: 'white'}}>{text}</Text>
             <View
               style={{
                 justifyContent: 'flex-end',
                 height: 20,
               }}>
-              <Text style={{ color: 'slategray', fontSize: 10 }}>{time}</Text>
+              <Text style={{color: 'slategray', fontSize: 10}}>{time}</Text>
             </View>
           </View>
         </View>
@@ -130,23 +130,21 @@ export default function Message({ route, navigation, ...props }) {
         });
         socketUserWatching({
           id: userID ? userID : userData._id,
-          status: 'online',
-          roomID
+          receiverId,
         });
         Keyboard.addListener('keyboardDidHide', () => {
-          socketUserTyped({ id: userID ? userID : userData._id, roomID });
+          socketUserTyped({id: userID ? userID : userData._id, receiverId});
         });
         Keyboard.addListener('keyboardDidShow', () => {
           socketUserTyping({
             id: userID ? userID : userData._id,
-            status: 'online',
-            roomID
+            receiverId,
           });
         });
       }
       return () => {
         if (socket) {
-          socketUserWatched({ id: userID ? userID : userData._id, roomID });
+          socketUserWatched({id: userID ? userID : userData._id, receiverId});
         }
       };
     }, [socket]),
@@ -167,10 +165,10 @@ export default function Message({ route, navigation, ...props }) {
         setuserData(userDetails);
         getContactByUserId(userDetails._id).then(users => {
           if (users) {
-            const res = users.find(user => user.ContactDetails._id === id);
+            const res = users.find(user => user.ContactDetails._id == id);
             if (res) {
               setreceiverDetails(res);
-              console.log(res.userDetails);
+
               // navigation.setOptions({
               //   title: res ? res.ContactDetails.displayName : 'Message',
               // });
@@ -182,10 +180,12 @@ export default function Message({ route, navigation, ...props }) {
             setchatID(chat._id);
             getMessage(chat._id).then(msg => {
               if (msg) {
+                scrollViewRef.current?.scrollToEnd({animated: true});
+
                 setchatArray(
-                  msg.map(elem => ({ ...elem, time: getTime(elem.createdAt) })),
+                  msg.map(elem => ({...elem, time: getTime(elem.createdAt)})),
                 );
-                setisMsgLongPressed(msg.map(item => ({ isSelected: false })));
+                setisMsgLongPressed(msg.map(item => ({isSelected: false})));
               }
             });
           }
@@ -208,7 +208,7 @@ export default function Message({ route, navigation, ...props }) {
         sender: userData._id,
         receiver: id,
         message: formDatas.msg,
-        name: userData.name
+        name: userData.name,
       });
 
       setformDatas({
@@ -252,7 +252,7 @@ export default function Message({ route, navigation, ...props }) {
     }
   };
   const handleOnchange = (value, name) => {
-    setformDatas(prev => ({ ...prev, [name]: value }));
+    setformDatas(prev => ({...prev, [name]: value}));
   };
   const handleLongPress = (index, id) => {
     const updatedStates = [...isMsgLongPressed];
@@ -262,7 +262,7 @@ export default function Message({ route, navigation, ...props }) {
     setisDelete(true);
   };
   const handlePress = () => {
-    const updatedStates = isMsgLongPressed?.map(() => ({ isSelected: false }));
+    const updatedStates = isMsgLongPressed?.map(() => ({isSelected: false}));
     setisMsgLongPressed(updatedStates);
     setisDelete(false);
   };
@@ -307,9 +307,9 @@ export default function Message({ route, navigation, ...props }) {
     },
   });
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{flex: 1}}>
       <TopBar
-        isTyping={isTyping(receiverId)}
+        isTyping={isTyping}
         subtitle={isOnline(receiverId)}
         arrow={true}
         title={receiverDetails ? receiverDetails.name : 'Message'}
@@ -319,11 +319,11 @@ export default function Message({ route, navigation, ...props }) {
         }}
         isDelete={isDelete}
       />
-      <Pressable style={{ flex: 1 }} onPress={handlePress}>
+      <Pressable style={{flex: 1}} onPress={handlePress}>
         <ImageBackground
           source={require('../src/assets/chatBg.png')} // specify the path to your image
           style={styles.backgroundImage}>
-          {isWatching(receiverDetails?.ContactDetails?._id) && (
+          {isWatching && (
             <Image
               source={require('../src/assets/crossAvatar.png')}
               style={{
@@ -336,12 +336,16 @@ export default function Message({ route, navigation, ...props }) {
             />
           )}
           <FlatList
+            onContentSizeChange={() => {
+              scrollViewRef.current?.scrollToEnd({animated: true});
+            }}
+            ref={scrollViewRef}
             scrollEnabled
             data={chatArray}
             contentContainerStyle={{
-              paddingBottom: isWatching(receiverId) ? 40 : 0,
+              paddingBottom: isWatching ? 40 : 0,
             }}
-            renderItem={({ item, index }) => (
+            renderItem={({item, index}) => (
               <BubbleMsg
                 text={item.message}
                 time={item.time}
