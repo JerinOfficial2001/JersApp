@@ -112,7 +112,11 @@ export default function AllContacts(props) {
   }
 
   return (
-    <ScrollView style={{backgroundColor: jersAppTheme.main}}>
+    <ScrollView
+      contentContainerStyle={{
+        paddingHorizontal: 5,
+      }}
+      style={{backgroundColor: jersAppTheme.main}}>
       {contacts.length > 0 ? (
         contacts.map((elem, index) => (
           <MyComponent

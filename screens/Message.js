@@ -38,10 +38,19 @@ export default function Message({route, navigation, ...props}) {
     socketUserWatched,
     isOnline,
     isWatching,
-    isTyping,
     socketUserID,
     socketUserConnected,
+    setisWatching,
   } = useSocketHook();
+
+  const [isTyping, setisTyping] = useState(null);
+  useEffect(() => {
+    socket.on('user_typing', data => {
+      console.log('socketLogged', data, userID);
+      setisTyping(data);
+    });
+  }, []);
+
   const [formDatas, setformDatas] = useState({
     msg: '',
     userName: '',
@@ -140,11 +149,13 @@ export default function Message({route, navigation, ...props}) {
             id: userID ? userID : userData._id,
             receiverId,
           });
+          setisTyping(null);
         });
       }
       return () => {
         if (socket) {
           socketUserWatched({id: userID ? userID : userData._id, receiverId});
+          setisWatching(null);
         }
       };
     }, [socket]),
@@ -306,10 +317,15 @@ export default function Message({route, navigation, ...props}) {
       justifyContent: 'center',
     },
   });
+  const UserTyping =
+    isTyping && isTyping?.id == receiverId ? isTyping.isTyping : false;
+  const UserWatching =
+    isWatching && isWatching?.id == receiverId ? isWatching.isWatching : false;
+
   return (
     <View style={{flex: 1}}>
       <TopBar
-        isTyping={isTyping}
+        isTyping={UserTyping}
         subtitle={isOnline(receiverId)}
         arrow={true}
         title={receiverDetails ? receiverDetails.name : 'Message'}
@@ -323,7 +339,7 @@ export default function Message({route, navigation, ...props}) {
         <ImageBackground
           source={require('../src/assets/chatBg.png')} // specify the path to your image
           style={styles.backgroundImage}>
-          {isWatching && (
+          {UserWatching && (
             <Image
               source={require('../src/assets/crossAvatar.png')}
               style={{
@@ -343,7 +359,7 @@ export default function Message({route, navigation, ...props}) {
             scrollEnabled
             data={chatArray}
             contentContainerStyle={{
-              paddingBottom: isWatching ? 40 : 0,
+              paddingBottom: UserWatching ? 40 : 0,
             }}
             renderItem={({item, index}) => (
               <BubbleMsg

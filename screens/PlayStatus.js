@@ -105,7 +105,11 @@ export default function PlayStatus({route, ...props}) {
             />
           </View>
         ) : (
-          <Carousel data={status?.file} navigation={props.navigation} />
+          <Carousel
+            text={status?.text}
+            data={status?.file}
+            navigation={props.navigation}
+          />
         )
 
         //   : (

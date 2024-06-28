@@ -9,6 +9,7 @@ import DonutChart from '../src/components/DonutChart';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {DarkThemeSchema, JersAppThemeSchema} from '../utils/theme';
 import {MyContext} from '../App';
+import {ActivityIndicator, MD2Colors} from 'react-native-paper';
 
 export default function Status(props) {
   // const [theme, settheme] = useState(JersAppThemeSchema);
@@ -18,11 +19,13 @@ export default function Status(props) {
   const {jersAppTheme} = useContext(MyContext);
   const [status, setstatus] = useState([]);
   const [userData, setuserData] = useState(null);
+  const [isLoading, setisLoading] = useState(true);
   useFocusEffect(
     React.useCallback(() => {
       setactiveTab('STATUS');
       GetAllStatus().then(data => {
         setstatus(data);
+        setisLoading(false);
       });
       AsyncStorage.getItem('userData').then(data => {
         setuserData(data ? JSON.parse(data) : null);
@@ -32,42 +35,59 @@ export default function Status(props) {
   const handlePress = () => {
     setopenMenu(false);
   };
-  const userStatus = status?.find(data => data.userID == userData._id);
-  const otherUserStatus = status?.filter(data => data.userID !== userData._id);
+  const userStatus = status?.find(data => data.userID == userData?._id);
+  const otherUserStatus = status?.filter(data => data.userID !== userData?._id);
   return (
     <Pressable style={{flex: 1}} onPress={handlePress}>
-      <ScrollView style={{padding: 10, backgroundColor: jersAppTheme.main}}>
-        <MyComponent
-          status={{
-            title: 'My status',
-            file: userStatus?.file,
-          }}
-          onclick={() => {
-            if (!userStatus) {
-              props.navigation.navigate('AddStatus', {
-                id: userData?._id,
-              });
-            } else {
-              props.navigation.navigate('PlayStatus', {
-                id: userStatus?._id,
-              });
-            }
-          }}
-        />
-        {otherUserStatus?.map(elem => {
-          return (
-            <MyComponent
-              status={elem}
-              key={elem._id}
-              onclick={() => {
-                props.navigation.navigate('PlayStatus', {
-                  id: elem._id,
+      {isLoading ? (
+        <View
+          style={{
+            width: '100%',
+            alignItems: 'center',
+            flex: 1,
+            justifyContent: 'center',
+            backgroundColor: jersAppTheme.main,
+          }}>
+          <ActivityIndicator
+            animating={true}
+            color={MD2Colors.green400}
+            size="large"
+          />
+        </View>
+      ) : (
+        <ScrollView style={{padding: 10, backgroundColor: jersAppTheme.main}}>
+          <MyComponent
+            status={{
+              title: 'My status',
+              file: userStatus?.file,
+            }}
+            onclick={() => {
+              if (!userStatus) {
+                props.navigation.navigate('AddStatus', {
+                  id: userData?._id,
                 });
-              }}
-            />
-          );
-        })}
-      </ScrollView>
+              } else {
+                props.navigation.navigate('PlayStatus', {
+                  id: userStatus?._id,
+                });
+              }
+            }}
+          />
+          {otherUserStatus?.map(elem => {
+            return (
+              <MyComponent
+                status={elem}
+                key={elem._id}
+                onclick={() => {
+                  props.navigation.navigate('PlayStatus', {
+                    id: elem._id,
+                  });
+                }}
+              />
+            );
+          })}
+        </ScrollView>
+      )}
     </Pressable>
   );
 }

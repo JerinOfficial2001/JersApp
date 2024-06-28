@@ -17,6 +17,7 @@
     "@tanstack/react-query": "^5.45.1",
     "axios": "^1.6.8",
     "deprecated-react-native-prop-types": "^5.0.0",
+    "events": "^3.3.0",
     "react": "18.2.0",
     "react-native": "^0.73.8",
     "react-native-camera": "^4.2.1",

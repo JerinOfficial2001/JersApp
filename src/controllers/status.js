@@ -3,17 +3,16 @@ import {expressApi} from '../api';
 
 export const AddStatus = async formData => {
   try {
-    const response = await fetch(`${expressApi}/api/status/add`, {
-      method: 'POST',
+    const {data} = await axios.post(`${expressApi}/api/status/add`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-      body: formData,
-    }).then(res => res.json());
-    if (response.status == 'ok') {
-      return response;
+    });
+
+    if (data.status == 'ok') {
+      return data;
     } else {
-      console.log(response.message, 'StatusERR');
+      console.log(data.message, 'StatusERR');
     }
   } catch (error) {
     console.log('AddStatus Err:', error);

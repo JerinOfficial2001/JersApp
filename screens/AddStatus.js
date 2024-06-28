@@ -83,10 +83,10 @@ export default function AddStatus({route, ...props}) {
       try {
         const options = {quality: 0.5, base64: false};
         const data = await cameraRef.current.takePictureAsync(options);
-        console.log('Photo captured:', data);
+        console.log('Photo captured');
         if (!onlyCamera) {
           props.navigation.navigate('PreviewStatus', {
-            image: data,
+            image: [data],
             id,
             video: null,
           });

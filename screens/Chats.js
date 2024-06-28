@@ -13,13 +13,22 @@ import {TopBarContext} from '../navigations/tabNavigation';
 import {ActivityIndicator, Button, MD2Colors} from 'react-native-paper';
 import {MyContext} from '../App';
 import {DarkThemeSchema, JersAppThemeSchema} from '../utils/theme';
-import {showNotification} from '../src/notification.android';
+import {eventEmitter, showNotification} from '../src/notification.android';
 import {checkApplicationPermission} from '../src/controllers/permissions';
 import {useQueryClient} from '@tanstack/react-query';
 import {useSocketHook} from '../utils/socket';
 
 export default function Chats(props) {
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const subscription = eventEmitter.addListener('notificationPressed', () => {
+      props.navigation.navigate('Chats');
+    });
+    return () => {
+      subscription.remove(); // Clean up listener on component unmount
+    };
+  }, []);
 
   const {Data, jersAppTheme, setpageName} = useContext(MyContext);
   const [chats, setChats] = useState([]);
@@ -52,7 +61,6 @@ export default function Chats(props) {
   };
   const fetchData = async () => {
     checkApplicationPermission();
-    setisLoading(true);
     try {
       const data = await AsyncStorage.getItem('userData');
       if (data) {
@@ -77,8 +85,9 @@ export default function Chats(props) {
   };
   useFocusEffect(
     useCallback(() => {
-      fetchData();
+      setisLoading(true);
 
+      fetchData();
       setpageName('Chats');
     }, []),
   );
@@ -102,6 +111,11 @@ export default function Chats(props) {
   );
   useFocusEffect(
     React.useCallback(() => {
+      fetchData();
+    }, [newMsgCount]),
+  );
+  useFocusEffect(
+    React.useCallback(() => {
       if (socket) {
         socket.on('connection', () => {
           console.log('connected');
@@ -114,7 +128,6 @@ export default function Chats(props) {
       }
     }, [socket]),
   );
-
   const handleDeleteContact = () => {
     if (receiversId && Contact_id) {
       deleteContactById(userDatas._id, receiversId, Contact_id).then(data => {
@@ -169,8 +182,14 @@ export default function Chats(props) {
         ) : chats?.length > 0 ? (
           chats?.map((elem, index) => {
             const isSelected = isMsgLongPressed[index]?.isSelected;
-            const msgCount = newMsgCount ? newMsgCount?.length : '';
-
+            // const msgCount =
+            //   newMsgCount && parseInt(newMsgCount.count) > 0
+            //     ? newMsgCount?.count
+            //     : elem.msgCount;
+            // const lastMsg =
+            //   newMsgCount && newMsgCount.lastMsg !== ''
+            //     ? newMsgCount.lastMsg
+            //     : null;
             return (
               <View
                 key={index}
@@ -179,7 +198,7 @@ export default function Chats(props) {
                   borderRadius: 3,
                 }}>
                 <MyComponent
-                  newMsgcount={msgCount}
+                  newMsgcount={elem.msgCount}
                   contact={elem}
                   onclick={() => {
                     const Ids = [userDatas._id, elem.ContactDetails._id]
@@ -193,13 +212,12 @@ export default function Chats(props) {
                       roomID: Ids,
                     });
                     handlePress();
-                    if (newMsgCount?.length > 0) {
-                      socket.emit('clearNewMsg', {
-                        id: userDatas._id,
-                        receiverID: elem.ContactDetails._id,
-                      });
-                      setnewMsgCount([]);
-                    }
+
+                    socket.emit('clearNewMsg', {
+                      id: userDatas._id,
+                      Contact_id: elem._id,
+                    });
+                    setnewMsgCount(null);
                   }}
                   onLongPress={() => {
                     handleLongPress(

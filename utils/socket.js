@@ -10,28 +10,26 @@ export const useSocketHook = () => {
 export const SocketProvider = ({children}) => {
   const [socket, setsocket] = useState(null);
   const [activeUsers, setactiveUsers] = useState([]);
-  const [isWatching, setisWatching] = useState(false);
-  const [isTyping, setisTyping] = useState(false);
-  const [newMsgCount, setnewMsgCount] = useState([]);
+  const [isWatching, setisWatching] = useState(null);
+  const [isTyping, setisTyping] = useState(null);
+  const [newMsgCount, setnewMsgCount] = useState(null);
+  const [ID, setID] = useState('');
   useEffect(() => {
     const connection = io(socketServerApi);
     setsocket(connection);
     connection.on('notification', data => {
-      console.log(data, 'notification');
       showNotification(data.name, data.msg);
     });
     connection.on('user_connected', data => {
       setactiveUsers(data);
     });
     connection.on('user_watching', data => {
-      setisWatching(data.isWatching);
+      setisWatching(data);
     });
     connection.on('user_typing', data => {
-      console.log(data, 'isTyping');
-      setisTyping(data.isTyping);
+      setisTyping(data);
     });
     connection.on('newMsgs', data => {
-      console.log('newMsgs-socket', data);
       setnewMsgCount(data);
     });
     return () => {
@@ -58,6 +56,9 @@ export const SocketProvider = ({children}) => {
   const socketUserWatched = data => {
     socket?.emit('user_watchout', data);
   };
+  const socketLogout = data => {
+    socket?.emit('removeUser', data);
+  };
   const isOnline = id => {
     const isActive = activeUsers?.find(res => res.id == id);
     return isActive;
@@ -79,6 +80,9 @@ export const SocketProvider = ({children}) => {
         activeUsers,
         newMsgCount,
         setnewMsgCount,
+        socketLogout,
+        setisWatching,
+        setisTyping,
       }}>
       {children}
     </SocketContext.Provider>

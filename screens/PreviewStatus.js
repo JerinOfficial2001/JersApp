@@ -13,20 +13,25 @@ export default function PreviewStatus({route, ...props}) {
   const [isLoading, setisLoading] = useState(false);
   // const [jersAppTheme, setjersAppTheme] = useState(JersAppThemeSchema);
   const {jersAppTheme} = useContext(MyContext);
-
+  const getMediaSorce = image => {
+    if (image !== null && image !== 'null') {
+      return image?.map(img => {
+        return {
+          uri: img.uri,
+          type: image.type ? image.type : 'image/jpeg',
+          name: image.type ? image.type : 'image.jpg',
+        };
+      });
+    } else {
+      return {
+        uri: video?.uri,
+        type: 'video/mp4',
+        name: 'video.mp4',
+      };
+    }
+  };
   const [inputDatas, setinputDatas] = useState({
-    file:
-      image !== null
-        ? image.map(img => ({
-            uri: img?.uri,
-            type: 'image/jpeg',
-            name: 'image.jpg',
-          }))
-        : {
-            uri: video?.uri,
-            type: 'video/mp4',
-            name: 'video.mp4',
-          },
+    file: getMediaSorce(image),
     text: '',
     userID: id,
   });
@@ -37,9 +42,14 @@ export default function PreviewStatus({route, ...props}) {
     setisLoading(true);
     if (inputDatas.video !== null || inputDatas.image !== null) {
       const formData = new FormData();
+      // if (typeof image == 'object') {
+      //   formData.append('file', image);
+      // } else {
       inputDatas.file.forEach(image => {
         formData.append('file', image);
       });
+      // }
+
       const data = {
         text: inputDatas.text,
         userID: id,
@@ -81,7 +91,7 @@ export default function PreviewStatus({route, ...props}) {
       ) : (
         <View style={styles.content}>
           <Carousel
-            data={inputDatas?.file}
+            data={inputDatas.file}
             preview={true}
             navigation={props.navigation}
           />
@@ -140,6 +150,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: 3,
+    marginBottom: 10,
   },
   sendBtn: {
     backgroundColor: '#14a95f',
