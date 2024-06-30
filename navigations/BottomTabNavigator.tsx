@@ -41,6 +41,9 @@ import {
 } from '@react-navigation/bottom-tabs';
 import MaterialCommunityIcons from 'react-native-vector-icons/Ionicons';
 import FontAwesomeIcons from 'react-native-vector-icons/FontAwesome';
+import MaterialCommunityIconsIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import EntypoIcons from 'react-native-vector-icons/Entypo';
+import AntDesignIcons from 'react-native-vector-icons/AntDesign';
 import Animated, {
   useAnimatedStyle,
   useDerivedValue,
@@ -49,9 +52,11 @@ import Animated, {
 import {Path, Svg} from 'react-native-svg';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Lottie from 'lottie-react-native';
-import {useSocketHook} from '../utils/socket';
 import AddStatus from '../screens/AddStatus';
 import AllContacts from '../screens/AllContacts';
+import {useSocketHook} from '../utils/socket';
+import {StackScreenProps} from '@react-navigation/stack';
+import {useNavigation} from '@react-navigation/native';
 
 const Tab = createBottomTabNavigator();
 const AnimatedSvg = Animated.createAnimatedComponent(Svg);
@@ -60,58 +65,63 @@ interface UserData {
   name?: string;
   // Add other fields as necessary
 }
-export default function BottomTabNavigator(props: any) {
-  const {socketLogout} = useSocketHook();
+
+interface BottomTabNavigatorProps extends StackScreenProps<any> {}
+
+export default function BottomTabNavigator() {
+  const navigation = useNavigation<any>();
+  const {socketLogout}: any = useSocketHook();
   const [visible, setVisible] = useState(false);
   const [isDelete, setisDelete] = useState(false);
   const [isModelOpen, setisModelOpen] = useState(false);
   const [openMenu, setopenMenu] = useState(false);
   const [isloading, setisloading] = useState(false);
-  const [userData, setuserData] = useState({});
+  const [userData, setuserData] = useState<UserData | null>(null);
   const [activeTab, setactiveTab] = useState('CHATS');
   const [addStatus, setaddStatus] = useState(false);
   const [userProfile, setuserProfile] = useState(null);
-  const [jersAppTheme, setjersApptheme] = useState(JersAppThemeSchema);
-  // const {jersAppTheme, setpageName} = useContext(MyContext);
-  // useEffect(() => {
-  //   AsyncStorage.getItem('userData').then(res => {
-  //     const data = JSON.parse(res);
-  //     setuserData(data);
-  //     GetUsersByID(data._id).then(res => {
-  //       setuserProfile(res?.image?.url);
-  //     });
-  //   });
-  //   setpageName('Home');
-  // }, []);
-  // const renderRightHeaderComponent = () => (
-  //   <IconButton
-  //     style={{
-  //       bottom: 10,
-  //       position: 'absolute',
-  //       right: 10,
-  //       backgroundColor: jersAppTheme.appBar,
-  //       padding: 10,
-  //     }}
-  //     icon={() => (
-  //       <View>
-  //         {activeTab == 'CHATS' ? (
-  //           <Plus color={jersAppTheme.title} />
-  //         ) : (
-  //           <Camera color={jersAppTheme.title} />
-  //         )}
-  //       </View>
-  //     )}
-  //     size={40}
-  //     onPress={() => {
-  //       activeTab == 'CHATS'
-  //         ? props.navigation.navigate('AllContacts')
-  //         : props.navigation.navigate('AddStatus', {
-  //             onlyCamera: false,
-  //             id: userData._id,
-  //           });
-  //     }}
-  //   />
-  // );
+  // const [jersAppTheme, setjersApptheme] = useState(jersAppTheme);
+  const {jersAppTheme, setpageName} = useContext<any>(MyContext);
+  useEffect(() => {
+    AsyncStorage.getItem('userData').then((res: any) => {
+      const data = JSON.parse(res);
+      setuserData(data);
+      GetUsersByID(data._id).then(res => {
+        setuserProfile(res?.image?.url);
+      });
+    });
+    setpageName('Home');
+  }, []);
+
+  const renderRightHeaderComponent = () => (
+    <IconButton
+      style={{
+        bottom: 10,
+        position: 'absolute',
+        right: 10,
+        backgroundColor: jersAppTheme.appBar,
+        padding: 10,
+      }}
+      icon={() => (
+        <View>
+          {activeTab == 'CHATS' ? (
+            <Plus color={jersAppTheme.title} />
+          ) : (
+            <Camera color={jersAppTheme.title} />
+          )}
+        </View>
+      )}
+      size={40}
+      onPress={() => {
+        activeTab == 'CHATS'
+          ? navigation.navigate('AllContacts')
+          : navigation.navigate('AddStatus', {
+              onlyCamera: false,
+              id: userData?._id,
+            });
+      }}
+    />
+  );
   const handleCloseMenu = () => {
     setopenMenu(false);
   };
@@ -122,9 +132,9 @@ export default function BottomTabNavigator(props: any) {
       if (parsedToken) {
         logoutWithToken(parsedToken).then(res => {
           if (res.status == 'ok') {
-            // socketLogout(userData._id);
+            socketLogout(userData?._id);
             AsyncStorage.removeItem('userData');
-            props.navigation.navigate('Login');
+            navigation.navigate('Login');
             handleCloseMenu();
             ToastAndroid.show(res.message, ToastAndroid.SHORT);
           }
@@ -136,6 +146,14 @@ export default function BottomTabNavigator(props: any) {
       }
     });
   };
+  const styles = StyleSheet.create({
+    icon: {
+      color: 'white',
+    },
+    menuIcons: {
+      color: jersAppTheme.themeText,
+    },
+  });
   return (
     <TopBarContext.Provider
       value={{
@@ -154,7 +172,7 @@ export default function BottomTabNavigator(props: any) {
             if (isDelete) {
               setisModelOpen(true);
             } else {
-              // props.navigation.navigate('Settings');
+              // navigation.navigate('Settings');
               setopenMenu(true);
             }
           }}
@@ -167,63 +185,58 @@ export default function BottomTabNavigator(props: any) {
             right: 5,
             top: 40,
             zIndex: 2,
-            backgroundColor: JersAppThemeSchema.model,
+            backgroundColor: jersAppTheme.model,
             borderRadius: 10,
-            shadowColor: JersAppThemeSchema.shadows,
-            shadowOpacity: 10,
+            // shadowColor: jersAppTheme.shadows,
+            // shadowOpacity: 10,
+            elevation: 8,
           }}>
           <Menu.Item
             leadingIcon={() =>
               userProfile ? (
                 <Avatar.Image size={30} source={{uri: userProfile}} />
               ) : (
-                <Avatar.Image
-                  size={30}
-                  source={require('../src/assets/user.png')}
-                />
+                <EntypoIcons style={styles.menuIcons} name="user" size={24} />
               )
             }
-            title={'jerin'}
-            titleStyle={{color: JersAppThemeSchema.title}}
+            title={userData?.name}
+            titleStyle={{color: jersAppTheme.title}}
             onPress={() => {
               handleCloseMenu();
-              props.navigation.navigate('MyProfile', {
-                // id: userData._id,
+              navigation.navigate('MyProfile', {
+                id: userData?._id,
+                image: userProfile,
               });
             }}
           />
           <Menu.Item
             leadingIcon={() => (
-              <Image
-                style={{
-                  height: 30,
-                  width: 30,
-                }}
-                source={require('../src/assets/qrscan.png')}
+              <MaterialCommunityIconsIcons
+                style={styles.menuIcons}
+                name="qrcode-scan"
+                size={24}
               />
             )}
             title="JersApp web"
-            titleStyle={{color: JersAppThemeSchema.title}}
+            titleStyle={{color: jersAppTheme.title}}
             onPress={() => {
               handleCloseMenu();
-              props.navigation.navigate('QRScanner');
+              navigation.navigate('QRScanner');
             }}
           />
           <Menu.Item
             leadingIcon={() => (
-              <Image
-                style={{
-                  height: 30,
-                  width: 30,
-                }}
-                source={require('../src/assets/logo.png')}
+              <MaterialCommunityIconsIcons
+                style={styles.menuIcons}
+                name="theme-light-dark"
+                size={26}
               />
             )}
             title="Theme"
-            titleStyle={{color: JersAppThemeSchema.title}}
+            titleStyle={{color: jersAppTheme.title}}
             onPress={() => {
               handleCloseMenu();
-              props.navigation.navigate('Themes');
+              navigation.navigate('Themes');
             }}
           />
           <Menu.Item
@@ -232,21 +245,19 @@ export default function BottomTabNavigator(props: any) {
                 {isloading ? (
                   <ActivityIndicator
                     animating={true}
-                    color={JersAppThemeSchema.appBar}
+                    color={jersAppTheme.appBar}
                   />
                 ) : (
-                  <Image
-                    style={{
-                      height: 30,
-                      width: 30,
-                    }}
-                    source={require('../src/assets/logout.png')}
+                  <AntDesignIcons
+                    style={styles.menuIcons}
+                    name="logout"
+                    size={24}
                   />
                 )}
               </View>
             )}
             title="Logout"
-            titleStyle={{color: JersAppThemeSchema.title}}
+            titleStyle={{color: jersAppTheme.title}}
             onPress={logout}
           />
         </View>
@@ -341,9 +352,7 @@ export default function BottomTabNavigator(props: any) {
   );
 }
 
-// ------------------------------------------------------------------
-
-// ------------------------------------------------------------------
+//* ------------------------------------------------------------------
 
 const AnimatedTabBar = ({
   state: {index: activeIndex, routes},
@@ -387,7 +396,20 @@ const AnimatedTabBar = ({
       transform: [{translateX: withTiming(xOffset.value, {duration: 250})}],
     };
   });
-
+  const {jersAppTheme, setpageName} = useContext<any>(MyContext);
+  const styles = StyleSheet.create({
+    tabBar: {
+      backgroundColor: jersAppTheme.appBar,
+    },
+    activeBackground: {
+      position: 'absolute',
+    },
+    tabBarContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-evenly',
+      marginBottom: 10,
+    },
+  });
   return (
     <View style={[styles.tabBar, {paddingBottom: bottom}]}>
       <AnimatedSvg
@@ -396,7 +418,7 @@ const AnimatedTabBar = ({
         viewBox="0 0 110 60"
         style={[styles.activeBackground, animatedStyles]}>
         <Path
-          fill="#242C3B"
+          fill={jersAppTheme.main}
           d="M20 0H0c11.046 0 20 8.953 20 20v5c0 19.33 15.67 35 35 35s35-15.67 35-35v-5c0-11.045 8.954-20 20-20H20z"
         />
       </AnimatedSvg>
@@ -438,6 +460,7 @@ const TabBarComponent = ({
 }: TabBarComponentProps) => {
   // handle lottie animation -----------------------------------------
   const ref = useRef(null);
+  const {jersAppTheme, setpageName} = useContext<any>(MyContext);
 
   useEffect(() => {
     if (active && ref?.current) {
@@ -464,6 +487,29 @@ const TabBarComponent = ({
     };
   });
 
+  const styles = StyleSheet.create({
+    component: {
+      height: 60,
+      width: 60,
+      marginTop: -5,
+    },
+    componentCircle: {
+      flex: 1,
+      borderRadius: 30,
+      backgroundColor: jersAppTheme.appBar,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    iconContainer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+  });
   return (
     <Pressable onPress={onPress} onLayout={onLayout} style={styles.component}>
       <Animated.View
@@ -477,40 +523,3 @@ const TabBarComponent = ({
     </Pressable>
   );
 };
-const styles = StyleSheet.create({
-  tabBar: {
-    backgroundColor: '#151B26',
-  },
-  activeBackground: {
-    position: 'absolute',
-  },
-  tabBarContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    marginBottom: 10,
-  },
-  component: {
-    height: 60,
-    width: 60,
-    marginTop: -5,
-  },
-  componentCircle: {
-    flex: 1,
-    borderRadius: 30,
-    backgroundColor: '#151B26',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  icon: {
-    color: 'white',
-  },
-});

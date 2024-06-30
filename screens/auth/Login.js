@@ -10,7 +10,7 @@ import {
 import {login} from '../../src/controllers/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useFocusEffect} from '@react-navigation/native';
-import {DarkThemeSchema} from '../../utils/theme';
+import {DarkThemeSchema, JersAppThemeSchema} from '../../utils/theme';
 
 export default function Login(props) {
   useFocusEffect(
@@ -46,8 +46,13 @@ export default function Login(props) {
     ) {
       setisLoading(true);
       AsyncStorage.removeItem('token');
-      login(formData.mobNum, formData.password, props);
-      setisLoading(false);
+      login(formData.mobNum, formData.password, props).then(data => {
+        setisLoading(false);
+
+        if (data?.status == 'ok') {
+          props.navigation.navigate('Home');
+        }
+      });
     }
   };
   const handleValidation = (name, value) => {
@@ -187,7 +192,10 @@ export default function Login(props) {
         style={styles.button}
         textColor={theme.main}>
         {isLoading ? (
-          <ActivityIndicator animating={true} color={MD2Colors.greenA100} />
+          <ActivityIndicator
+            animating={true}
+            color={JersAppThemeSchema.appBar}
+          />
         ) : (
           'Next'
         )}

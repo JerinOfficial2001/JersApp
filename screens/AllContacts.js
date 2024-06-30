@@ -10,6 +10,7 @@ import {getAllUsers} from '../src/controllers/auth';
 import {ActivityIndicator, MD2Colors} from 'react-native-paper';
 import {MyContext} from '../App';
 import SurfaceLayout from '../src/Layouts/SurfaceLayout';
+import Loader from '../src/components/Loader';
 
 export default function AllContacts(props) {
   const [contacts, setContacts] = useState([]);
@@ -94,54 +95,39 @@ export default function AllContacts(props) {
     );
   };
 
-  if (loading) {
-    return (
-      <View
-        style={{
-          width: '100%',
-          alignItems: 'center',
-          flex: 1,
-          justifyContent: 'center',
-          backgroundColor: jersAppTheme.main,
-        }}>
-        <ActivityIndicator
-          animating={true}
-          color={jersAppTheme.appBar}
-          size="large"
-        />
-      </View>
-    );
-  }
-
   return (
     <SurfaceLayout>
-      <ScrollView
-        contentContainerStyle={{
-          paddingHorizontal: 5,
-        }}>
-        {contacts.length > 0 ? (
-          contacts.map((elem, index) => (
-            <MyComponent
-              contactPg
-              contact={elem}
-              key={index}
-              onclick={() => {
-                handleClick(elem);
-              }}
-            />
-          ))
-        ) : (
-          <View
-            style={{
-              width: '100%',
-              alignItems: 'center',
-              height: 700,
-              justifyContent: 'center',
-            }}>
-            <Text style={{color: 'black'}}>No Contacts</Text>
-          </View>
-        )}
-      </ScrollView>
+      {loading ? (
+        <Loader />
+      ) : (
+        <ScrollView
+          contentContainerStyle={{
+            paddingHorizontal: 5,
+          }}>
+          {contacts.length > 0 ? (
+            contacts.map((elem, index) => (
+              <MyComponent
+                contactPg
+                contact={elem}
+                key={index}
+                onclick={() => {
+                  handleClick(elem);
+                }}
+              />
+            ))
+          ) : (
+            <View
+              style={{
+                width: '100%',
+                alignItems: 'center',
+                height: 700,
+                justifyContent: 'center',
+              }}>
+              <Text style={{color: 'black'}}>No Contacts</Text>
+            </View>
+          )}
+        </ScrollView>
+      )}
     </SurfaceLayout>
   );
 }

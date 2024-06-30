@@ -9,7 +9,7 @@ export default function SurfaceLayout({children}) {
     <View
       style={{
         flex: 1,
-        backgroundColor: '#151B26',
+        backgroundColor: jersAppTheme.appBar,
       }}>
       <View
         style={{

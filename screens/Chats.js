@@ -1,43 +1,36 @@
-import React, {useCallback, useContext, useEffect, useState} from 'react';
+import {useFocusEffect} from '@react-navigation/native';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import React, {useContext, useEffect, useState} from 'react';
 import {Pressable, ScrollView, Text, ToastAndroid, View} from 'react-native';
+import {MyContext} from '../App';
+import {TopBarContext} from '../navigations/tabNavigation';
+import SurfaceLayout from '../src/Layouts/SurfaceLayout';
+import DeleteModal from '../src/components/DeleteModel';
 import MyComponent from '../src/components/MyComponent';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {createChat} from '../src/controllers/chats';
 import {
   deleteContactById,
   getContactByUserId,
 } from '../src/controllers/contacts';
-import {useFocusEffect} from '@react-navigation/native';
-import {createChat} from '../src/controllers/chats';
-import DeleteModal from '../src/components/DeleteModel';
-import {TopBarContext} from '../navigations/tabNavigation';
-import {ActivityIndicator, Button, MD2Colors} from 'react-native-paper';
-import {MyContext} from '../App';
-import {DarkThemeSchema, JersAppThemeSchema} from '../utils/theme';
-import {eventEmitter, showNotification} from '../src/notification.android';
 import {checkApplicationPermission} from '../src/controllers/permissions';
-import {useQueryClient} from '@tanstack/react-query';
+import {eventEmitter} from '../src/notification.android';
 import {useSocketHook} from '../utils/socket';
-import SurfaceLayout from '../src/Layouts/SurfaceLayout';
+import Loader from '../src/components/Loader';
 
 export default function Chats(props) {
-  const queryClient = useQueryClient();
-
   useEffect(() => {
     const subscription = eventEmitter.addListener('notificationPressed', () => {
       props.navigation.navigate('Chats');
     });
     return () => {
-      // subscription.remove(); // Clean up listener on component unmount
+      if (subscription) subscription.removeListener();
     };
   }, []);
 
   const {Data, jersAppTheme, setpageName} = useContext(MyContext);
-  const [chats, setChats] = useState([]);
   const [isMsgLongPressed, setisMsgLongPressed] = useState([]);
   const [receiversId, setreceiversId] = useState('');
-  const [userDatas, setuserDatas] = useState({});
   const [Contact_id, setContact_id] = useState('');
-  const [isLoading, setisLoading] = useState(false);
   // const [theme, settheme] = useState(JersAppThemeSchema);
 
   const {setisDelete, isModelOpen, setisModelOpen, setopenMenu, setactiveTab} =
@@ -49,6 +42,7 @@ export default function Chats(props) {
     socketUserID,
     socketUserConnected,
   } = useSocketHook();
+
   const getDate = timestamps => {
     const date = new Date(timestamps);
     const properDate =
@@ -60,59 +54,34 @@ export default function Chats(props) {
     }`;
     return formatedDate;
   };
-  const fetchData = async () => {
-    checkApplicationPermission();
-    try {
-      const data = await AsyncStorage.getItem('userData');
-      if (data) {
-        setisLoading(false);
-        const userData = JSON.parse(data);
 
-        setuserDatas(userData);
-        const contacts = await getContactByUserId(userData?._id);
-        if (contacts) {
-          socket.emit('me', userData._id);
+  const {data, refetch, isLoading} = useQuery({
+    queryKey: ['chats'],
+    queryFn: () => getContactByUserId(Data._id),
+    enabled: Data._id != undefined,
+  });
 
-          setChats(
-            contacts.map(item => ({...item, date: getDate(item.createdAt)})),
-          );
-          setisMsgLongPressed(contacts.map(item => ({isSelected: false})));
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      setisLoading(false);
-    }
-  };
-  useFocusEffect(
-    useCallback(() => {
-      setisLoading(true);
+  checkApplicationPermission();
 
-      fetchData();
-      setpageName('Chats');
-    }, []),
-  );
-  const addChat = data => {
-    if (data.sender && data.receiver) {
+  const {mutateAsync: AddChat} = useMutation({
+    mutationFn: data => {
+      createChat(data);
+      return data;
+    },
+    onSuccess: data => {
       socket.emit('roomID', data.roomID);
-      createChat(data).then(res => {
-        props.navigation.navigate('Message', {
-          id: data.elem.ContactDetails?._id,
-          userID: userDatas._id,
-          receiverId: data.receiver,
-          roomID: data.roomID,
-        });
+      props.navigation.navigate('Message', {
+        id: data.elem.ContactDetails?._id,
+        userID: Data._id,
+        receiverId: data.receiver,
+        roomID: data.roomID,
       });
-    }
-  };
+    },
+  });
+
   useFocusEffect(
     React.useCallback(() => {
-      setactiveTab('CHATS');
-    }, []),
-  );
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchData();
+      refetch();
     }, [newMsgCount]),
   );
   useFocusEffect(
@@ -121,9 +90,9 @@ export default function Chats(props) {
         socket.on('connection', () => {
           console.log('connected');
         });
-        socketUserID(Data._id ? Data._id : userDatas._id);
+        socketUserID(Data._id);
         socketUserConnected({
-          id: Data._id ? Data._id : userDatas._id,
+          id: Data._id,
           status: 'online',
         });
       }
@@ -131,7 +100,7 @@ export default function Chats(props) {
   );
   const handleDeleteContact = () => {
     if (receiversId && Contact_id) {
-      deleteContactById(userDatas._id, receiversId, Contact_id).then(data => {
+      deleteContactById(Data._id, receiversId, Contact_id).then(data => {
         if (data.status == 'ok' && data.message !== 'failed') {
           fetchData();
           handlePress();
@@ -163,35 +132,17 @@ export default function Chats(props) {
     setisModelOpen(false);
     handlePress();
   };
+
+  if (isLoading) {
+    return <Loader />;
+  }
   return (
     <SurfaceLayout>
       <Pressable style={{flex: 1}} onPress={handlePress}>
         <ScrollView style={{padding: 10}}>
-          {isLoading ? (
-            <View
-              style={{
-                width: '100%',
-                alignItems: 'center',
-                height: 650,
-                justifyContent: 'center',
-              }}>
-              <ActivityIndicator
-                animating={true}
-                color={MD2Colors.green400}
-                size="large"
-              />
-            </View>
-          ) : chats?.length > 0 ? (
-            chats?.map((elem, index) => {
+          {data?.length > 0 ? (
+            data?.map((elem, index) => {
               const isSelected = isMsgLongPressed[index]?.isSelected;
-              // const msgCount =
-              //   newMsgCount && parseInt(newMsgCount.count) > 0
-              //     ? newMsgCount?.count
-              //     : elem.msgCount;
-              // const lastMsg =
-              //   newMsgCount && newMsgCount.lastMsg !== ''
-              //     ? newMsgCount.lastMsg
-              //     : null;
               return (
                 <View
                   key={index}
@@ -203,12 +154,12 @@ export default function Chats(props) {
                     newMsgcount={elem.msgCount}
                     contact={elem}
                     onclick={() => {
-                      const Ids = [userDatas._id, elem.ContactDetails._id]
+                      const Ids = [Data._id, elem.ContactDetails._id]
                         .sort()
                         .join('_');
 
-                      addChat({
-                        sender: userDatas._id,
+                      AddChat({
+                        sender: Data._id,
                         receiver: elem.ContactDetails._id,
                         elem: elem,
                         roomID: Ids,
@@ -216,7 +167,7 @@ export default function Chats(props) {
                       handlePress();
 
                       socket.emit('clearNewMsg', {
-                        id: userDatas._id,
+                        id: Data._id,
                         Contact_id: elem._id,
                       });
                       setnewMsgCount(null);

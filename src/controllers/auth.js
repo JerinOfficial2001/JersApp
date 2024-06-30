@@ -34,23 +34,15 @@ export const login = async (mobNum, password, props) => {
         },
         body: JSON.stringify({token}),
       }).then(res => res.json());
-      if (userData.status === 'ok') {
-        // Store user data in AsyncStorage
-        AsyncStorage.setItem('userData', JSON.stringify(userData.data.user));
-        AsyncStorage.setItem('token', JSON.stringify(token));
-
-        // Check if 'userData' key exists before navigating
-        AsyncStorage.getItem('userData').then(storedUserData => {
-          if (storedUserData) {
-            // 'userData' key exists, navigate to 'Home'
-            props.navigation.navigate('Home');
-          } else {
-            // 'userData' key does not exist, handle accordingly
-            console.error('Error: userData key not found in AsyncStorage');
-          }
-        });
-      } else {
-        console.error('Error:', userData.data);
+      if (userData) {
+        if (userData.status === 'ok') {
+          // Store user data in AsyncStorage
+          AsyncStorage.setItem('userData', JSON.stringify(userData.data.user));
+          AsyncStorage.setItem('token', JSON.stringify(token));
+        } else {
+          console.error('Error:', userData.data);
+        }
+        return userData;
       }
     } else if (data.status == 'error' && data.message == 'User not found') {
       props.navigation.navigate('Register', {
@@ -58,8 +50,9 @@ export const login = async (mobNum, password, props) => {
         password: password,
       });
     } else {
-      console.error('Error:', data.data);
+      ToastAndroid.show(data.message, ToastAndroid.SHORT);
     }
+    return data;
   } catch (error) {
     console.error('Error at Login:', error.message);
     // Handle the error appropriately (e.g., show an error message to the user)

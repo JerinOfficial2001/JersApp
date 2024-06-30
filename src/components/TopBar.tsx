@@ -1,6 +1,7 @@
 import React, {useContext} from 'react';
 import {Image, Text, TouchableOpacity, View, StyleSheet} from 'react-native';
 import {DarkThemeSchema, JersAppThemeSchema} from '../../utils/theme';
+import {MyContext} from '../../App';
 // import {MyContext, MyContextType} from '../../App';
 
 interface TopBarProps {
@@ -22,16 +23,10 @@ const TopBar: React.FC<TopBarProps> = ({
   subtitle,
   isTyping,
 }) => {
-  // const context = (useContext < MyContextType) | (undefined > MyContext);
-
-  // if (!context) {
-  //   throw new Error('MyContextProvider is missing');
-  // }
-
-  // const {jersAppTheme, setpageName} = context;
+  const {jersAppTheme, setpageName} = useContext<any>(MyContext);
 
   return (
-    <View style={[styles.container, {backgroundColor: '#151B26'}]}>
+    <View style={[styles.container, {backgroundColor: jersAppTheme.appBar}]}>
       <View style={styles.leftContainer}>
         {arrow && (
           <TouchableOpacity onPress={lefOnPress}>

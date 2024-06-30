@@ -12,6 +12,7 @@ import DocumentPicker from 'react-native-document-picker';
 import ProfilePicModel from '../src/components/ProfilePicModel';
 import {GetUsersByID, UpdateProfile} from '../src/controllers/auth';
 import {MyContext} from '../App';
+import SurfaceLayout from '../src/Layouts/SurfaceLayout';
 export default function MyProfile({route, ...props}) {
   // const [theme, settheme] = useState(JersAppThemeSchema);
   const {jersAppTheme} = useContext(MyContext);
@@ -102,7 +103,7 @@ export default function MyProfile({route, ...props}) {
           password: data.password,
           name: data.name,
           image: data.image,
-          public_id: data.image.public_id,
+          public_id: data?.image?.public_id,
         });
       } else {
         setformData({
@@ -136,7 +137,6 @@ export default function MyProfile({route, ...props}) {
       justifyContent: 'space-between',
       padding: 10,
       marginBottom: 20,
-      backgroundColor: jersAppTheme.main,
     },
     errorText: {
       color: 'red',
@@ -164,89 +164,91 @@ export default function MyProfile({route, ...props}) {
     },
   });
   return (
-    <View style={styles.container}>
-      <View style={styles.contentContainer}>
-        <Text style={styles.title}>Add Personal Details</Text>
-        <View style={{position: 'relative'}}>
-          {formData.image && formData.image.url ? (
-            <Avatar.Image size={200} source={{uri: formData.image.url}} />
-          ) : (
-            <Avatar.Image
-              size={200}
-              source={
-                formData.image != null
-                  ? formData.image
-                  : require('../src/assets/user.png')
-              }
-            />
-          )}
-          <IconButton
-            style={{
-              bottom: 0,
-              position: 'absolute',
-              right: 5,
-              backgroundColor: '#008069',
-              padding: 10,
-            }}
-            icon={() => (
-              <Image
-                style={{
-                  height: 25,
-                  width: 25,
-                }}
-                source={require('../src/assets/camera.png')}
+    <SurfaceLayout>
+      <View style={styles.container}>
+        <View style={styles.contentContainer}>
+          <Text style={styles.title}>Add Personal Details</Text>
+          <View style={{position: 'relative'}}>
+            {formData.image && formData.image.url ? (
+              <Avatar.Image size={200} source={{uri: formData.image.url}} />
+            ) : (
+              <Avatar.Image
+                size={200}
+                source={
+                  formData.image != null
+                    ? formData.image
+                    : require('../src/assets/user.png')
+                }
               />
             )}
-            size={40}
-            onPress={() => {
-              setopenImageModel(true);
-            }}
-          />
+            <IconButton
+              style={{
+                bottom: 0,
+                position: 'absolute',
+                right: 5,
+                backgroundColor: '#008069',
+                padding: 10,
+              }}
+              icon={() => (
+                <Image
+                  style={{
+                    height: 25,
+                    width: 25,
+                  }}
+                  source={require('../src/assets/camera.png')}
+                />
+              )}
+              size={40}
+              onPress={() => {
+                setopenImageModel(true);
+              }}
+            />
+          </View>
+          <View style={{width: '100%', alignItems: 'center'}}>
+            <TextInput
+              value={formData.name}
+              onChangeText={value => {
+                handleOnchange('name', value);
+              }}
+              style={styles.input}
+              underlineColor="gray"
+              activeUnderlineColor="#92d4c7"
+              placeholder="Name"
+              keyboardType="default"
+              textColor={jersAppTheme.title}
+              error={err}
+            />
+            {err && <Text style={styles.errorText}>{errMsg}</Text>}
+          </View>
         </View>
-        <View style={{width: '100%', alignItems: 'center'}}>
-          <TextInput
-            value={formData.name}
-            onChangeText={value => {
-              handleOnchange('name', value);
-            }}
-            style={styles.input}
-            underlineColor="gray"
-            activeUnderlineColor="#92d4c7"
-            placeholder="Name"
-            keyboardType="default"
-            textColor={jersAppTheme.title}
-            error={err}
-          />
-          {err && <Text style={styles.errorText}>{errMsg}</Text>}
-        </View>
+        <Button
+          onPress={handleSubmit}
+          mode="contained"
+          style={styles.button}
+          textColor={jersAppTheme.main}>
+          {isProcessing ? (
+            <ActivityIndicator animating={true} color={jersAppTheme.appBar} />
+          ) : (
+            'Submit'
+          )}
+        </Button>
+        <ProfilePicModel
+          handleDltProfilePic={() => {
+            handleFormData('image', null);
+            handleCloseModel();
+          }}
+          visible={openImageModel}
+          setVisible={setopenImageModel}
+          handlePick={handlePick}
+          handleCamera={() => {
+            handleCloseModel();
+            props.navigation.navigate('AddStatus', {
+              onlyCamera: true,
+              id,
+            });
+          }}
+        />
       </View>
-      <Button
-        onPress={handleSubmit}
-        mode="contained"
-        style={styles.button}
-        textColor={jersAppTheme.main}>
-        {isProcessing ? (
-          <ActivityIndicator animating={true} color={MD2Colors.greenA100} />
-        ) : (
-          'Submit'
-        )}
-      </Button>
-      <ProfilePicModel
-        handleDltProfilePic={() => {
-          handleFormData('image', null);
-          handleCloseModel();
-        }}
-        visible={openImageModel}
-        setVisible={setopenImageModel}
-        handlePick={handlePick}
-        handleCamera={() => {
-          handleCloseModel();
-          props.navigation.navigate('AddStatus', {
-            onlyCamera: true,
-            id,
-          });
-        }}
-      />
-    </View>
+    </SurfaceLayout>
   );
 }

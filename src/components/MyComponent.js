@@ -23,9 +23,6 @@ const MyComponent = ({
   useEffect(() => {
     if (contact?.user_id && contact?.ContactDetails._id) {
       getUser(contact?.user_id);
-      // getLastMsg(contact?.user_id, contact?.ContactDetails._id).then(data => {
-      //   setlastMsg(data);
-      // });
     }
   }, [contact]);
   const getUser = async id => {
@@ -106,8 +103,7 @@ const MyComponent = ({
                     newMsgcount !== '' && (
                       <View
                         style={{
-                          backgroundColor: 'green',
-                          padding: 3,
+                          backgroundColor: '#439BCC',
                           height: 25,
                           width: 25,
                           borderRadius: 100,

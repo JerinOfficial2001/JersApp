@@ -46,6 +46,7 @@ export default function Navigator() {
           options={{
             headerStyle: {
               backgroundColor: jersAppTheme.appBar,
+              elevation: 0,
             },
             headerTintColor: 'white',
             title: 'Add Personal Details',
@@ -78,6 +79,7 @@ export default function Navigator() {
           options={{
             headerStyle: {
               backgroundColor: jersAppTheme.appBar,
+              elevation: 0,
             },
             headerTintColor: 'white',
           }}
@@ -88,6 +90,7 @@ export default function Navigator() {
           options={{
             headerStyle: {
               backgroundColor: jersAppTheme.appBar,
+              elevation: 0,
             },
             headerTintColor: 'white',
           }}
@@ -98,6 +101,7 @@ export default function Navigator() {
           options={{
             headerStyle: {
               backgroundColor: jersAppTheme.appBar,
+              elevation: 0,
             },
             headerTintColor: 'white',
           }}
@@ -122,6 +126,7 @@ export default function Navigator() {
           options={{
             headerStyle: {
               backgroundColor: jersAppTheme.appBar,
+              elevation: 0,
             },
             title: 'My Profile',
             headerTintColor: 'white',
@@ -133,6 +138,7 @@ export default function Navigator() {
           options={{
             headerStyle: {
               backgroundColor: jersAppTheme.appBar,
+              elevation: 0,
             },
             title: 'Theme',
             headerTintColor: 'white',

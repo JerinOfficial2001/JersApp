@@ -27,6 +27,7 @@ import Send from '../src/assets/svg/send';
 import {JersAppThemeSchema} from '../utils/theme';
 import {MyContext} from '../App';
 import {useSocketHook} from '../utils/socket';
+import {useQuery} from '@tanstack/react-query';
 
 export default function Message({route, navigation, ...props}) {
   const {id, userID, receiverId, roomID} = route.params;
@@ -104,7 +105,9 @@ export default function Message({route, navigation, ...props}) {
           <View
             style={{
               minWidth: 50,
-              backgroundColor: '#064e49',
+              backgroundColor: received
+                ? jersAppTheme.bubbleReceiverBgColor
+                : jersAppTheme.bubbleSenderBgColor,
               borderRadius: 15,
               padding: 5,
               alignItems: 'center',
@@ -116,13 +119,16 @@ export default function Message({route, navigation, ...props}) {
               gap: 8,
               paddingHorizontal: 10,
             }}>
-            <Text style={{color: 'white'}}>{text}</Text>
+            <Text style={{color: jersAppTheme.bubbleTextColor}}>{text}</Text>
             <View
               style={{
                 justifyContent: 'flex-end',
                 height: 20,
               }}>
-              <Text style={{color: 'slategray', fontSize: 10}}>{time}</Text>
+              <Text
+                style={{color: jersAppTheme.bubblesSubTextColor, fontSize: 10}}>
+                {time}
+              </Text>
             </View>
           </View>
         </View>
