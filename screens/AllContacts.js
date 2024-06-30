@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getAllUsers} from '../src/controllers/auth';
 import {ActivityIndicator, MD2Colors} from 'react-native-paper';
 import {MyContext} from '../App';
+import SurfaceLayout from '../src/Layouts/SurfaceLayout';
 
 export default function AllContacts(props) {
   const [contacts, setContacts] = useState([]);
@@ -18,6 +19,7 @@ export default function AllContacts(props) {
 
   function cleanPhoneNumber(phoneNumber) {
     const cleanedNumber = phoneNumber.replace(/\D/g, '');
+    console.log(cleanedNumber, 'number');
     return cleanedNumber;
   }
 
@@ -28,8 +30,8 @@ export default function AllContacts(props) {
       if (permissionsGranted) {
         const dbContact = await getAllUsers();
         if (dbContact) {
-          const mobContacts = permissionsGranted.map(contact =>
-            cleanPhoneNumber(contact.phoneNumbers[0]?.number),
+          const mobContacts = permissionsGranted.map(
+            contact => contact.phoneNumbers[0]?.number,
           );
           const apiContacts = dbContact.map(contact => contact.mobNum);
           let commonMobNumbers = apiContacts.filter(
@@ -112,33 +114,34 @@ export default function AllContacts(props) {
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={{
-        paddingHorizontal: 5,
-      }}
-      style={{backgroundColor: jersAppTheme.main}}>
-      {contacts.length > 0 ? (
-        contacts.map((elem, index) => (
-          <MyComponent
-            contactPg
-            contact={elem}
-            key={index}
-            onclick={() => {
-              handleClick(elem);
-            }}
-          />
-        ))
-      ) : (
-        <View
-          style={{
-            width: '100%',
-            alignItems: 'center',
-            height: 700,
-            justifyContent: 'center',
-          }}>
-          <Text style={{color: 'black'}}>No Contacts</Text>
-        </View>
-      )}
-    </ScrollView>
+    <SurfaceLayout>
+      <ScrollView
+        contentContainerStyle={{
+          paddingHorizontal: 5,
+        }}>
+        {contacts.length > 0 ? (
+          contacts.map((elem, index) => (
+            <MyComponent
+              contactPg
+              contact={elem}
+              key={index}
+              onclick={() => {
+                handleClick(elem);
+              }}
+            />
+          ))
+        ) : (
+          <View
+            style={{
+              width: '100%',
+              alignItems: 'center',
+              height: 700,
+              justifyContent: 'center',
+            }}>
+            <Text style={{color: 'black'}}>No Contacts</Text>
+          </View>
+        )}
+      </ScrollView>
+    </SurfaceLayout>
   );
 }

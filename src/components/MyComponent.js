@@ -46,7 +46,7 @@ const MyComponent = ({
           padding: 3,
           borderRadius: 20,
           paddingHorizontal: 10,
-          backgroundColor: '#00000030',
+          // backgroundColor: '#00000030',
         }}>
         {status && status.file ? (
           <View style={{position: 'relative'}}>

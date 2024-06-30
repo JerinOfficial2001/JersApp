@@ -17,6 +17,7 @@ import {eventEmitter, showNotification} from '../src/notification.android';
 import {checkApplicationPermission} from '../src/controllers/permissions';
 import {useQueryClient} from '@tanstack/react-query';
 import {useSocketHook} from '../utils/socket';
+import SurfaceLayout from '../src/Layouts/SurfaceLayout';
 
 export default function Chats(props) {
   const queryClient = useQueryClient();
@@ -26,7 +27,7 @@ export default function Chats(props) {
       props.navigation.navigate('Chats');
     });
     return () => {
-      subscription.remove(); // Clean up listener on component unmount
+      // subscription.remove(); // Clean up listener on component unmount
     };
   }, []);
 
@@ -163,90 +164,92 @@ export default function Chats(props) {
     handlePress();
   };
   return (
-    <Pressable style={{flex: 1}} onPress={handlePress}>
-      <ScrollView style={{padding: 10, backgroundColor: jersAppTheme.main}}>
-        {isLoading ? (
-          <View
-            style={{
-              width: '100%',
-              alignItems: 'center',
-              height: 650,
-              justifyContent: 'center',
-            }}>
-            <ActivityIndicator
-              animating={true}
-              color={MD2Colors.green400}
-              size="large"
-            />
-          </View>
-        ) : chats?.length > 0 ? (
-          chats?.map((elem, index) => {
-            const isSelected = isMsgLongPressed[index]?.isSelected;
-            // const msgCount =
-            //   newMsgCount && parseInt(newMsgCount.count) > 0
-            //     ? newMsgCount?.count
-            //     : elem.msgCount;
-            // const lastMsg =
-            //   newMsgCount && newMsgCount.lastMsg !== ''
-            //     ? newMsgCount.lastMsg
-            //     : null;
-            return (
-              <View
-                key={index}
-                style={{
-                  backgroundColor: isSelected ? 'gray' : 'transparent',
-                  borderRadius: 3,
-                }}>
-                <MyComponent
-                  newMsgcount={elem.msgCount}
-                  contact={elem}
-                  onclick={() => {
-                    const Ids = [userDatas._id, elem.ContactDetails._id]
-                      .sort()
-                      .join('_');
+    <SurfaceLayout>
+      <Pressable style={{flex: 1}} onPress={handlePress}>
+        <ScrollView style={{padding: 10}}>
+          {isLoading ? (
+            <View
+              style={{
+                width: '100%',
+                alignItems: 'center',
+                height: 650,
+                justifyContent: 'center',
+              }}>
+              <ActivityIndicator
+                animating={true}
+                color={MD2Colors.green400}
+                size="large"
+              />
+            </View>
+          ) : chats?.length > 0 ? (
+            chats?.map((elem, index) => {
+              const isSelected = isMsgLongPressed[index]?.isSelected;
+              // const msgCount =
+              //   newMsgCount && parseInt(newMsgCount.count) > 0
+              //     ? newMsgCount?.count
+              //     : elem.msgCount;
+              // const lastMsg =
+              //   newMsgCount && newMsgCount.lastMsg !== ''
+              //     ? newMsgCount.lastMsg
+              //     : null;
+              return (
+                <View
+                  key={index}
+                  style={{
+                    backgroundColor: isSelected ? 'gray' : 'transparent',
+                    borderRadius: 3,
+                  }}>
+                  <MyComponent
+                    newMsgcount={elem.msgCount}
+                    contact={elem}
+                    onclick={() => {
+                      const Ids = [userDatas._id, elem.ContactDetails._id]
+                        .sort()
+                        .join('_');
 
-                    addChat({
-                      sender: userDatas._id,
-                      receiver: elem.ContactDetails._id,
-                      elem: elem,
-                      roomID: Ids,
-                    });
-                    handlePress();
+                      addChat({
+                        sender: userDatas._id,
+                        receiver: elem.ContactDetails._id,
+                        elem: elem,
+                        roomID: Ids,
+                      });
+                      handlePress();
 
-                    socket.emit('clearNewMsg', {
-                      id: userDatas._id,
-                      Contact_id: elem._id,
-                    });
-                    setnewMsgCount(null);
-                  }}
-                  onLongPress={() => {
-                    handleLongPress(
-                      index,
-                      elem.ContactDetails._id,
-                      elem.Contact_id,
-                    );
-                  }}
-                />
-              </View>
-            );
-          })
-        ) : (
-          <View
-            style={{
-              justifyContent: 'center',
-              alignItems: 'center',
-              flex: 1,
-              height: 600,
-            }}>
-            <Text style={{color: 'gray'}}>No Chats</Text>
-          </View>
-        )}
-        <DeleteModal
-          handleModelClose={handleModelClose}
-          visible={isModelOpen}
-          handleDelete={handleDeleteContact}
-        />
-      </ScrollView>
-    </Pressable>
+                      socket.emit('clearNewMsg', {
+                        id: userDatas._id,
+                        Contact_id: elem._id,
+                      });
+                      setnewMsgCount(null);
+                    }}
+                    onLongPress={() => {
+                      handleLongPress(
+                        index,
+                        elem.ContactDetails._id,
+                        elem.Contact_id,
+                      );
+                    }}
+                  />
+                </View>
+              );
+            })
+          ) : (
+            <View
+              style={{
+                justifyContent: 'center',
+                alignItems: 'center',
+                flex: 1,
+                height: 600,
+              }}>
+              <Text style={{color: 'gray'}}>No Chats</Text>
+            </View>
+          )}
+          <DeleteModal
+            handleModelClose={handleModelClose}
+            visible={isModelOpen}
+            handleDelete={handleDeleteContact}
+          />
+        </ScrollView>
+      </Pressable>
+    </SurfaceLayout>
   );
 }

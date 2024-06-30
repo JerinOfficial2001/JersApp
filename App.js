@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {themeSchema} from './utils/theme';
 import {QueryClientProvider, QueryClient} from '@tanstack/react-query';
 import {SocketProvider} from './utils/socket';
+import {View} from 'react-native';
 
 export const MyContext = createContext({});
 
