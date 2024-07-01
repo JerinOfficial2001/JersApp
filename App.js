@@ -24,10 +24,10 @@ export default function App() {
       const data = res ? JSON.parse(res) : false;
       if (data) {
         setuserData(data);
-        setthemeHandler(data.theme);
+        setthemeHandler(data.theme ? data.theme : themeHandler);
       }
     });
-  }, [themeHandler]);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

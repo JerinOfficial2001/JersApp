@@ -29,7 +29,6 @@ export const SocketProvider = ({children}) => {
       setisTyping(data);
     });
     connection.on('newMsgs', data => {
-      console.log(data, 'newMsg');
       setnewMsgCount(data);
     });
     return () => {

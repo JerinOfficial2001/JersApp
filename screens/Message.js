@@ -48,7 +48,6 @@ export default function Message({route, navigation, ...props}) {
   const [isTyping, setisTyping] = useState(null);
   useEffect(() => {
     socket.on('user_typing', data => {
-      console.log('socketLogged', data, userID);
       setisTyping(data);
     });
   }, []);

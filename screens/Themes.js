@@ -44,7 +44,6 @@ export default function Themes(props) {
       ToastAndroid.show('Mandatory field is missing', ToastAndroid.SHORT);
     }
   };
-  console.log(Data, 'test');
   return (
     <SurfaceLayout>
       <View style={styles.content}>
