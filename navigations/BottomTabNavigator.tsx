@@ -91,7 +91,7 @@ export default function BottomTabNavigator() {
       });
     });
     setpageName('Home');
-  }, []);
+  }, [openMenu]);
 
   const renderRightHeaderComponent = () => (
     <IconButton
@@ -236,7 +236,7 @@ export default function BottomTabNavigator() {
             titleStyle={{color: jersAppTheme.title}}
             onPress={() => {
               handleCloseMenu();
-              navigation.navigate('Themes');
+              navigation.navigate('Themes',{id:userData?._id});
             }}
           />
           <Menu.Item

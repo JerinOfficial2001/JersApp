@@ -19,29 +19,23 @@ import Loader from '../src/components/Loader';
 
 export default function Chats(props) {
   useEffect(() => {
+    checkApplicationPermission();
+
     const subscription = eventEmitter.addListener('notificationPressed', () => {
       props.navigation.navigate('Chats');
     });
-    return () => {
-      if (subscription) subscription.removeListener();
-    };
+    // return () => {
+    //   if (subscription) subscription.removeListener();
+    // };
   }, []);
 
   const {Data, jersAppTheme, setpageName} = useContext(MyContext);
   const [isMsgLongPressed, setisMsgLongPressed] = useState([]);
   const [receiversId, setreceiversId] = useState('');
   const [Contact_id, setContact_id] = useState('');
-  // const [theme, settheme] = useState(JersAppThemeSchema);
 
   const {setisDelete, isModelOpen, setisModelOpen, setopenMenu, setactiveTab} =
     useContext(TopBarContext);
-  const {
-    newMsgCount,
-    setnewMsgCount,
-    socket,
-    socketUserID,
-    socketUserConnected,
-  } = useSocketHook();
 
   const getDate = timestamps => {
     const date = new Date(timestamps);
@@ -60,9 +54,13 @@ export default function Chats(props) {
     queryFn: () => getContactByUserId(Data._id),
     enabled: Data._id != undefined,
   });
-
-  checkApplicationPermission();
-
+  const {
+    newMsgCount,
+    setnewMsgCount,
+    socket,
+    socketUserID,
+    socketUserConnected,
+  } = useSocketHook();
   const {mutateAsync: AddChat} = useMutation({
     mutationFn: data => {
       createChat(data);
@@ -87,7 +85,7 @@ export default function Chats(props) {
   useFocusEffect(
     React.useCallback(() => {
       if (socket) {
-        socket.on('connection', () => {
+        socket.on('connect', () => {
           console.log('connected');
         });
         socketUserID(Data._id);
@@ -143,6 +141,7 @@ export default function Chats(props) {
           {data?.length > 0 ? (
             data?.map((elem, index) => {
               const isSelected = isMsgLongPressed[index]?.isSelected;
+              elem.date = getDate(elem.createdAt);
               return (
                 <View
                   key={index}

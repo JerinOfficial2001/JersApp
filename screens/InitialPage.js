@@ -17,7 +17,6 @@ export default function InitialPage(props) {
     return () => clearTimeout(timer);
   }, []);
   // const [theme, settheme] = useState(JersAppThemeSchema);
-  const {jersAppTheme} = useContext(MyContext);
 
   return (
     <View
@@ -25,7 +24,7 @@ export default function InitialPage(props) {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: jersAppTheme.main,
+        backgroundColor: '#242C3B',
       }}>
       <Image
         alt="LOGO"

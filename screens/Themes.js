@@ -1,11 +1,13 @@
-import React, {useContext} from 'react';
-import {ImageBackground, StyleSheet, View} from 'react-native';
+import React, {useContext, useState} from 'react';
+import {ImageBackground, StyleSheet, View, ToastAndroid} from 'react-native';
 import {MyContext} from '../App';
 import {Button, Text} from 'react-native-paper';
 import SurfaceLayout from '../src/Layouts/SurfaceLayout';
+import {UpdateThemeByID} from '../src/controllers/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function Themes(props) {
-  const {jersAppTheme, setthemeHandler} = useContext(MyContext);
-
+  const {jersAppTheme, setthemeHandler, Data} = useContext(MyContext);
+  const userID = props.route.params.id;
   const styles = StyleSheet.create({
     content: {
       display: 'flex',
@@ -32,10 +34,17 @@ export default function Themes(props) {
       alignItems: 'center',
     },
   });
+
   const handleChangeTheme = theme => {
-    setthemeHandler(theme);
-    // props.navigation.navigate('Home');
+    if (userID && theme) {
+      AsyncStorage.setItem('userData', JSON.stringify({...Data, theme}));
+      UpdateThemeByID({id: userID, data: {theme}});
+      setthemeHandler(theme);
+    } else {
+      ToastAndroid.show('Mandatory field is missing', ToastAndroid.SHORT);
+    }
   };
+  console.log(Data, 'test');
   return (
     <SurfaceLayout>
       <View style={styles.content}>
@@ -50,18 +59,18 @@ export default function Themes(props) {
                 text: 'Hi there',
                 time: '12.05PM',
                 type: 'receiver',
-                textColor: jersAppTheme.bubbleTextColor,
+                textColor: jersAppTheme.bubbleSenderTextColor,
                 backgroundColor: jersAppTheme.bubbleSenderBgColor,
-                subText: jersAppTheme.bubblesSubTextColor,
+                subText: jersAppTheme.bubblesSenderSubTextColor,
               },
               {
                 text: 'Hey bruh',
                 time: '12:30PM',
                 type: 'sender',
 
-                textColor: jersAppTheme.bubbleTextColor,
+                textColor: jersAppTheme.bubbleReceiverTextColor,
                 backgroundColor: jersAppTheme.bubbleReceiverBgColor,
-                subText: jersAppTheme.bubblesSubTextColor,
+                subText: jersAppTheme.bubblesReceiverSubTextColor,
               },
             ].map((elem, index) => (
               <View

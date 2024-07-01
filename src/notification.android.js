@@ -35,7 +35,7 @@ PushNotification.configure({
   // (required) Called when a remote is received or opened, or local notification is opened
   onNotification: function (notification) {
     if (notification.userInteraction) {
-      eventEmitter?.emit('notificationPressed');
+      eventEmitter.emit('notificationPressed');
     } else {
       notification.finish(PushNotification.FetchResult.NoData);
     }

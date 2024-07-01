@@ -13,6 +13,7 @@ import ProfilePicModel from '../src/components/ProfilePicModel';
 import {GetUsersByID, UpdateProfile} from '../src/controllers/auth';
 import {MyContext} from '../App';
 import SurfaceLayout from '../src/Layouts/SurfaceLayout';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function MyProfile({route, ...props}) {
   // const [theme, settheme] = useState(JersAppThemeSchema);
   const {jersAppTheme} = useContext(MyContext);
@@ -62,7 +63,8 @@ export default function MyProfile({route, ...props}) {
       };
       UpdateProfile(DATA).then(response => {
         if (response.status == 'ok') {
-          ToastAndroid.show(response.message, ToastAndroid.SHORT);
+          ToastAndroid.show('Profile Updated successfully', ToastAndroid.SHORT);
+          AsyncStorage.setItem('userData', JSON.stringify(response.data));
         } else {
           ToastAndroid.show(response.message, ToastAndroid.SHORT);
         }
@@ -97,13 +99,13 @@ export default function MyProfile({route, ...props}) {
 
   useEffect(() => {
     GetUsersByID(id).then(data => {
-      if (!image) {
+      if (!image || image == 'null' || data.image == 'undefined') {
         setformData({
           mobNum: data.mobNum,
           password: data.password,
           name: data.name,
-          image: data.image,
-          public_id: data?.image?.public_id,
+          image: null,
+          public_id: '',
         });
       } else {
         setformData({
@@ -169,7 +171,9 @@ export default function MyProfile({route, ...props}) {
         <View style={styles.contentContainer}>
           <Text style={styles.title}>Add Personal Details</Text>
           <View style={{position: 'relative'}}>
-            {formData.image && formData.image.url ? (
+            {formData.image &&
+            formData.image.url &&
+            formData.image !== 'null' ? (
               <Avatar.Image size={200} source={{uri: formData.image.url}} />
             ) : (
               <Avatar.Image

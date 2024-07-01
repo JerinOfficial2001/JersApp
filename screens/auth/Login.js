@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useContext} from 'react';
 import {Text, View, StyleSheet, Image, TouchableOpacity} from 'react-native';
 import {
   ActivityIndicator,
@@ -11,8 +11,10 @@ import {login} from '../../src/controllers/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useFocusEffect} from '@react-navigation/native';
 import {DarkThemeSchema, JersAppThemeSchema} from '../../utils/theme';
+import {MyContext} from '../../App';
 
 export default function Login(props) {
+  const {setuserData} = useContext(MyContext);
   useFocusEffect(
     React.useCallback(() => {
       checkToken();
@@ -49,7 +51,8 @@ export default function Login(props) {
       login(formData.mobNum, formData.password, props).then(data => {
         setisLoading(false);
 
-        if (data?.status == 'ok') {
+        if (data?.status == 'ok' && data?.data && data?.data?.user) {
+          setuserData(data?.data?.user);
           props.navigation.navigate('Home');
         }
       });

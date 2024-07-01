@@ -17,6 +17,10 @@ export default function SurfaceLayout({children}) {
           borderTopRightRadius: 25,
           borderTopLeftRadius: 25,
           backgroundColor: jersAppTheme.main,
+          elevation: 2,
+          shadowColor: 'white',
+          shadowOpacity: 2,
+          marginTop: 1,
         }}>
         {children}
       </View>

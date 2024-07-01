@@ -13,7 +13,6 @@ export const SocketProvider = ({children}) => {
   const [isWatching, setisWatching] = useState(null);
   const [isTyping, setisTyping] = useState(null);
   const [newMsgCount, setnewMsgCount] = useState(null);
-  const [ID, setID] = useState('');
   useEffect(() => {
     const connection = io(socketServerApi);
     setsocket(connection);
@@ -30,6 +29,7 @@ export const SocketProvider = ({children}) => {
       setisTyping(data);
     });
     connection.on('newMsgs', data => {
+      console.log(data, 'newMsg');
       setnewMsgCount(data);
     });
     return () => {
@@ -40,6 +40,7 @@ export const SocketProvider = ({children}) => {
   }, []);
   const socketUserID = data => {
     socket?.emit('set_user_id', data);
+    socket?.emit('me', data);
   };
   const socketUserConnected = data => {
     socket?.emit('user_connected', data);

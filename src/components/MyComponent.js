@@ -92,8 +92,9 @@ const MyComponent = ({
                   style={{
                     position: 'absolute',
                     right: 0,
-                    gap: 10,
+                    gap: 7,
                     alignItems: 'center',
+                    zIndex: 1,
                   }}>
                   <Text style={{color: jersAppTheme.subText}}>
                     {contact?.date}
@@ -103,7 +104,7 @@ const MyComponent = ({
                     newMsgcount !== '' && (
                       <View
                         style={{
-                          backgroundColor: '#439BCC',
+                          backgroundColor: jersAppTheme.badgeColor,
                           height: 25,
                           width: 25,
                           borderRadius: 100,
@@ -112,11 +113,12 @@ const MyComponent = ({
                         }}>
                         <Text
                           style={{
-                            color: 'white',
+                            color: jersAppTheme.badgeTextColor,
                             fontWeight: 'bold',
                             fontSize: newMsgcount > '99' ? 10 : 15,
                           }}>
-                          {newMsgcount > '99' ? '99+' : newMsgcount}
+                          {/* {newMsgcount > '99' ? '99+' : newMsgcount} */}
+                          10
                         </Text>
                       </View>
                     )}
@@ -130,7 +132,9 @@ const MyComponent = ({
                 status?.title || status?.userName
                   ? jersAppTheme.title
                   : jersAppTheme.subText,
-            }}>
+              width: '85%',
+            }}
+            numberOfLines={1}>
             {contactPg
               ? contact
                 ? contact.mobNum

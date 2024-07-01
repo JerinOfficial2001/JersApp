@@ -11,7 +11,7 @@ export const MyContext = createContext({});
 
 const queryClient = new QueryClient();
 export default function App() {
-  const [Data, setuserData] = useState({});
+  const [Data, setuserData] = useState(null);
   const [themeHandler, setthemeHandler] = useState('JersApp');
   const [jersAppTheme, setjersAppTheme] = useState(themeSchema[themeHandler]);
   const [pageName, setpageName] = useState('');
@@ -24,9 +24,10 @@ export default function App() {
       const data = res ? JSON.parse(res) : false;
       if (data) {
         setuserData(data);
+        setthemeHandler(data.theme);
       }
     });
-  }, []);
+  }, [themeHandler]);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -39,6 +40,7 @@ export default function App() {
             jersAppTheme,
             pageName,
             setpageName,
+            setuserData,
           }}>
           <Provider>
             <Navigator />

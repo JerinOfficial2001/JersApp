@@ -114,6 +114,7 @@ export const GetUsersByID = async id => {
     console.error('GetUsersByID Err:', error.message);
   }
 };
+
 export const logoutWithToken = async token => {
   try {
     const response = await fetch(expressApi + '/api/auth/logout', {
@@ -148,5 +149,26 @@ export const UpdateProfile = async DATA => {
     return response;
   } catch (error) {
     console.error('Error at UpdateProfile:', error);
+  }
+};
+export const UpdateThemeByID = async formData => {
+  try {
+    const {data} = await axios.post(
+      `${expressApi}/api/auth/updateTheme/${formData.id}`,
+      formData.data,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    if (data) {
+      ToastAndroid.show(data.message, ToastAndroid.SHORT);
+    } else {
+      ToastAndroid.show('Something went wrong', ToastAndroid.SHORT);
+    }
+  } catch (error) {
+    console.error('GetUsersByID Err:', error.message);
   }
 };

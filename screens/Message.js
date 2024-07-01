@@ -28,6 +28,7 @@ import {JersAppThemeSchema} from '../utils/theme';
 import {MyContext} from '../App';
 import {useSocketHook} from '../utils/socket';
 import {useQuery} from '@tanstack/react-query';
+import SurfaceLayout from '../src/Layouts/SurfaceLayout';
 
 export default function Message({route, navigation, ...props}) {
   const {id, userID, receiverId, roomID} = route.params;
@@ -70,16 +71,13 @@ export default function Message({route, navigation, ...props}) {
   const scrollViewRef = useRef();
   const getTime = timeStamp => {
     const date = new Date(timeStamp);
-    date.setHours(date.getDate());
-    date.setMinutes(date.getMinutes());
-    const hours = date.getHours() + 4;
+    let hours = date.getHours();
     const minutes = date.getMinutes();
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const hours12 = hours % 12 || 12;
-    const formatedHour = hours12 < 10 ? '0' + hours12 : hours12;
-    const formatedMins = minutes < 10 ? '0' + minutes : minutes;
-    const time = `${formatedHour}:${formatedMins} ${period}`;
-    return time;
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+    return hours + ':' + formattedMinutes + ' ' + ampm;
   };
   const BubbleMsg = ({
     text,
@@ -119,14 +117,26 @@ export default function Message({route, navigation, ...props}) {
               gap: 8,
               paddingHorizontal: 10,
             }}>
-            <Text style={{color: jersAppTheme.bubbleTextColor}}>{text}</Text>
+            <Text
+              style={{
+                color: received
+                  ? jersAppTheme.bubbleReceiverTextColor
+                  : jersAppTheme.bubbleSenderTextColor,
+              }}>
+              {text}
+            </Text>
             <View
               style={{
                 justifyContent: 'flex-end',
                 height: 20,
               }}>
               <Text
-                style={{color: jersAppTheme.bubblesSubTextColor, fontSize: 10}}>
+                style={{
+                  color: received
+                    ? jersAppTheme.bubblesReceiverSubTextColor
+                    : jersAppTheme.bubblesSenderSubTextColor,
+                  fontSize: 10,
+                }}>
                 {time}
               </Text>
             </View>
@@ -198,9 +208,13 @@ export default function Message({route, navigation, ...props}) {
             getMessage(chat._id).then(msg => {
               if (msg) {
                 scrollViewRef.current?.scrollToEnd({animated: true});
-
                 setchatArray(
-                  msg.map(elem => ({...elem, time: getTime(elem.createdAt)})),
+                  msg.map(elem => {
+                    return {
+                      ...elem,
+                      time: getTime(elem.createdAt),
+                    };
+                  }),
                 );
                 setisMsgLongPressed(msg.map(item => ({isSelected: false})));
               }
@@ -329,7 +343,7 @@ export default function Message({route, navigation, ...props}) {
     isWatching && isWatching?.id == receiverId ? isWatching.isWatching : false;
 
   return (
-    <View style={{flex: 1}}>
+    <View style={{flex: 1, backgroundColor: jersAppTheme.appBar}}>
       <TopBar
         isTyping={UserTyping}
         subtitle={isOnline(receiverId)}
@@ -343,6 +357,7 @@ export default function Message({route, navigation, ...props}) {
       />
       <Pressable style={{flex: 1}} onPress={handlePress}>
         <ImageBackground
+          imageStyle={{borderTopRightRadius: 25, borderTopLeftRadius: 25}}
           source={require('../src/assets/chatBg.png')} // specify the path to your image
           style={styles.backgroundImage}>
           {UserWatching && (
