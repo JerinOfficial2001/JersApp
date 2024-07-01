@@ -57,6 +57,7 @@ import AllContacts from '../screens/AllContacts';
 import {useSocketHook} from '../utils/socket';
 import {StackScreenProps} from '@react-navigation/stack';
 import {useNavigation} from '@react-navigation/native';
+import Groups from '../screens/Groups';
 
 const Tab = createBottomTabNavigator();
 const AnimatedSvg = Animated.createAnimatedComponent(Svg);
@@ -324,7 +325,7 @@ export default function BottomTabNavigator() {
                 <FontAwesomeIcons style={styles.icon} name="group" size={26} />
               ),
             }}
-            component={Status}
+            component={Groups}
             // props={props}
             name="Group"
           />

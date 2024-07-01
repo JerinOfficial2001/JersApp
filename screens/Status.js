@@ -39,7 +39,7 @@ export default function Status(props) {
   const userStatus = status?.find(data => data.userID == userData?._id);
   const otherUserStatus = status?.filter(data => data.userID !== userData?._id);
   return (
-    <SurfaceLayout>
+    <SurfaceLayout title="Status">
       <Pressable style={{flex: 1}} onPress={handlePress}>
         {isLoading ? (
           <View

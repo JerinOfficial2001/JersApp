@@ -117,8 +117,7 @@ const MyComponent = ({
                             fontWeight: 'bold',
                             fontSize: newMsgcount > '99' ? 10 : 15,
                           }}>
-                          {/* {newMsgcount > '99' ? '99+' : newMsgcount} */}
-                          10
+                          {newMsgcount > '99' ? '99+' : newMsgcount}
                         </Text>
                       </View>
                     )}

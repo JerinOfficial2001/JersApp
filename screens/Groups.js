@@ -17,18 +17,7 @@ import {eventEmitter} from '../src/notification.android';
 import {useSocketHook} from '../utils/socket';
 import Loader from '../src/components/Loader';
 
-export default function Chats(props) {
-  useEffect(() => {
-    checkApplicationPermission();
-
-    const subscription = eventEmitter.addListener('notificationPressed', () => {
-      props.navigation.navigate('Chats');
-    });
-    // return () => {
-    //   if (subscription) subscription.removeListener();
-    // };
-  }, []);
-
+export default function Groups(props) {
   const {Data, jersAppTheme, setpageName} = useContext(MyContext);
   const [isMsgLongPressed, setisMsgLongPressed] = useState([]);
   const [receiversId, setreceiversId] = useState('');
@@ -48,10 +37,14 @@ export default function Chats(props) {
     }`;
     return formatedDate;
   };
-
+  const GetGroupByID = {
+    name: 'Test',
+    image: '',
+    lastMsg: {msg: 'Hi', id: 2, name: 'John'},
+  };
   const {data, refetch, isLoading} = useQuery({
-    queryKey: ['chats'],
-    queryFn: () => getContactByUserId(Data._id),
+    queryKey: ['groups'],
+    queryFn: () => [],
     enabled: Data._id != undefined,
   });
   const {
@@ -135,71 +128,71 @@ export default function Chats(props) {
     return <Loader />;
   }
   return (
-    <SurfaceLayout title="Chats">
-      <Pressable style={{flex: 1}} onPress={handlePress}>
-        <ScrollView style={{padding: 10}}>
-          {data?.length > 0 ? (
-            data?.map((elem, index) => {
-              const isSelected = isMsgLongPressed[index]?.isSelected;
-              elem.date = getDate(elem.createdAt);
-              return (
-                <View
-                  key={index}
-                  style={{
-                    backgroundColor: isSelected ? 'gray' : 'transparent',
-                    borderRadius: 3,
-                  }}>
-                  <MyComponent
-                    newMsgcount={elem.msgCount}
-                    contact={elem}
-                    onclick={() => {
-                      const Ids = [Data._id, elem.ContactDetails._id]
-                        .sort()
-                        .join('_');
+    <SurfaceLayout title="Groups">
+      {/* <Pressable style={{flex: 1}} onPress={handlePress}> */}
+      <ScrollView style={{padding: 10}}>
+        {data?.length > 0 ? (
+          data?.map((elem, index) => {
+            // const isSelected = isMsgLongPressed[index]?.isSelected;
+            // elem.date = getDate(elem.createdAt);
+            return (
+              <View
+                key={index}
+                style={{
+                  backgroundColor: isSelected ? 'gray' : 'transparent',
+                  borderRadius: 3,
+                }}>
+                <MyComponent
+                  newMsgcount={elem.msgCount}
+                  contact={elem}
+                  onclick={() => {
+                    const Ids = [Data._id, elem.ContactDetails._id]
+                      .sort()
+                      .join('_');
 
-                      AddChat({
-                        sender: Data._id,
-                        receiver: elem.ContactDetails._id,
-                        elem: elem,
-                        roomID: Ids,
-                      });
-                      handlePress();
+                    AddChat({
+                      sender: Data._id,
+                      receiver: elem.ContactDetails._id,
+                      elem: elem,
+                      roomID: Ids,
+                    });
+                    handlePress();
 
-                      socket.emit('clearNewMsg', {
-                        id: Data._id,
-                        Contact_id: elem._id,
-                      });
-                      setnewMsgCount(null);
-                    }}
-                    onLongPress={() => {
-                      handleLongPress(
-                        index,
-                        elem.ContactDetails._id,
-                        elem.Contact_id,
-                      );
-                    }}
-                  />
-                </View>
-              );
-            })
-          ) : (
-            <View
-              style={{
-                justifyContent: 'center',
-                alignItems: 'center',
-                flex: 1,
-                height: 600,
-              }}>
-              <Text style={{color: 'gray'}}>No Chats</Text>
-            </View>
-          )}
-          <DeleteModal
-            handleModelClose={handleModelClose}
-            visible={isModelOpen}
-            handleDelete={handleDeleteContact}
-          />
-        </ScrollView>
-      </Pressable>
+                    socket.emit('clearNewMsg', {
+                      id: Data._id,
+                      Contact_id: elem._id,
+                    });
+                    setnewMsgCount(null);
+                  }}
+                  // onLongPress={() => {
+                  //   handleLongPress(
+                  //     index,
+                  //     elem.ContactDetails._id,
+                  //     elem.Contact_id,
+                  //   );
+                  // }}
+                />
+              </View>
+            );
+          })
+        ) : (
+          <View
+            style={{
+              justifyContent: 'center',
+              alignItems: 'center',
+              flex: 1,
+              height: 600,
+            }}>
+            <Text style={{color: 'gray'}}>Upcoming feature..</Text>
+          </View>
+        )}
+        <DeleteModal
+          handleModelClose={handleModelClose}
+          visible={isModelOpen}
+          handleDelete={handleDeleteContact}
+        />
+      </ScrollView>
+      {/* </Pressable> */}
     </SurfaceLayout>
   );
 }

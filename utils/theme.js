@@ -45,7 +45,7 @@ export const themeSchema = {
   },
   DarkMode: {
     name: 'DarkMode',
-    main: 'black',
+    main: '#202021f2',
     title: 'white',
     subText: '#958C8C',
     headerText: 'white',
