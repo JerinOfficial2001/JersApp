@@ -12,9 +12,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useFocusEffect} from '@react-navigation/native';
 import {DarkThemeSchema, JersAppThemeSchema} from '../../utils/theme';
 import {MyContext} from '../../App';
+import SurfaceLayout from '../../src/Layouts/SurfaceLayout';
+import EntypoIcon from 'react-native-vector-icons/Entypo';
 
 export default function Login(props) {
-  const {setuserData} = useContext(MyContext);
+  const {setuserData, jersAppTheme} = useContext(MyContext);
   useFocusEffect(
     React.useCallback(() => {
       checkToken();
@@ -32,7 +34,6 @@ export default function Login(props) {
       });
     }
   };
-  const [theme, settheme] = useState(DarkThemeSchema);
   const [formData, setformData] = useState({mobNum: '', password: ''});
   const [isHide, setisHide] = useState(false);
   const [errMsg, seterrMsg] = useState({});
@@ -94,12 +95,11 @@ export default function Login(props) {
 
   const styles = StyleSheet.create({
     container: {
-      height: '100%',
+      flex: 1,
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: 10,
       marginBottom: 20,
-      backgroundColor: theme.main,
     },
     errorText: {
       color: 'red',
@@ -109,12 +109,14 @@ export default function Login(props) {
     },
     contentContainer: {
       alignItems: 'center',
-      justifyContent: 'space-between',
       width: '100%',
+      flex: 1,
+      gap: 15,
+      justifyContent: 'center',
     },
     title: {
       fontSize: 20,
-      color: theme.themeText,
+      color: jersAppTheme.themeText,
       fontWeight: '500',
     },
     input: {
@@ -123,7 +125,7 @@ export default function Login(props) {
       marginBottom: 10,
     },
     button: {
-      backgroundColor: theme.themeText,
+      backgroundColor: jersAppTheme.themeText,
       alignItems: 'center',
       justifyContent: 'center',
       display: 'flex',
@@ -134,75 +136,78 @@ export default function Login(props) {
     setformData({...formData, [name]: value});
   };
   return (
-    <View style={styles.container}>
-      <View style={styles.contentContainer}>
-        <Text style={styles.title}>Enter your phone number</Text>
-        <TextInput
-          value={formData.mobNum}
-          onChangeText={value => {
-            handleOnchange('mobNum', value);
-          }}
-          style={styles.input}
-          underlineColor="gray"
-          activeUnderlineColor="#92d4c7"
-          placeholder="Phone number"
-          keyboardType="numeric"
-          textColor={theme.title}
-          error={mobNubErr}
-        />
-        {mobNubErr && <Text style={styles.errorText}>{errMsg.mobNum}</Text>}
-        <TextInput
-          error={passwordErr}
-          secureTextEntry={isHide ? true : false}
-          value={formData.password}
-          onChangeText={value => {
-            handleOnchange('password', value);
-          }}
-          style={styles.input}
-          underlineColor="gray"
-          activeUnderlineColor="#92d4c7"
-          placeholder="Password"
-          textColor={theme.title}
-          right={
-            <TextInput.Icon
-              icon={() => (
-                <TouchableOpacity
-                  onPress={() => {
-                    setisHide(!isHide);
-                  }}>
-                  {isHide ? (
-                    <Image
-                      source={require('../../src/assets/view.png')}
-                      style={{height: 25, width: 25}}
-                    />
-                  ) : (
-                    <Image
-                      source={require('../../src/assets/hide.png')}
-                      style={{height: 25, width: 25}}
-                    />
-                  )}
-                </TouchableOpacity>
-              )}
-            />
-          }
-        />
-        {passwordErr && <Text style={styles.errorText}>{errMsg.password}</Text>}
-      </View>
-      <Button
-        disabled={isLoading}
-        onPress={handleSubmit}
-        mode="contained"
-        style={styles.button}
-        textColor={theme.main}>
-        {isLoading ? (
-          <ActivityIndicator
-            animating={true}
-            color={JersAppThemeSchema.appBar}
+    <SurfaceLayout>
+      <View style={styles.container}>
+        <View style={styles.contentContainer}>
+          <Text style={styles.title}>Enter your phone number</Text>
+          <TextInput
+            value={formData.mobNum}
+            onChangeText={value => {
+              handleOnchange('mobNum', value);
+            }}
+            style={styles.input}
+            underlineColor="gray"
+            activeUnderlineColor="#92d4c7"
+            placeholder="Phone number"
+            keyboardType="numeric"
+            textColor={jersAppTheme.title}
+            error={mobNubErr}
           />
-        ) : (
-          'Next'
-        )}
-      </Button>
-    </View>
+          {mobNubErr && <Text style={styles.errorText}>{errMsg.mobNum}</Text>}
+          <TextInput
+            error={passwordErr}
+            secureTextEntry={isHide ? true : false}
+            value={formData.password}
+            onChangeText={value => {
+              handleOnchange('password', value);
+            }}
+            style={styles.input}
+            underlineColor="gray"
+            activeUnderlineColor="#92d4c7"
+            placeholder="Password"
+            textColor={jersAppTheme.title}
+            right={
+              <TextInput.Icon
+                icon={() => (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setisHide(!isHide);
+                    }}>
+                    {isHide ? (
+                      <EntypoIcon
+                        name="eye"
+                        size={25}
+                        color={jersAppTheme.themeText}
+                      />
+                    ) : (
+                      <EntypoIcon
+                        name="eye-with-line"
+                        size={25}
+                        color={jersAppTheme.themeText}
+                      />
+                    )}
+                  </TouchableOpacity>
+                )}
+              />
+            }
+          />
+          {passwordErr && (
+            <Text style={styles.errorText}>{errMsg.password}</Text>
+          )}
+        </View>
+        <Button
+          disabled={isLoading}
+          onPress={handleSubmit}
+          mode="contained"
+          style={styles.button}
+          textColor={jersAppTheme.main}>
+          {isLoading ? (
+            <ActivityIndicator animating={true} color={jersAppTheme.appBar} />
+          ) : (
+            'Next'
+          )}
+        </Button>
+      </View>
+    </SurfaceLayout>
   );
 }

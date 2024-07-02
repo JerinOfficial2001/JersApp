@@ -58,7 +58,7 @@ export const login = async (mobNum, password, props) => {
     // Handle the error appropriately (e.g., show an error message to the user)
   }
 };
-export const register = async (Data, formData, props) => {
+export const register = async (Data, formData) => {
   try {
     const {data} = await axios.post(
       `${expressApi}/api/auth/register`,
@@ -69,12 +69,8 @@ export const register = async (Data, formData, props) => {
         },
       },
     );
-    if (data.status == 'ok') {
-      ToastAndroid.show('Registered Successfully', ToastAndroid.SHORT);
-      login(Data.mobNum, Data.password, props);
-    } else {
-      ToastAndroid.show(data.message, ToastAndroid.SHORT);
-    }
+
+    return data;
   } catch (error) {
     console.error('Error at Register:', error.message);
   }
@@ -114,7 +110,6 @@ export const GetUsersByID = async id => {
     console.error('GetUsersByID Err:', error.message);
   }
 };
-
 export const logoutWithToken = async token => {
   try {
     const response = await fetch(expressApi + '/api/auth/logout', {
@@ -138,15 +133,17 @@ export const logoutWithToken = async token => {
 export const UpdateProfile = async DATA => {
   const {formData, id} = DATA;
   try {
-    const response = await fetch(`${expressApi}/api/auth/update/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'multipart/form-data',
+    const {data} = await axios.put(
+      `${expressApi}/api/auth/update/${id}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       },
-      body: formData,
-    }).then(res => res.json());
+    );
 
-    return response;
+    return data;
   } catch (error) {
     console.error('Error at UpdateProfile:', error);
   }

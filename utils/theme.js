@@ -52,7 +52,7 @@ export const themeSchema = {
     appBar: '#0E0E0E',
     model: '#292929',
     themeText: 'white',
-    shadows: 'red',
+    shadows: 'white',
     button: '#292929',
     tabBarIndicator: 'white',
     statusIndicator: '#008069',

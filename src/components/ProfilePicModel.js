@@ -9,6 +9,9 @@ import {
 } from 'react-native-paper';
 import InputField from './InputField';
 import {Image, StyleSheet, TouchableOpacity, View} from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import {MyContext} from '../../App';
 
 const ProfilePicModel = ({
   visible,
@@ -16,26 +19,60 @@ const ProfilePicModel = ({
   handlePick,
   handleDltProfilePic,
   handleCamera,
+  isDeleteEnable,
 }) => {
+  const {jersAppTheme} = React.useContext(MyContext);
   const hideModal = () => setVisible(false);
-
   const BtnArr = [
     {
       name: 'Camera',
-      image: require('../assets/camera.png'),
+      image: (
+        <MaterialCommunityIcons
+          color={jersAppTheme.badgeTextColor}
+          name="camera"
+          size={25}
+        />
+      ),
       onClick: handleCamera,
+      isEnabled: true,
     },
     {
       name: 'Gallery',
-      image: require('../assets/imageBlack.png'),
+      image: (
+        <Ionicons name="image" color={jersAppTheme.badgeTextColor} size={25} />
+      ),
       onClick: handlePick,
+      isEnabled: true,
     },
     {
       name: 'Delete',
-      image: require('../assets/deleteBlack.png'),
+      image: (
+        <MaterialCommunityIcons
+          color={!isDeleteEnable ? '#686868' : jersAppTheme.badgeTextColor}
+          name="delete"
+          size={25}
+        />
+      ),
       onClick: handleDltProfilePic,
+      isEnabled: isDeleteEnable,
     },
   ];
+  const styles = StyleSheet.create({
+    container: {
+      backgroundColor: jersAppTheme.model,
+      padding: 20,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 10,
+      position: 'absolute',
+      width: '100%',
+      bottom: 0,
+    },
+  });
+
   return (
     <Portal>
       <Modal
@@ -47,13 +84,7 @@ const ProfilePicModel = ({
           onPress={() => {
             setVisible(false);
           }}>
-          <Image
-            style={{
-              height: 30,
-              width: 30,
-            }}
-            source={require('../assets/clear.png')}
-          />
+          <Ionicons name="close" color={jersAppTheme.title} size={25} />
         </TouchableOpacity>
         <View
           style={{
@@ -61,7 +92,12 @@ const ProfilePicModel = ({
             flexDirection: 'row',
             justifyContent: 'space-between',
           }}>
-          <Text style={{color: 'white', fontWeight: 'bold', fontSize: 20}}>
+          <Text
+            style={{
+              color: jersAppTheme.title,
+              fontWeight: 'bold',
+              fontSize: 20,
+            }}>
             Profile photo
           </Text>
         </View>
@@ -77,26 +113,32 @@ const ProfilePicModel = ({
               key={index}
               style={{alignItems: 'center', justifyContent: 'center'}}>
               <IconButton
+                disabled={!elem.isEnabled}
                 style={{
-                  backgroundColor: '#008069',
+                  backgroundColor: !elem.isEnabled
+                    ? 'gray'
+                    : jersAppTheme.badgeColor,
                   padding: 10,
-                  borderColor: 'gray',
-                  borderWidth: 1,
                 }}
-                icon={() => (
-                  <Image
-                    style={{
-                      height: 25,
-                      width: 25,
-                    }}
-                    source={elem.image}
-                  />
-                )}
+                icon={() =>
+                  // <Image
+                  //   style={{
+                  //     height: 25,
+                  //     width: 25,
+                  //   }}
+                  //   source={elem.image}
+                  // />
+                  elem.image
+                }
                 size={40}
                 onPress={elem.onClick}
               />
               <Text
-                style={{color: '#CECECED1', fontWeight: 'bold', fontSize: 10}}>
+                style={{
+                  color: jersAppTheme.title,
+                  fontWeight: 'bold',
+                  fontSize: 10,
+                }}>
                 {elem.name}
               </Text>
             </View>
@@ -106,21 +148,5 @@ const ProfilePicModel = ({
     </Portal>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#008069',
-    padding: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
-    position: 'absolute',
-    width: '100%',
-    bottom: 0,
-  },
-});
 
 export default ProfilePicModel;

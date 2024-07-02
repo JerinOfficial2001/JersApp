@@ -96,6 +96,13 @@ export default function Chats(props) {
       }
     }, [socket]),
   );
+  useFocusEffect(
+    React.useCallback(() => {
+      if (data) {
+        setisMsgLongPressed(data.map(elem => ({isSelected: false})));
+      }
+    }, []),
+  );
   const handleDeleteContact = () => {
     if (receiversId && Contact_id) {
       deleteContactById(Data._id, receiversId, Contact_id).then(data => {
@@ -142,12 +149,13 @@ export default function Chats(props) {
             data?.map((elem, index) => {
               const isSelected = isMsgLongPressed[index]?.isSelected;
               elem.date = getDate(elem.createdAt);
+              // console.log(JSON.stringify(elem, null, 2));
               return (
                 <View
                   key={index}
                   style={{
                     backgroundColor: isSelected ? 'gray' : 'transparent',
-                    borderRadius: 3,
+                    borderRadius: 10,
                   }}>
                   <MyComponent
                     newMsgcount={elem.msgCount}

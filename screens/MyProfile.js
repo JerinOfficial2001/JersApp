@@ -25,7 +25,8 @@ export default function MyProfile({route, ...props}) {
     password: '',
     name: '',
     image: null,
-    public_id: '',
+    public_id: null,
+    isDeleteImg: false,
   });
   const [err, seterr] = useState(false);
   const [errMsg, seterrMsg] = useState('');
@@ -52,6 +53,8 @@ export default function MyProfile({route, ...props}) {
       formData.password !== '' &&
       formData.name !== ''
     ) {
+      handleFormData('isDeleteImg', false);
+
       setisProcessing(true);
 
       Object.entries(formData).forEach(([key, value]) =>
@@ -62,8 +65,8 @@ export default function MyProfile({route, ...props}) {
         formData: convertToMultipart,
       };
       UpdateProfile(DATA).then(response => {
-        if (response.status == 'ok') {
-          ToastAndroid.show('Profile Updated successfully', ToastAndroid.SHORT);
+        if (response?.status == 'ok') {
+          ToastAndroid.show(response.message, ToastAndroid.SHORT);
           AsyncStorage.setItem('userData', JSON.stringify(response.data));
         } else {
           ToastAndroid.show(response.message, ToastAndroid.SHORT);
@@ -99,32 +102,36 @@ export default function MyProfile({route, ...props}) {
 
   useEffect(() => {
     GetUsersByID(id).then(data => {
-      if (!image || image == 'null' || data.image == 'undefined') {
+      if (image) {
         setformData({
           mobNum: data.mobNum,
           password: data.password,
           name: data.name,
-          image: null,
-          public_id: '',
+          image: {
+            uri: image.uri,
+            name: 'image.jpg',
+            type: 'image/jpeg',
+          },
+          public_id: data.image ? data.image?.public_id : null,
+          isDeleteImg: false,
+        });
+      } else if (!data?.image || data?.image == 'null') {
+        setformData({
+          mobNum: data.mobNum,
+          password: data.password,
+          name: data.name,
+          image: image ? image : null,
+          public_id: null,
+          isDeleteImg: false,
         });
       } else {
         setformData({
           mobNum: data.mobNum,
           password: data.password,
           name: data.name,
-          image:
-            image && image.uri
-              ? {
-                  url: image.uri,
-                  type: 'image/jpeg',
-                  name: 'image.jpg',
-                }
-              : image?.type
-              ? {
-                  ...image,
-                }
-              : null,
+          image: data.image,
           public_id: data.image.public_id,
+          isDeleteImg: false,
         });
       }
     });
@@ -134,11 +141,10 @@ export default function MyProfile({route, ...props}) {
   };
   const styles = StyleSheet.create({
     container: {
-      height: '100%',
+      flex: 1,
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: 10,
-      marginBottom: 20,
     },
     errorText: {
       color: 'red',
@@ -148,9 +154,10 @@ export default function MyProfile({route, ...props}) {
     },
     contentContainer: {
       alignItems: 'center',
-      justifyContent: 'space-between',
+      justifyContent: 'center',
       width: '100%',
-      gap: 90,
+      flex: 1,
+      gap: 20,
     },
     title: {
       fontSize: 20,
@@ -171,18 +178,19 @@ export default function MyProfile({route, ...props}) {
         <View style={styles.contentContainer}>
           <Text style={styles.title}>Add Personal Details</Text>
           <View style={{position: 'relative'}}>
-            {formData.image &&
-            formData.image.url &&
-            formData.image !== 'null' ? (
-              <Avatar.Image size={200} source={{uri: formData.image.url}} />
+            {formData.image ? (
+              <Avatar.Image
+                size={200}
+                source={{
+                  uri: formData.image.url
+                    ? formData.image.url
+                    : formData.image.uri,
+                }}
+              />
             ) : (
               <Avatar.Image
                 size={200}
-                source={
-                  formData.image != null
-                    ? formData.image
-                    : require('../src/assets/user.png')
-                }
+                source={require('../src/assets/user.png')}
               />
             )}
             <IconButton
@@ -190,7 +198,7 @@ export default function MyProfile({route, ...props}) {
                 bottom: 0,
                 position: 'absolute',
                 right: 5,
-                backgroundColor: '#008069',
+                backgroundColor: jersAppTheme.badgeColor,
                 padding: 10,
               }}
               icon={() => (
@@ -239,8 +247,10 @@ export default function MyProfile({route, ...props}) {
         <ProfilePicModel
           handleDltProfilePic={() => {
             handleFormData('image', null);
+            handleFormData('isDeleteImg', true);
             handleCloseModel();
           }}
+          isDeleteEnable={formData.image !== null && formData.image !== 'null'}
           visible={openImageModel}
           setVisible={setopenImageModel}
           handlePick={handlePick}

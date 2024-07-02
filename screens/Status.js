@@ -61,6 +61,7 @@ export default function Status(props) {
               status={{
                 title: 'My status',
                 file: userStatus?.file,
+                id: userData?._id,
               }}
               onclick={() => {
                 if (!userStatus) {
@@ -77,7 +78,7 @@ export default function Status(props) {
             {otherUserStatus?.map(elem => {
               return (
                 <MyComponent
-                  status={elem}
+                  status={{...elem, id: userData?._id}}
                   key={elem._id}
                   onclick={() => {
                     props.navigation.navigate('PlayStatus', {

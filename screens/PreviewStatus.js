@@ -45,9 +45,14 @@ export default function PreviewStatus({route, ...props}) {
       // if (typeof image == 'object') {
       //   formData.append('file', image);
       // } else {
-      inputDatas.file.forEach(image => {
-        formData.append('file', image);
-      });
+      if (image) {
+        inputDatas.file.forEach(image => {
+          formData.append('file', image);
+        });
+      } else {
+        formData.append('file', video);
+      }
+
       // }
 
       const data = {
@@ -90,22 +95,22 @@ export default function PreviewStatus({route, ...props}) {
         </View>
       ) : (
         <View style={styles.content}>
-          <Carousel
-            data={inputDatas.file}
-            preview={true}
-            navigation={props.navigation}
-          />
+          {image ? (
+            <Carousel
+              data={inputDatas.file}
+              preview={true}
+              navigation={props.navigation}
+            />
+          ) : (
+            <Video
+              source={{uri: video.uri}}
+              style={{width: '100%', height: '80%'}}
+              resizeMode="cover"
+              controls
+              paused={false}
+            />
+          )}
         </View>
-
-        // {video && (
-        //   <Video
-        //     source={{uri: video.uri}}
-        //     style={{width: '100%', height: '80%'}}
-        //     // resizeMode="cover"
-        //     controls
-        //     paused={false}
-        //   />
-        // )}
       )}
       <View style={styles.inputContainer}>
         <TextInput

@@ -194,11 +194,11 @@ export default function BottomTabNavigator() {
           }}>
           <Menu.Item
             leadingIcon={() =>
-              userProfile ? (
-                <Avatar.Image size={30} source={{uri: userProfile}} />
-              ) : (
+              // userProfile ? (
+              //   <Avatar.Image size={30} source={{uri: userProfile}} />
+              // ) : (
                 <EntypoIcons style={styles.menuIcons} name="user" size={24} />
-              )
+              // )
             }
             title={userData?.name}
             titleStyle={{color: jersAppTheme.title}}
@@ -206,7 +206,7 @@ export default function BottomTabNavigator() {
               handleCloseMenu();
               navigation.navigate('MyProfile', {
                 id: userData?._id,
-                image: userProfile,
+                // image: userProfile,
               });
             }}
           />

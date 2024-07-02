@@ -6,6 +6,8 @@ import {getLastMsg} from '../controllers/chats';
 import {GetUsersByID} from '../controllers/auth';
 import {DarkThemeSchema, JersAppThemeSchema} from '../../utils/theme';
 import {MyContext} from '../../App';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import {useNavigation} from '@react-navigation/native';
 
 const MyComponent = ({
   onclick,
@@ -16,6 +18,7 @@ const MyComponent = ({
   onLongPress,
   newMsgcount,
 }) => {
+  const navigation = useNavigation();
   // const [theme, settheme] = useState(JersAppThemeSchema);
   const {jersAppTheme, setpageName} = useContext(MyContext);
 
@@ -52,6 +55,28 @@ const MyComponent = ({
               source={{uri: status.file[status.file.length - 1]?.url}}
             />
             <DonutChart width={175} height={50} data={status?.file} />
+            {status.title == 'My status' && (
+              <TouchableOpacity
+                onPress={() => {
+                  navigation.navigate('AddStatus', {
+                    onlyCamera: false,
+                    id: status?.id,
+                  });
+                }}
+                style={{
+                  position: 'absolute',
+                  right: -6,
+                  bottom: -3,
+                  backgroundColor: jersAppTheme.appBar,
+                  borderRadius: 50,
+                }}>
+                <Ionicons
+                  name="add-circle-sharp"
+                  size={25}
+                  color={jersAppTheme.badgeColor}
+                />
+              </TouchableOpacity>
+            )}
           </View>
         ) : contact && contact.image ? (
           <Avatar.Image size={50} source={{uri: contact.image?.url}} />
@@ -62,6 +87,33 @@ const MyComponent = ({
             size={50}
             source={{uri: contact.ContactDetails.image?.url}}
           />
+        ) : status?.title == 'My status' ? (
+          <View style={{position: 'relative'}}>
+            <Image
+              source={require('../assets/user.png')}
+              style={{height: 50, width: 50}}
+            />
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate('AddStatus', {
+                  onlyCamera: false,
+                  id: status?.id,
+                });
+              }}
+              style={{
+                position: 'absolute',
+                right: -6,
+                bottom: -3,
+                backgroundColor: jersAppTheme.main,
+                borderRadius: 50,
+              }}>
+              <Ionicons
+                name="add-circle-sharp"
+                size={25}
+                color={jersAppTheme.badgeColor}
+              />
+            </TouchableOpacity>
+          </View>
         ) : (
           <Image
             source={require('../assets/user.png')}

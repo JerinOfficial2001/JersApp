@@ -183,7 +183,7 @@ export default function Groups(props) {
               flex: 1,
               height: 600,
             }}>
-            <Text style={{color: 'gray'}}>Upcoming feature..</Text>
+            <Text style={{color: 'gray'}}>No Groups</Text>
           </View>
         )}
         <DeleteModal
