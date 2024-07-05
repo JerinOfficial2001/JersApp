@@ -6,7 +6,7 @@ import DocumentPicker from 'react-native-document-picker';
 import SurfaceLayout from '../../src/Layouts/SurfaceLayout';
 import {MyContext} from '../../App';
 export default function Register({route, ...props}) {
-  const {jersAppTheme} = useContext(MyContext);
+  const {jersAppTheme, setuserData} = useContext(MyContext);
   const {mobNum, password} = route.params;
   const [formData, setformData] = useState({
     mobNum: '',
@@ -56,7 +56,14 @@ export default function Register({route, ...props}) {
       register(formData, convertToMultipart, props).then(data => {
         if (data.status == 'ok') {
           ToastAndroid.show('Registered Successfully', ToastAndroid.SHORT);
-          login(formData.mobNum, formData.password, props);
+          login(formData.mobNum, formData.password, props).then(data => {
+            setisLoading(false);
+
+            if (data?.status == 'ok' && data?.data) {
+              setuserData(data?.data);
+              props.navigation.navigate('Home');
+            }
+          });
         } else {
           ToastAndroid.show(data.message, ToastAndroid.SHORT);
         }

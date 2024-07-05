@@ -17,6 +17,9 @@ import InitialPage from '../screens/InitialPage';
 import {DarkThemeSchema, JersAppThemeSchema} from '../utils/theme';
 import Themes from '../screens/Themes';
 import {MyContext} from '../App';
+import AddParticipants from '../screens/AddParticipants';
+import CreateGroup from '../screens/CreateGroup';
+import GroupMsg from '../screens/GroupMsg';
 
 const Stack = createStackNavigator();
 
@@ -145,6 +148,42 @@ export default function Navigator() {
           }}
           name="Themes"
           component={Themes}
+        />
+        <Stack.Screen
+          options={{
+            headerStyle: {
+              backgroundColor: jersAppTheme.appBar,
+              elevation: 0,
+            },
+            title: 'New Group',
+            headerTintColor: 'white',
+          }}
+          name="AddParticipants"
+          component={AddParticipants}
+        />
+        <Stack.Screen
+          options={{
+            headerStyle: {
+              backgroundColor: jersAppTheme.appBar,
+              elevation: 0,
+            },
+            title: 'New Group',
+            headerTintColor: 'white',
+          }}
+          name="CreateGroup"
+          component={CreateGroup}
+        />
+        <Stack.Screen
+          options={{
+            headerStyle: {
+              backgroundColor: jersAppTheme.appBar,
+              elevation: 0,
+            },
+            title: 'Group',
+            headerTintColor: 'white',
+          }}
+          name="GroupMsg"
+          component={GroupMsg}
         />
       </Stack.Navigator>
 

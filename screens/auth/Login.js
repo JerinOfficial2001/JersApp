@@ -52,8 +52,8 @@ export default function Login(props) {
       login(formData.mobNum, formData.password, props).then(data => {
         setisLoading(false);
 
-        if (data?.status == 'ok' && data?.data && data?.data?.user) {
-          setuserData(data?.data?.user);
+        if (data?.status == 'ok' && data?.data) {
+          setuserData(data?.data);
           props.navigation.navigate('Home');
         }
       });

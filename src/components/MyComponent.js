@@ -8,6 +8,7 @@ import {DarkThemeSchema, JersAppThemeSchema} from '../../utils/theme';
 import {MyContext} from '../../App';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useNavigation} from '@react-navigation/native';
+import AntDesignIcon from 'react-native-vector-icons/AntDesign';
 
 const MyComponent = ({
   onclick,
@@ -17,6 +18,8 @@ const MyComponent = ({
   contactPg,
   onLongPress,
   newMsgcount,
+  isSelected,
+  showSelectedIcon,
 }) => {
   const navigation = useNavigation();
   // const [theme, settheme] = useState(JersAppThemeSchema);
@@ -34,7 +37,15 @@ const MyComponent = ({
   };
 
   return (
-    <TouchableOpacity onLongPress={onLongPress} onPress={onclick}>
+    <TouchableOpacity
+      style={{
+        backgroundColor: isSelected
+          ? jersAppTheme.selectedColor
+          : 'transparent',
+        borderRadius: 10,
+      }}
+      onLongPress={onLongPress}
+      onPress={onclick}>
       <View
         style={{
           height: 80,
@@ -151,28 +162,26 @@ const MyComponent = ({
                   <Text style={{color: jersAppTheme.subText}}>
                     {contact?.date}
                   </Text>
-                  {newMsgcount !== 0 &&
-                    newMsgcount !== '0' &&
-                    newMsgcount !== '' && (
-                      <View
+                  {newMsgcount != 0 && newMsgcount && newMsgcount !== '' && (
+                    <View
+                      style={{
+                        backgroundColor: jersAppTheme.badgeColor,
+                        height: 25,
+                        width: 25,
+                        borderRadius: 100,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                      <Text
                         style={{
-                          backgroundColor: jersAppTheme.badgeColor,
-                          height: 25,
-                          width: 25,
-                          borderRadius: 100,
-                          alignItems: 'center',
-                          justifyContent: 'center',
+                          color: jersAppTheme.badgeTextColor,
+                          fontWeight: 'bold',
+                          fontSize: newMsgcount > '99' ? 10 : 15,
                         }}>
-                        <Text
-                          style={{
-                            color: jersAppTheme.badgeTextColor,
-                            fontWeight: 'bold',
-                            fontSize: newMsgcount > '99' ? 10 : 15,
-                          }}>
-                          {newMsgcount > '99' ? '99+' : newMsgcount}
-                        </Text>
-                      </View>
-                    )}
+                        {newMsgcount > '99' ? '99+' : newMsgcount}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               )}
             </View>
@@ -201,6 +210,38 @@ const MyComponent = ({
               : ''}
           </Text>
         </View>
+        {showSelectedIcon && (
+          <View
+            style={{
+              position: 'absolute',
+              right: 10,
+              gap: 7,
+              alignItems: 'center',
+              zIndex: 1,
+            }}>
+            <View
+              style={{
+                backgroundColor: isSelected
+                  ? jersAppTheme.badgeColor
+                  : 'transparent',
+                height: 30,
+                width: 30,
+                borderRadius: 100,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderColor: jersAppTheme.selectedColor,
+                borderWidth: 2,
+              }}>
+              {isSelected && (
+                <AntDesignIcon
+                  size={24}
+                  name="check"
+                  color={jersAppTheme.headerText}
+                />
+              )}
+            </View>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );

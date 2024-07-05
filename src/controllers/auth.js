@@ -37,7 +37,7 @@ export const login = async (mobNum, password, props) => {
       if (userData) {
         if (userData.status === 'ok') {
           // Store user data in AsyncStorage
-          AsyncStorage.setItem('userData', JSON.stringify(userData.data.user));
+          AsyncStorage.setItem('userData', JSON.stringify(userData.data));
           AsyncStorage.setItem('token', JSON.stringify(token));
         } else {
           console.error('Error:', userData.data);
@@ -167,5 +167,29 @@ export const UpdateThemeByID = async formData => {
     }
   } catch (error) {
     console.error('GetUsersByID Err:', error.message);
+  }
+};
+export const GetUsersFromIds = async Ids => {
+  if (!Ids || Ids.length == 0) {
+    return [];
+  } else {
+    try {
+      const {data} = await axios.post(`${expressApi}/api/auth/getByIds`, Ids, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (data) {
+        if (data.status == 'ok') {
+          return data.data;
+        } else {
+          ToastAndroid.show(data.message, ToastAndroid.SHORT);
+        }
+      } else {
+        ToastAndroid.show('Something went wrong', ToastAndroid.SHORT);
+      }
+    } catch (error) {
+      console.error('GetUsersByID Err:', error.message);
+    }
   }
 };

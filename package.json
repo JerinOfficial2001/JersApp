@@ -25,6 +25,7 @@
     "react-native-camera": "^4.2.1",
     "react-native-contacts": "^7.0.8",
     "react-native-document-picker": "^9.1.1",
+    "react-native-fast-image": "^8.6.3",
     "react-native-gesture-handler": "^2.14.0",
     "react-native-pager-view": "^6.2.3",
     "react-native-paper": "^5.11.6",

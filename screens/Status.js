@@ -11,6 +11,7 @@ import {DarkThemeSchema, JersAppThemeSchema} from '../utils/theme';
 import {MyContext} from '../App';
 import {ActivityIndicator, MD2Colors} from 'react-native-paper';
 import SurfaceLayout from '../src/Layouts/SurfaceLayout';
+import Loader from '../src/components/Loader';
 
 export default function Status(props) {
   // const [theme, settheme] = useState(JersAppThemeSchema);
@@ -40,22 +41,10 @@ export default function Status(props) {
   const otherUserStatus = status?.filter(data => data.userID !== userData?._id);
   return (
     <SurfaceLayout title="Status">
-      <Pressable style={{flex: 1}} onPress={handlePress}>
-        {isLoading ? (
-          <View
-            style={{
-              width: '100%',
-              alignItems: 'center',
-              flex: 1,
-              justifyContent: 'center',
-            }}>
-            <ActivityIndicator
-              animating={true}
-              color={MD2Colors.green400}
-              size="large"
-            />
-          </View>
-        ) : (
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <Pressable style={{flex: 1}} onPress={handlePress}>
           <ScrollView style={{padding: 10}}>
             <MyComponent
               status={{
@@ -89,8 +78,8 @@ export default function Status(props) {
               );
             })}
           </ScrollView>
-        )}
-      </Pressable>
+        </Pressable>
+      )}
     </SurfaceLayout>
   );
 }

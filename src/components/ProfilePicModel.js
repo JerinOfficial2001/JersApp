@@ -20,6 +20,7 @@ const ProfilePicModel = ({
   handleDltProfilePic,
   handleCamera,
   isDeleteEnable,
+  group,
 }) => {
   const {jersAppTheme} = React.useContext(MyContext);
   const hideModal = () => setVisible(false);
@@ -98,7 +99,7 @@ const ProfilePicModel = ({
               fontWeight: 'bold',
               fontSize: 20,
             }}>
-            Profile photo
+            {group ? 'Group Photo' : 'Profile photo'}
           </Text>
         </View>
 

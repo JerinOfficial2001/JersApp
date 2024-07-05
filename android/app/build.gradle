@@ -113,6 +113,9 @@ dependencies {
     implementation project(':react-native-contacts')
     implementation project(':react-native-camera')
     implementation project(':react-native-vector-icons')
+    implementation 'com.facebook.fresco:animated-gif:2.6.0'
+    implementation 'com.facebook.fresco:animated-webp:2.0.0'
+    implementation 'com.facebook.fresco:webpsupport:2.0.0'
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {

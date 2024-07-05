@@ -1,6 +1,6 @@
 import {useFocusEffect} from '@react-navigation/native';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useCallback, useContext, useEffect, useState} from 'react';
 import {Pressable, ScrollView, Text, ToastAndroid, View} from 'react-native';
 import {MyContext} from '../App';
 import {TopBarContext} from '../navigations/tabNavigation';
@@ -16,6 +16,9 @@ import {checkApplicationPermission} from '../src/controllers/permissions';
 import {eventEmitter} from '../src/notification.android';
 import {useSocketHook} from '../utils/socket';
 import Loader from '../src/components/Loader';
+import {Button, IconButton} from 'react-native-paper';
+import Plus from '../src/assets/svg/plus';
+import {GetGroups} from '../src/controllers/group';
 
 export default function Groups(props) {
   const {Data, jersAppTheme, setpageName} = useContext(MyContext);
@@ -26,26 +29,10 @@ export default function Groups(props) {
   const {setisDelete, isModelOpen, setisModelOpen, setopenMenu, setactiveTab} =
     useContext(TopBarContext);
 
-  const getDate = timestamps => {
-    const date = new Date(timestamps);
-    const properDate =
-      date.getDate() < 10 ? '0' + date.getDate() : date.getDate();
-    const properMonth =
-      date.getMonth() < 10 ? '0' + date.getMonth() : date.getMonth();
-    const formatedDate = `${properDate}/${properMonth}/${
-      date.getFullYear() % 100
-    }`;
-    return formatedDate;
-  };
-  const GetGroupByID = {
-    name: 'Test',
-    image: '',
-    lastMsg: {msg: 'Hi', id: 2, name: 'John'},
-  };
   const {data, refetch, isLoading} = useQuery({
     queryKey: ['groups'],
-    queryFn: () => [],
-    enabled: Data._id != undefined,
+    queryFn: () => GetGroups({id: Data?._id, token: Data?.accessToken}),
+    enabled: !!Data && !!Data._id,
   });
   const {
     newMsgCount,
@@ -70,41 +57,6 @@ export default function Groups(props) {
     },
   });
 
-  useFocusEffect(
-    React.useCallback(() => {
-      refetch();
-    }, [newMsgCount]),
-  );
-  useFocusEffect(
-    React.useCallback(() => {
-      if (socket) {
-        socket.on('connect', () => {
-          console.log('connected');
-        });
-        socketUserID(Data._id);
-        socketUserConnected({
-          id: Data._id,
-          status: 'online',
-        });
-      }
-    }, [socket]),
-  );
-  const handleDeleteContact = () => {
-    if (receiversId && Contact_id) {
-      deleteContactById(Data._id, receiversId, Contact_id).then(data => {
-        if (data.status == 'ok' && data.message !== 'failed') {
-          fetchData();
-          handlePress();
-          setisModelOpen(false);
-          ToastAndroid.show('Deleted', ToastAndroid.SHORT);
-        } else {
-          ToastAndroid.show('Failed', ToastAndroid.SHORT);
-          setisModelOpen(false);
-        }
-      });
-    }
-  };
-
   const handleLongPress = (index, id, Contact_id) => {
     setContact_id(Contact_id);
     const updatedStates = [...isMsgLongPressed];
@@ -124,75 +76,51 @@ export default function Groups(props) {
     handlePress();
   };
 
-  if (isLoading) {
-    return <Loader />;
-  }
   return (
-    <SurfaceLayout title="Groups">
-      {/* <Pressable style={{flex: 1}} onPress={handlePress}> */}
-      <ScrollView style={{padding: 10}}>
-        {data?.length > 0 ? (
-          data?.map((elem, index) => {
-            // const isSelected = isMsgLongPressed[index]?.isSelected;
-            // elem.date = getDate(elem.createdAt);
-            return (
-              <View
-                key={index}
-                style={{
-                  backgroundColor: isSelected ? 'gray' : 'transparent',
-                  borderRadius: 3,
-                }}>
-                <MyComponent
-                  newMsgcount={elem.msgCount}
-                  contact={elem}
-                  onclick={() => {
-                    const Ids = [Data._id, elem.ContactDetails._id]
-                      .sort()
-                      .join('_');
-
-                    AddChat({
-                      sender: Data._id,
-                      receiver: elem.ContactDetails._id,
-                      elem: elem,
-                      roomID: Ids,
-                    });
-                    handlePress();
-
-                    socket.emit('clearNewMsg', {
-                      id: Data._id,
-                      Contact_id: elem._id,
-                    });
-                    setnewMsgCount(null);
-                  }}
-                  // onLongPress={() => {
-                  //   handleLongPress(
-                  //     index,
-                  //     elem.ContactDetails._id,
-                  //     elem.Contact_id,
-                  //   );
-                  // }}
-                />
-              </View>
-            );
-          })
-        ) : (
-          <View
-            style={{
-              justifyContent: 'center',
-              alignItems: 'center',
-              flex: 1,
-              height: 600,
-            }}>
-            <Text style={{color: 'gray'}}>No Groups</Text>
-          </View>
-        )}
-        <DeleteModal
-          handleModelClose={handleModelClose}
-          visible={isModelOpen}
-          handleDelete={handleDeleteContact}
-        />
-      </ScrollView>
-      {/* </Pressable> */}
+    <SurfaceLayout
+      title="Groups"
+      ShowNavigationBtn={true}
+      onClick={() => props.navigation.navigate('AddParticipants')}>
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <ScrollView style={{padding: 10}}>
+          {data?.length > 0 ? (
+            data?.map((elem, index) => {
+              return (
+                <View
+                  key={index}
+                  style={{
+                    borderRadius: 3,
+                  }}>
+                  <MyComponent
+                    // newMsgcount={elem.msgCount}
+                    contact={{
+                      _id: elem._id,
+                      ContactDetails: {name: elem.group_name},
+                    }}
+                    onclick={() => {
+                      props.navigation.navigate('GroupMsg', {
+                        id: elem._id,
+                      });
+                    }}
+                  />
+                </View>
+              );
+            })
+          ) : (
+            <View
+              style={{
+                justifyContent: 'center',
+                alignItems: 'center',
+                flex: 1,
+                height: 600,
+              }}>
+              <Text style={{color: 'gray'}}>No Groups</Text>
+            </View>
+          )}
+        </ScrollView>
+      )}
     </SurfaceLayout>
   );
 }

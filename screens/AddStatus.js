@@ -5,7 +5,7 @@ import {RNCamera} from 'react-native-camera';
 import DocumentPicker from 'react-native-document-picker';
 
 export default function AddStatus({route, ...props}) {
-  const {onlyCamera, id} = route.params;
+  const {onlyCamera, id, group} = route.params;
   const cameraRef = useRef(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -32,6 +32,11 @@ export default function AddStatus({route, ...props}) {
             image: result,
             id,
             video: null,
+          });
+        } else if (group) {
+          props.navigation.navigate('CreateGroup', {
+            image: result,
+            ids: id,
           });
         } else {
           props.navigation.navigate('MyProfile', {
@@ -89,6 +94,11 @@ export default function AddStatus({route, ...props}) {
             image: [data],
             id,
             video: null,
+          });
+        } else if (group) {
+          props.navigation.navigate('CreateGroup', {
+            image: data,
+            ids: id,
           });
         } else {
           props.navigation.navigate('MyProfile', {

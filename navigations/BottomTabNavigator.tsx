@@ -85,11 +85,13 @@ export default function BottomTabNavigator() {
   const {jersAppTheme, setpageName} = useContext<any>(MyContext);
   useEffect(() => {
     AsyncStorage.getItem('userData').then((res: any) => {
-      const data = JSON.parse(res);
-      setuserData(data);
-      GetUsersByID(data._id).then(res => {
-        setuserProfile(res?.image?.url);
-      });
+      const data = res ? JSON.parse(res) : false;
+      if (data) {
+        setuserData(data);
+        GetUsersByID(data?._id).then(res => {
+          setuserProfile(res?.image?.url);
+        });
+      }
     });
     setpageName('Home');
   }, [openMenu]);
@@ -193,11 +195,13 @@ export default function BottomTabNavigator() {
             elevation: 8,
           }}>
           <Menu.Item
-            leadingIcon={() =>
-              // userProfile ? (
-              //   <Avatar.Image size={30} source={{uri: userProfile}} />
-              // ) : (
+            leadingIcon={
+              () => (
+                // userProfile ? (
+                //   <Avatar.Image size={30} source={{uri: userProfile}} />
+                // ) : (
                 <EntypoIcons style={styles.menuIcons} name="user" size={24} />
+              )
               // )
             }
             title={userData?.name}
@@ -237,7 +241,7 @@ export default function BottomTabNavigator() {
             titleStyle={{color: jersAppTheme.title}}
             onPress={() => {
               handleCloseMenu();
-              navigation.navigate('Themes',{id:userData?._id});
+              navigation.navigate('Themes', {id: userData?._id});
             }}
           />
           <Menu.Item

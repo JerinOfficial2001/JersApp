@@ -16,11 +16,10 @@ export default function AllContacts(props) {
   const [contacts, setContacts] = useState([]);
   const [userData, setUserData] = useState({});
   const [loading, setLoading] = useState(true);
-  const {jersAppTheme} = useContext(MyContext);
+  const {jersAppTheme, Data} = useContext(MyContext);
 
   function cleanPhoneNumber(phoneNumber) {
-    const cleanedNumber = phoneNumber.replace(/\D/g, '');
-    console.log(cleanedNumber, 'number');
+    const cleanedNumber = phoneNumber?.replace(/\D/g, '').slice(-10);
     return cleanedNumber;
   }
 
@@ -31,14 +30,12 @@ export default function AllContacts(props) {
       if (permissionsGranted) {
         const dbContact = await getAllUsers();
         if (dbContact) {
-          const mobContacts = permissionsGranted.map(
-            contact => contact.phoneNumbers[0]?.number,
+          const mobContacts = permissionsGranted.map(contact =>
+            cleanPhoneNumber(contact.phoneNumbers[0]?.number),
           );
           const apiContacts = dbContact.map(contact => contact.mobNum);
-          let commonMobNumbers = apiContacts.filter(
-            contact =>
-              mobContacts.includes(`+91${contact}`) ||
-              mobContacts.includes(contact),
+          let commonMobNumbers = apiContacts.filter(contact =>
+            mobContacts.includes(cleanPhoneNumber(contact)),
           );
           // if (commonMobNumbers.length == 0) {
           //   commonMobNumbers = apiContacts.filter(contact =>
@@ -46,8 +43,14 @@ export default function AllContacts(props) {
           //   );
           // }
           const apiUserDatas = commonMobNumbers.map(num => {
-            const commonObj = dbContact.find(user => user.mobNum == num);
-            return commonObj;
+            const commonObj = dbContact.find(
+              user => cleanPhoneNumber(user.mobNum) == num,
+            );
+            if (commonObj._id == Data?._id) {
+              return {...commonObj, name: 'Me'};
+            } else {
+              return commonObj;
+            }
           });
           // const commonMobContacts = permissionsGranted.filter(contact =>
           //   commonMobNumbers.includes(
