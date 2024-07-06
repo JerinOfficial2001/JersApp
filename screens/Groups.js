@@ -21,7 +21,8 @@ import Plus from '../src/assets/svg/plus';
 import {GetGroups} from '../src/controllers/group';
 
 export default function Groups(props) {
-  const {Data, jersAppTheme, setpageName} = useContext(MyContext);
+  const {Data, jersAppTheme, setpageName, setSelectedIds} =
+    useContext(MyContext);
   const [isMsgLongPressed, setisMsgLongPressed] = useState([]);
   const [receiversId, setreceiversId] = useState('');
   const [Contact_id, setContact_id] = useState('');
@@ -41,21 +42,6 @@ export default function Groups(props) {
     socketUserID,
     socketUserConnected,
   } = useSocketHook();
-  const {mutateAsync: AddChat} = useMutation({
-    mutationFn: data => {
-      createChat(data);
-      return data;
-    },
-    onSuccess: data => {
-      socket.emit('roomID', data.roomID);
-      props.navigation.navigate('Message', {
-        id: data.elem.ContactDetails?._id,
-        userID: Data._id,
-        receiverId: data.receiver,
-        roomID: data.roomID,
-      });
-    },
-  });
 
   const handleLongPress = (index, id, Contact_id) => {
     setContact_id(Contact_id);
@@ -75,7 +61,12 @@ export default function Groups(props) {
     setisModelOpen(false);
     handlePress();
   };
-
+  useFocusEffect(
+    useCallback(() => {
+      setSelectedIds([]);
+      refetch();
+    }, []),
+  );
   return (
     <SurfaceLayout
       title="Groups"

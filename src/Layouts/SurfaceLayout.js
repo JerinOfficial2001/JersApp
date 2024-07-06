@@ -12,26 +12,26 @@ export default function SurfaceLayout({
   title,
   ShowNavigationBtn,
   onClick,
-  Ids,
   toggleSelection,
   showBack,
+  group,
 }) {
-  const {jersAppTheme} = useContext(MyContext);
+  const {jersAppTheme, selectedIds} = useContext(MyContext);
   const [UsersInArray, setUsersInArray] = useState([]);
   useEffect(() => {
-    if (Ids && Ids.length > 0) {
-      GetUsersFromIds({ids: Ids}).then(data => {
+    if (selectedIds && selectedIds.length > 0) {
+      GetUsersFromIds({ids: selectedIds}).then(data => {
         setUsersInArray(data);
       });
     }
-  }, [Ids?.length]);
+  }, [selectedIds?.length]);
   return (
     <View
       style={{
         flex: 1,
         backgroundColor: jersAppTheme.appBar,
       }}>
-      {Ids && Ids.length !== 0 && (
+      {selectedIds && selectedIds.length !== 0 && (
         <View
           style={{
             width: '100%',
@@ -86,6 +86,41 @@ export default function SurfaceLayout({
               </View>
             );
           })}
+        </View>
+      )}
+      {group && (
+        <View
+          style={{
+            width: '100%',
+            padding: 10,
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          <Avatar.Image
+            size={100}
+            source={
+              group.image
+                ? {uri: group.image.url}
+                : require('../assets/user.png')
+            }
+            style={{marginBottom: 15}}
+          />
+          <Text
+            style={{
+              color: jersAppTheme.headerText,
+              fontSize: 20,
+              fontWeight: 'bold',
+            }}>
+            {group.name}
+          </Text>
+          <Text
+            style={{
+              color: jersAppTheme.subText,
+              fontSize: 13,
+            }}>
+            {`${group.members} members`}
+          </Text>
         </View>
       )}
       <View

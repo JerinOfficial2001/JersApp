@@ -49,10 +49,17 @@ export default function Chats(props) {
     return formatedDate;
   };
 
+  const getAllChats = async () => {
+    const response = await getContactByUserId(Data._id);
+    if (response.status === 'ok') {
+      setisMsgLongPressed(response.data.map(() => ({isSelected: false})));
+      return response.data;
+    }
+  };
   const {data, refetch, isLoading} = useQuery({
     queryKey: ['chats'],
-    queryFn: () => getContactByUserId(Data._id),
-    enabled: Data._id != undefined,
+    queryFn: () => getAllChats(),
+    enabled: !!Data._id,
   });
   const {
     newMsgCount,
@@ -96,18 +103,18 @@ export default function Chats(props) {
       }
     }, [socket]),
   );
-  useFocusEffect(
-    React.useCallback(() => {
-      if (data) {
-        setisMsgLongPressed(data.map(elem => ({isSelected: false})));
-      }
-    }, []),
-  );
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     if (data) {
+
+  //     }
+  //   }, []),
+  // );
   const handleDeleteContact = () => {
     if (receiversId && Contact_id) {
       deleteContactById(Data._id, receiversId, Contact_id).then(data => {
         if (data.status == 'ok' && data.message !== 'failed') {
-          fetchData();
+          refetch();
           handlePress();
           setisModelOpen(false);
           ToastAndroid.show('Deleted', ToastAndroid.SHORT);

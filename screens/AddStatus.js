@@ -36,7 +36,6 @@ export default function AddStatus({route, ...props}) {
         } else if (group) {
           props.navigation.navigate('CreateGroup', {
             image: result,
-            ids: id,
           });
         } else {
           props.navigation.navigate('MyProfile', {
@@ -98,7 +97,6 @@ export default function AddStatus({route, ...props}) {
         } else if (group) {
           props.navigation.navigate('CreateGroup', {
             image: data,
-            ids: id,
           });
         } else {
           props.navigation.navigate('MyProfile', {

@@ -38,30 +38,56 @@ export default function GroupMsg({navigation, route}) {
       GetGroupByID({id: Data?._id, token: Data?.accessToken, groupID: id}),
     enabled: !!Data && !!Data._id,
   });
-  React.useLayoutEffect(() => {
-    navigation.setOptions({
-      headerTitle: () => (
-        <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
-          <Image
-            source={
-              GroupData && GroupData.image
-                ? {uri: GroupData.image.url}
-                : require('../src/assets/user.png')
-            }
-            style={{width: 40, height: 40, borderRadius: 15}}
-          />
-          <Text
-            style={{
-              color: jersAppTheme.headerText,
-              fontSize: 20,
-              fontWeight: 'bold',
-            }}>
-            {GroupData ? GroupData.group_name : 'MyGroup'}
-          </Text>
-        </View>
-      ),
-    });
-  }, [navigation]);
+  useFocusEffect(
+    useCallback(() => {
+      navigation.setOptions({
+        headerTitle: () => (
+          <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
+            <Image
+              source={
+                GroupData && GroupData.image && GroupData.image !== 'null'
+                  ? {uri: GroupData.image.url}
+                  : require('../src/assets/user.png')
+              }
+              style={{width: 40, height: 40, borderRadius: 15}}
+            />
+            <TouchableOpacity
+              onPress={() => {
+                if (GroupData)
+                  navigation.navigate('ViewGroupProfile', {
+                    id,
+                    name: GroupData?.group_name,
+                    image:
+                      GroupData?.image && GroupData?.image !== 'null'
+                        ? GroupData.image.url
+                        : null,
+                    members: GroupData?.members?.length,
+                  });
+              }}>
+              <View style={{flexDirection: 'column'}}>
+                <Text
+                  style={{
+                    color: jersAppTheme.headerText,
+                    fontSize: 20,
+                    fontWeight: 'bold',
+                  }}>
+                  {GroupData ? GroupData.group_name : 'MyGroup'}
+                </Text>
+
+                <Text
+                  style={{
+                    color: jersAppTheme.headerText,
+                    fontSize: 10,
+                  }}>
+                  tab here for group info
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        ),
+      });
+    }, [navigation]),
+  );
 
   const [formDatas, setformDatas] = useState({
     msg: '',

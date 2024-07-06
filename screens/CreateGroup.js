@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
+  ToastAndroid,
 } from 'react-native';
 import React, {useContext, useEffect, useState} from 'react';
 import SurfaceLayout from '../src/Layouts/SurfaceLayout';
@@ -18,15 +19,20 @@ import {
   TextInput,
 } from 'react-native-paper';
 import DocumentPicker from 'react-native-document-picker';
+import {CreateNewGroup} from '../src/controllers/group';
+import {QueryClient, useMutation} from '@tanstack/react-query';
 
-export default function CreateGroup({route, ...props}) {
-  const {Data, jersAppTheme} = useContext(MyContext);
-  const {ids, image} = route.params;
-  const [selectedIds, setSelectedIds] = useState(ids);
+export default function CreateGroup({navigation, route, ...props}) {
+  const {Data, jersAppTheme, selectedIds, setSelectedIds} =
+    useContext(MyContext);
+  const {image} = route?.params;
 
   const toggleSelection = contactId => {
     if (selectedIds.includes(contactId)) {
       setSelectedIds(selectedIds.filter(id => id !== contactId)); // Deselect
+      if (selectedIds.length == 1) {
+        navigation.navigate('AddParticipants');
+      }
     } else {
       setSelectedIds([...selectedIds, contactId]); // Select
     }
@@ -35,13 +41,14 @@ export default function CreateGroup({route, ...props}) {
   const [isProcessing, setisProcessing] = useState(false);
   const [openImageModel, setopenImageModel] = useState(false);
   const [formData, setformData] = useState({
-    name: '',
+    group_name: '',
     image: image ? image : null,
     public_id: null,
     isDeleteImg: false,
   });
   const [err, seterr] = useState(false);
   const [errMsg, seterrMsg] = useState('');
+  const queryClient = new QueryClient();
   const handleFormData = (key, value) => {
     setformData(prev => ({...prev, [key]: value}));
   };
@@ -57,9 +64,21 @@ export default function CreateGroup({route, ...props}) {
     }
   };
   const convertToMultipart = new FormData();
-
-  const handleSubmit = () => {
-    if (!err && formData.name !== '') {
+  const {mutateAsync: handleSubmit} = useMutation({
+    mutationFn: () => handleCreateNewGroup(),
+    onSuccess: data => {
+      if (data.status == 'ok') {
+        queryClient.invalidateQueries({queryKey: ['groups']});
+        navigation.navigate('Home');
+        ToastAndroid.show(data.message, ToastAndroid.SHORT);
+      } else {
+        ToastAndroid.show(data.message, ToastAndroid.SHORT);
+      }
+    },
+  });
+  const handleCreateNewGroup = () => {
+    console.log('test');
+    if (!err && formData.group_name !== '') {
       handleFormData('isDeleteImg', false);
 
       setisProcessing(true);
@@ -67,33 +86,35 @@ export default function CreateGroup({route, ...props}) {
       Object.entries(formData).forEach(([key, value]) =>
         convertToMultipart.append(key, value),
       );
+      selectedIds.forEach((id, index) => {
+        convertToMultipart.append('members[]', id);
+      });
       const DATA = {
-        id,
+        id: Data._id,
+        token: Data.accessToken,
         formData: convertToMultipart,
       };
-      // UpdateProfile(DATA).then(response => {
-      //   if (response?.status == 'ok') {
-      //     ToastAndroid.show(response.message, ToastAndroid.SHORT);
-      //   } else {
-      //     ToastAndroid.show(response.message, ToastAndroid.SHORT);
-      //   }
-      //   setisProcessing(false);
-      // });
+      const response = CreateNewGroup(DATA).then(response => {
+        setisProcessing(false);
+        return response;
+      });
+      return response;
     } else {
-      handleValidation('name', formData.name);
+      handleValidation('group_name', formData.group_name);
+      return {status: 'error', message: 'error'};
     }
   };
   const handleValidation = (name, value) => {
-    if (name == 'name') {
+    if (name == 'group_name') {
       if (!value) {
         seterr(true);
-        seterrMsg('Name is required');
+        seterrMsg('Group name is required');
       } else {
         if (value.length > 0) {
           seterr(false);
         } else {
           seterr(true);
-          seterrMsg('Name is required');
+          seterrMsg('Group name is required');
         }
       }
     }
@@ -144,13 +165,12 @@ export default function CreateGroup({route, ...props}) {
   });
   return (
     <SurfaceLayout
-      Ids={selectedIds}
       toggleSelection={toggleSelection}
       title={'Create Group'}
       showBack={{
         state: true,
         onClick: () => {
-          props.navigation.navigate('AddParticipants', {ids: selectedIds});
+          navigation.navigate('AddParticipants');
         },
       }}>
       <View style={styles.container}>
@@ -196,9 +216,9 @@ export default function CreateGroup({route, ...props}) {
           </View>
           <View style={{width: '100%', alignItems: 'center'}}>
             <TextInput
-              value={formData.name}
+              value={formData.group_name}
               onChangeText={value => {
-                handleOnchange('name', value);
+                handleOnchange('group_name', value);
               }}
               style={styles.input}
               underlineColor="gray"
@@ -235,9 +255,8 @@ export default function CreateGroup({route, ...props}) {
           handlePick={handlePick}
           handleCamera={() => {
             handleCloseModel();
-            props.navigation.navigate('AddStatus', {
+            navigation.navigate('AddStatus', {
               onlyCamera: true,
-              id: ids,
               group: true,
             });
           }}

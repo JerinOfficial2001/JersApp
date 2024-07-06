@@ -202,7 +202,7 @@ export default function Login(props) {
           style={styles.button}
           textColor={jersAppTheme.main}>
           {isLoading ? (
-            <ActivityIndicator animating={true} color={jersAppTheme.appBar} />
+            <ActivityIndicator animating={true} color={jersAppTheme.loader} />
           ) : (
             'Next'
           )}

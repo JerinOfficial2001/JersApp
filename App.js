@@ -15,6 +15,8 @@ export default function App() {
   const [themeHandler, setthemeHandler] = useState('JersApp');
   const [jersAppTheme, setjersAppTheme] = useState(themeSchema[themeHandler]);
   const [pageName, setpageName] = useState('');
+  const [selectedIds, setSelectedIds] = useState([]);
+
   useEffect(() => {
     setjersAppTheme(themeSchema[themeHandler]);
   }, [themeHandler, pageName]);
@@ -41,6 +43,8 @@ export default function App() {
             pageName,
             setpageName,
             setuserData,
+            selectedIds,
+            setSelectedIds,
           }}>
           <Provider>
             <Navigator />

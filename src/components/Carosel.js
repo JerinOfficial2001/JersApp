@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useContext} from 'react';
 import {
   ScrollView,
   View,
@@ -10,10 +10,12 @@ import {
 import StatusIndicator from './StatusIndicator';
 import Video from 'react-native-video';
 import {Text} from 'react-native-paper';
+import {MyContext} from '../../App';
 const Carousel = ({navigation, data, preview, text}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLastImage, setIsLastImage] = useState(false);
   const carouselRef = useRef(null);
+  const {jersAppTheme} = useContext(MyContext);
 
   const handleScroll = event => {
     const {contentOffset} = event.nativeEvent;

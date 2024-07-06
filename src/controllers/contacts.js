@@ -33,7 +33,7 @@ export const getContactByUserId = async id => {
         Accept: 'application/json',
       },
     }).then(res => res.json());
-    return response.data;
+    return response;
   } catch (error) {
     console.log(error);
   }
@@ -60,6 +60,7 @@ export const addContact = async (
           id: response.data,
         });
       } else {
+        props.navigation.navigate('Home');
         return response.data;
       }
     } else {

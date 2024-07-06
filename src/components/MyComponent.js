@@ -20,6 +20,7 @@ const MyComponent = ({
   newMsgcount,
   isSelected,
   showSelectedIcon,
+  customImg,
 }) => {
   const navigation = useNavigation();
   // const [theme, settheme] = useState(JersAppThemeSchema);
@@ -27,7 +28,7 @@ const MyComponent = ({
 
   const [lastMsgUserName, setlastMsgUserName] = useState('');
   useEffect(() => {
-    if (contact?.user_id && contact?.ContactDetails._id) {
+    if (contact?.user_id && contact?.ContactDetails?._id) {
       getUser(contact?.user_id);
     }
   }, [contact]);
@@ -78,13 +79,13 @@ const MyComponent = ({
                   position: 'absolute',
                   right: -6,
                   bottom: -3,
-                  backgroundColor: jersAppTheme.appBar,
+                  backgroundColor: jersAppTheme.loader,
                   borderRadius: 50,
                 }}>
                 <Ionicons
                   name="add-circle-sharp"
                   size={25}
-                  color={jersAppTheme.badgeColor}
+                  color={jersAppTheme.statusIndicator}
                 />
               </TouchableOpacity>
             )}
@@ -96,7 +97,7 @@ const MyComponent = ({
           contact.ContactDetails.image ? (
           <Avatar.Image
             size={50}
-            source={{uri: contact.ContactDetails.image?.url}}
+            source={{uri: contact.ContactDetails.image.url}}
           />
         ) : status?.title == 'My status' ? (
           <View style={{position: 'relative'}}>
@@ -125,6 +126,18 @@ const MyComponent = ({
               />
             </TouchableOpacity>
           </View>
+        ) : customImg ? (
+          <View
+            style={{
+              height: 50,
+              width: 50,
+              borderRadius: 100,
+              backgroundColor: jersAppTheme.appBar,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            {customImg}
+          </View>
         ) : (
           <Image
             source={require('../assets/user.png')}
@@ -143,7 +156,12 @@ const MyComponent = ({
                 justifyContent: 'space-between',
                 flexDirection: 'row',
               }}>
-              <Text style={{color: jersAppTheme.title, fontWeight: 'bold'}}>
+              <Text
+                style={{
+                  color: jersAppTheme.title,
+                  fontWeight: 'bold',
+                  fontSize: 15,
+                }}>
                 {!contactPg
                   ? contact.ContactDetails?.name
                   : contact
@@ -186,29 +204,35 @@ const MyComponent = ({
               )}
             </View>
           )}
-          <Text
-            style={{
-              color:
-                status?.title || status?.userName
-                  ? jersAppTheme.title
-                  : jersAppTheme.subText,
-              width: '85%',
-            }}
-            numberOfLines={1}>
-            {contactPg
-              ? contact
-                ? contact.mobNum
-                : 'Phone Number'
-              : status
-              ? status?.title
+          {(contact?.mobNum ||
+            contact?.lastMsg ||
+            status?.title ||
+            contact?.lastMsg ||
+            status?.userName) && (
+            <Text
+              style={{
+                color:
+                  status?.title || status?.userName
+                    ? jersAppTheme.title
+                    : jersAppTheme.subText,
+                width: '85%',
+              }}
+              numberOfLines={1}>
+              {contactPg
+                ? contact
+                  ? contact.mobNum
+                  : 'Phone Number'
+                : status
                 ? status?.title
-                : status?.userName
-              : contact?.lastMsg?.msg
-              ? contact?.lastMsg?.id == contact?.user_id
-                ? contact?.lastMsg?.msg
-                : `${lastMsgUserName}:` + contact.lastMsg?.msg
-              : ''}
-          </Text>
+                  ? status?.title
+                  : status?.userName
+                : contact?.lastMsg?.msg
+                ? contact?.lastMsg?.id == contact?.user_id
+                  ? contact?.lastMsg?.msg
+                  : `${lastMsgUserName}:` + contact.lastMsg?.msg
+                : ''}
+            </Text>
+          )}
         </View>
         {showSelectedIcon && (
           <View
@@ -240,6 +264,23 @@ const MyComponent = ({
                 />
               )}
             </View>
+          </View>
+        )}
+        {contact && contact.role && contact.role !== 'MEMBER' && (
+          <View
+            style={{
+              position: 'absolute',
+              right: 10,
+              gap: 7,
+              alignItems: 'center',
+              zIndex: 1,
+              borderColor: 'green',
+              borderWidth: 2,
+              padding: 2,
+              borderRadius: 50,
+              paddingHorizontal: 10,
+            }}>
+            <Text style={{color: 'green'}}>{contact.role}</Text>
           </View>
         )}
       </View>

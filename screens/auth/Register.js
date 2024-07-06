@@ -174,7 +174,7 @@ export default function Register({route, ...props}) {
           style={styles.button}
           textColor={jersAppTheme.main}>
           {isLoading ? (
-            <ActivityIndicator animating={true} color={jersAppTheme.title} />
+            <ActivityIndicator animating={true} color={jersAppTheme.loader} />
           ) : (
             'Submit'
           )}

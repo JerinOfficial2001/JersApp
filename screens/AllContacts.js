@@ -7,7 +7,6 @@ import {
 } from '../src/controllers/contacts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getAllUsers} from '../src/controllers/auth';
-import {ActivityIndicator, MD2Colors} from 'react-native-paper';
 import {MyContext} from '../App';
 import SurfaceLayout from '../src/Layouts/SurfaceLayout';
 import Loader from '../src/components/Loader';
@@ -37,11 +36,6 @@ export default function AllContacts(props) {
           let commonMobNumbers = apiContacts.filter(contact =>
             mobContacts.includes(cleanPhoneNumber(contact)),
           );
-          // if (commonMobNumbers.length == 0) {
-          //   commonMobNumbers = apiContacts.filter(contact =>
-          //     mobContacts.includes(contact),
-          //   );
-          // }
           const apiUserDatas = commonMobNumbers.map(num => {
             const commonObj = dbContact.find(
               user => cleanPhoneNumber(user.mobNum) == num,
@@ -52,14 +46,6 @@ export default function AllContacts(props) {
               return commonObj;
             }
           });
-          // const commonMobContacts = permissionsGranted.filter(contact =>
-          //   commonMobNumbers.includes(
-          //     contact.phoneNumbers[0]?.number ||
-          //       `+91${contact.phoneNumbers[0]?.number}`,
-          //   ),
-          // );
-          // console.log(commonMobContacts);
-
           setContacts(apiUserDatas);
           setLoading(false);
         }

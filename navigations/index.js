@@ -20,6 +20,7 @@ import {MyContext} from '../App';
 import AddParticipants from '../screens/AddParticipants';
 import CreateGroup from '../screens/CreateGroup';
 import GroupMsg from '../screens/GroupMsg';
+import ViewGroupProfile from '../screens/ViewGroupProfile';
 
 const Stack = createStackNavigator();
 
@@ -184,6 +185,18 @@ export default function Navigator() {
           }}
           name="GroupMsg"
           component={GroupMsg}
+        />
+        <Stack.Screen
+          options={{
+            headerStyle: {
+              backgroundColor: jersAppTheme.appBar,
+              elevation: 0,
+            },
+            title: 'Group',
+            headerTintColor: 'white',
+          }}
+          name="ViewGroupProfile"
+          component={ViewGroupProfile}
         />
       </Stack.Navigator>
 

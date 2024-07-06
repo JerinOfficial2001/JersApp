@@ -11,7 +11,7 @@ export const themeSchema = {
     shadows: 'white',
     button: '#292929',
     tabBarIndicator: '#2F58A7',
-    statusIndicator: '#0056FC',
+    statusIndicator: '#1479d8',
     bubbleSenderBgColor: '#3c3c3c',
     bubbleReceiverBgColor: '#1479d8',
     bubbleSenderTextColor: 'white',
@@ -22,6 +22,7 @@ export const themeSchema = {
     badgeTextColor: 'white',
     selectedColor: '#D9D9D924',
     placeholderColor: 'gray',
+    loader: '#151B26',
   },
   Whatsapp: {
     name: 'Whatsapp',
@@ -46,6 +47,7 @@ export const themeSchema = {
     badgeTextColor: 'white',
     selectedColor: '#99999924',
     placeholderColor: 'gray',
+    loader: 'white',
   },
   DarkMode: {
     name: 'DarkMode',
@@ -59,7 +61,7 @@ export const themeSchema = {
     shadows: 'white',
     button: '#292929',
     tabBarIndicator: 'white',
-    statusIndicator: '#008069',
+    statusIndicator: 'slategray',
     bubbleSenderBgColor: '#7a8194',
     bubbleReceiverBgColor: '#373e4e',
     bubbleSenderTextColor: 'white',
@@ -70,6 +72,7 @@ export const themeSchema = {
     badgeTextColor: 'white',
     selectedColor: '#D9D9D924',
     placeholderColor: 'gray',
+    loader: '#0E0E0E',
   },
 };
 export const WhatsappThemeSchema = {

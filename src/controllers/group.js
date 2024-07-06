@@ -39,3 +39,24 @@ export const GetGroupByID = async ({token, id, groupID}) => {
     console.log('GetGroupsERR Err:', error);
   }
 };
+export const CreateNewGroup = async ({token, id, formData}) => {
+  try {
+    const {data} = await axios.post(
+      `${expressApi}/api/group/creategroup?userID=${id}`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    );
+    if (data) {
+      return data;
+    } else {
+      console.log('CreateGroupERR');
+    }
+  } catch (error) {
+    console.log('CreateGroup Err:', error);
+  }
+};

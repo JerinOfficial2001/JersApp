@@ -10,8 +10,7 @@ import {TouchableWithoutFeedback} from 'react-native';
 import {MyContext} from '../App';
 
 export default function AddParticipants(props) {
-  const {Data} = useContext(MyContext);
-  const [selectedIds, setSelectedIds] = useState([]);
+  const {Data, selectedIds, setSelectedIds} = useContext(MyContext);
 
   // Function to toggle selection of a contact by ID
   const toggleSelection = contactId => {
@@ -72,13 +71,10 @@ export default function AddParticipants(props) {
   });
   return (
     <SurfaceLayout
-      Ids={selectedIds}
       toggleSelection={toggleSelection}
       title={'Add Participants'}
       ShowNavigationBtn={selectedIds.length > 0 ? true : false}
-      onClick={() =>
-        props.navigation.navigate('CreateGroup', {ids: selectedIds})
-      }>
+      onClick={() => props.navigation.navigate('CreateGroup', {image: null})}>
       {isLoading ? (
         <Loader />
       ) : (

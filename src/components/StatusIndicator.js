@@ -1,9 +1,11 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {View, Text, Image, StyleSheet} from 'react-native';
 import {ProgressBar} from 'react-native-paper';
+import {MyContext} from '../../App';
 
 const StatusIndicator = ({totalStatus, currentStatus}) => {
   const [progress, setProgress] = useState(0);
+  const {jersAppTheme} = useContext(MyContext);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -34,7 +36,14 @@ const StatusIndicator = ({totalStatus, currentStatus}) => {
               styles.statusNumber,
               {
                 width: `${statusNumberWidth}%`,
-                backgroundColor: number === currentStatus ? '#008169' : '#ccc',
+                backgroundColor:
+                  number === currentStatus
+                    ? jersAppTheme.statusIndicator
+                    : jersAppTheme.placeholderColor,
+                borderTopLeftRadius: number === 1 ? 20 : 0,
+                borderBottomLeftRadius: number === 1 ? 20 : 0,
+                borderTopRightRadius: number === 1 ? 0 : 20,
+                borderBottomRightRadius: number === 1 ? 0 : 20,
               },
             ]}></View>
         ))}
