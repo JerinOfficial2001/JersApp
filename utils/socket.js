@@ -59,6 +59,15 @@ export const SocketProvider = ({children}) => {
   const socketLogout = data => {
     socket?.emit('removeUser', data);
   };
+  const socketJoinGroup = data => {
+    socket?.emit('join_group', data);
+  };
+  const socketRemoveGroup = data => {
+    socket?.emit('remove_group', data);
+  };
+  const socketSendGroupMsg = data => {
+    socket?.emit('send_group_msg', data);
+  };
   const isOnline = id => {
     const isActive = activeUsers?.find(res => res.id == id);
     return isActive;
@@ -83,6 +92,9 @@ export const SocketProvider = ({children}) => {
         socketLogout,
         setisWatching,
         setisTyping,
+        socketJoinGroup,
+        socketRemoveGroup,
+        socketSendGroupMsg,
       }}>
       {children}
     </SocketContext.Provider>

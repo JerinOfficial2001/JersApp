@@ -66,7 +66,7 @@ export default function Message({route, navigation, ...props}) {
   const [msgID, setmsgID] = useState('');
   const [isDelete, setisDelete] = useState(false);
   // const [jersAppTheme, setjersAppTheme] = useState(JersAppThemeSchema);
-  const {jersAppTheme, setpageName} = useContext(MyContext);
+  const {jersAppTheme, setpageName, Data} = useContext(MyContext);
   const scrollViewRef = useRef();
   const getTime = timeStamp => {
     const date = new Date(timeStamp);
@@ -185,39 +185,35 @@ export default function Message({route, navigation, ...props}) {
   }, [formDatas.msg]);
 
   const fetchData = () => {
-    AsyncStorage.getItem('userData').then(data => {
-      if (data) {
-        const userDetails = JSON.parse(data);
-        setuserData(userDetails);
-        getContactByUserId(userDetails._id).then(users => {
-          if (users) {
-            const res = users.find(user => user.ContactDetails._id == id);
-            if (res) {
-              setreceiverDetails(res);
+    const userDetails = Data;
+    setuserData(userDetails);
+    getContactByUserId(userDetails._id).then(users => {
+      if (users.data) {
+        const res = users.data.find(user => user.ContactDetails._id == id);
+        if (res) {
+          setreceiverDetails(res);
 
-              // navigation.setOptions({
-              //   title: res ? res.ContactDetails.displayName : 'Message',
-              // });
-            }
-          }
-        });
-        getAllChats(userDetails._id, id).then(chat => {
-          if (chat) {
-            setchatID(chat._id);
-            getMessage(chat._id).then(msg => {
-              if (msg) {
-                scrollViewRef.current?.scrollToEnd({animated: true});
-                setchatArray(
-                  msg.map(elem => {
-                    return {
-                      ...elem,
-                      time: getTime(elem.createdAt),
-                    };
-                  }),
-                );
-                setisMsgLongPressed(msg.map(item => ({isSelected: false})));
-              }
-            });
+          // navigation.setOptions({
+          //   title: res ? res.ContactDetails.displayName : 'Message',
+          // });
+        }
+      }
+    });
+    getAllChats(userDetails._id, id).then(chat => {
+      if (chat) {
+        setchatID(chat._id);
+        getMessage(chat._id).then(msg => {
+          if (msg) {
+            scrollViewRef.current?.scrollToEnd({animated: true});
+            setchatArray(
+              msg.map(elem => {
+                return {
+                  ...elem,
+                  time: getTime(elem.createdAt),
+                };
+              }),
+            );
+            setisMsgLongPressed(msg.map(item => ({isSelected: false})));
           }
         });
       }
@@ -226,9 +222,11 @@ export default function Message({route, navigation, ...props}) {
   useFocusEffect(
     React.useCallback(() => {
       handleSocket();
-      fetchData();
+      if (Data) {
+        fetchData();
+      }
       setpageName('Message');
-    }, []),
+    }, [Data]),
   );
   const handleSubmit = e => {
     e.preventDefault();

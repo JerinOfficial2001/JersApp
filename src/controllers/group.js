@@ -1,5 +1,6 @@
 import axios from 'axios';
 import {expressApi} from '../api';
+import {ToastAndroid} from 'react-native';
 
 export const GetGroups = async ({token, id}) => {
   try {
@@ -14,6 +15,7 @@ export const GetGroups = async ({token, id}) => {
     if (data.status == 'ok') {
       return data.data;
     } else {
+      ToastAndroid.show(data.message, ToastAndroid.SHORT);
       console.log(data.message, 'GetGroupsERR');
     }
   } catch (error) {

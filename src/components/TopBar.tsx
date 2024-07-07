@@ -2,6 +2,7 @@ import React, {useContext} from 'react';
 import {Image, Text, TouchableOpacity, View, StyleSheet} from 'react-native';
 import {DarkThemeSchema, JersAppThemeSchema} from '../../utils/theme';
 import {MyContext} from '../../App';
+import MenuComponent from './MenuComponent';
 // import {MyContext, MyContextType} from '../../App';
 
 interface TopBarProps {
@@ -12,6 +13,7 @@ interface TopBarProps {
   arrow?: boolean;
   subtitle?: string;
   isTyping?: boolean;
+  MenuComponent?: React.ReactNode;
 }
 
 const TopBar: React.FC<TopBarProps> = ({
@@ -22,6 +24,7 @@ const TopBar: React.FC<TopBarProps> = ({
   arrow,
   subtitle,
   isTyping,
+  MenuComponent,
 }) => {
   const {jersAppTheme, setpageName} = useContext<any>(MyContext);
 
@@ -45,7 +48,7 @@ const TopBar: React.FC<TopBarProps> = ({
           )}
         </View>
       </View>
-      <TouchableOpacity onPress={rightOnPress}>
+      {/* <TouchableOpacity onPress={rightOnPress}>
         {isDelete ? (
           <Image source={require('../assets/delete.png')} style={styles.icon} />
         ) : (
@@ -56,7 +59,8 @@ const TopBar: React.FC<TopBarProps> = ({
             />
           )
         )}
-      </TouchableOpacity>
+      </TouchableOpacity> */}
+      {MenuComponent}
     </View>
   );
 };

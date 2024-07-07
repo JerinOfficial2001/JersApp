@@ -1,4 +1,4 @@
-import {View, Text, TouchableOpacity} from 'react-native';
+import {View, Text, TouchableOpacity, FlatList} from 'react-native';
 import React, {useContext, useEffect, useState} from 'react';
 import {MyContext} from '../../App';
 import {Avatar, IconButton} from 'react-native-paper';
@@ -15,6 +15,7 @@ export default function SurfaceLayout({
   toggleSelection,
   showBack,
   group,
+  ids,
 }) {
   const {jersAppTheme, selectedIds} = useContext(MyContext);
   const [UsersInArray, setUsersInArray] = useState([]);
@@ -23,69 +24,89 @@ export default function SurfaceLayout({
       GetUsersFromIds({ids: selectedIds}).then(data => {
         setUsersInArray(data);
       });
+    } else if (ids && ids.length > 0) {
+      GetUsersFromIds({ids}).then(data => {
+        setUsersInArray(data);
+      });
     }
-  }, [selectedIds?.length]);
+  }, [selectedIds?.length, ids?.length]);
   return (
     <View
       style={{
         flex: 1,
         backgroundColor: jersAppTheme.appBar,
       }}>
-      {selectedIds && selectedIds.length !== 0 && (
+      {((selectedIds && selectedIds.length !== 0) ||
+        (ids && ids.length !== 0)) && (
         <View
           style={{
             width: '100%',
             padding: 10,
-            flexDirection: 'row',
-            gap: 22,
-            flexWrap: 'wrap',
+            // flexDirection: 'row',
+            // flexWrap: 'wrap',
+            height: 150,
           }}>
-          {UsersInArray.map(elem => {
-            return (
-              <View
-                key={elem._id}
-                style={{
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  flexDirection: 'column',
-                  width: 60,
-                }}>
-                <Avatar.Image
-                  size={60}
-                  source={
-                    elem.image
-                      ? {uri: elem.image.url}
-                      : require('../assets/user.png')
-                  }
-                />
-                <TouchableOpacity
+          {ids && ids.length > 0 && (
+            <View style={{width: '100%', marginBottom: 10}}>
+              <Text style={{color: jersAppTheme.placeholderColor}}>
+                Active users
+              </Text>
+            </View>
+          )}
+          <FlatList
+            horizontal
+            contentContainerStyle={{minHeight: 50}}
+            data={UsersInArray}
+            renderItem={({item}) => {
+              return (
+                <View
+                  key={item._id}
                   style={{
-                    position: 'absolute',
-                    top: -1,
-                    right: -7,
-                    backgroundColor: 'red',
-                    borderRadius: 100,
-                  }}
-                  onPress={() => {
-                    toggleSelection(elem._id);
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    flexDirection: 'column',
+                    width: 60,
+                    marginLeft: 13,
                   }}>
-                  <AntDesignIcon
-                    size={24}
-                    name="closecircle"
-                    color={jersAppTheme.headerText}
+                  <Avatar.Image
+                    size={60}
+                    source={
+                      item.image
+                        ? {uri: item.image.url}
+                        : require('../assets/user.png')
+                    }
                   />
-                </TouchableOpacity>
-                <Text
-                  style={{
-                    color: jersAppTheme.themeText,
-                    fontWeight: 'bold',
-                    fontSize: 13,
-                  }}>
-                  {elem.name}
-                </Text>
-              </View>
-            );
-          })}
+                  {!ids && ids?.length == 0 && (
+                    <TouchableOpacity
+                      style={{
+                        position: 'absolute',
+                        top: -1,
+                        right: -7,
+                        backgroundColor: 'red',
+                        borderRadius: 100,
+                      }}
+                      onPress={() => {
+                        toggleSelection(item._id);
+                      }}>
+                      <AntDesignIcon
+                        size={24}
+                        name="closecircle"
+                        color={jersAppTheme.headerText}
+                      />
+                    </TouchableOpacity>
+                  )}
+                  <Text
+                    style={{
+                      color: jersAppTheme.themeText,
+                      fontWeight: 'bold',
+                      fontSize: 13,
+                    }}>
+                    {item.name}
+                  </Text>
+                </View>
+              );
+            }}
+          />
         </View>
       )}
       {group && (

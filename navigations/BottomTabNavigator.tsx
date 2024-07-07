@@ -58,6 +58,7 @@ import {useSocketHook} from '../utils/socket';
 import {StackScreenProps} from '@react-navigation/stack';
 import {useNavigation} from '@react-navigation/native';
 import Groups from '../screens/Groups';
+import MenuComponent from '../src/components/MenuComponent';
 
 const Tab = createBottomTabNavigator();
 const AnimatedSvg = Animated.createAnimatedComponent(Svg);
@@ -96,59 +97,10 @@ export default function BottomTabNavigator() {
     setpageName('Home');
   }, [openMenu]);
 
-  const renderRightHeaderComponent = () => (
-    <IconButton
-      style={{
-        bottom: 10,
-        position: 'absolute',
-        right: 10,
-        backgroundColor: jersAppTheme.appBar,
-        padding: 10,
-      }}
-      icon={() => (
-        <View>
-          {activeTab == 'CHATS' ? (
-            <Plus color={jersAppTheme.title} />
-          ) : (
-            <Camera color={jersAppTheme.title} />
-          )}
-        </View>
-      )}
-      size={40}
-      onPress={() => {
-        activeTab == 'CHATS'
-          ? navigation.navigate('AllContacts')
-          : navigation.navigate('AddStatus', {
-              onlyCamera: false,
-              id: userData?._id,
-            });
-      }}
-    />
-  );
   const handleCloseMenu = () => {
     setopenMenu(false);
   };
-  const logout = () => {
-    setisloading(true);
-    AsyncStorage.getItem('token').then(data => {
-      const parsedToken = data ? JSON.parse(data) : false;
-      if (parsedToken) {
-        logoutWithToken(parsedToken).then(res => {
-          if (res.status == 'ok') {
-            socketLogout(userData?._id);
-            AsyncStorage.removeItem('userData');
-            navigation.navigate('Login');
-            handleCloseMenu();
-            ToastAndroid.show(res.message, ToastAndroid.SHORT);
-          }
-          setisloading(false);
-        });
-      } else {
-        ToastAndroid.show('Logout Failed', ToastAndroid.SHORT);
-        setisloading(false);
-      }
-    });
-  };
+
   const styles = StyleSheet.create({
     icon: {
       color: 'white',
@@ -168,7 +120,7 @@ export default function BottomTabNavigator() {
         addStatus,
         setaddStatus,
       }}>
-      <View style={{height: '100%'}}>
+      <View style={{flex: 1}}>
         <TopBar
           title={'JersApp'}
           rightOnPress={() => {
@@ -180,96 +132,21 @@ export default function BottomTabNavigator() {
             }
           }}
           isDelete={isDelete}
+          MenuComponent={
+            <MenuComponent
+              openMenu={openMenu}
+              handleCloseMenu={handleCloseMenu}
+              handleOpen={() => setopenMenu(true)}
+              isDelete={false}
+              setopenMenu={setopenMenu}
+            />
+          }
         />
-        <View
-          style={{
-            display: openMenu ? 'flex' : 'none',
-            position: 'absolute',
-            right: 5,
-            top: 40,
-            zIndex: 2,
-            backgroundColor: jersAppTheme.model,
-            borderRadius: 10,
-            // shadowColor: jersAppTheme.shadows,
-            // shadowOpacity: 10,
-            elevation: 8,
-          }}>
-          <Menu.Item
-            leadingIcon={
-              () => (
-                // userProfile ? (
-                //   <Avatar.Image size={30} source={{uri: userProfile}} />
-                // ) : (
-                <EntypoIcons style={styles.menuIcons} name="user" size={24} />
-              )
-              // )
-            }
-            title={userData?.name}
-            titleStyle={{color: jersAppTheme.title}}
-            onPress={() => {
-              handleCloseMenu();
-              navigation.navigate('MyProfile', {
-                id: userData?._id,
-                // image: userProfile,
-              });
-            }}
-          />
-          <Menu.Item
-            leadingIcon={() => (
-              <MaterialCommunityIconsIcons
-                style={styles.menuIcons}
-                name="qrcode-scan"
-                size={24}
-              />
-            )}
-            title="JersApp web"
-            titleStyle={{color: jersAppTheme.title}}
-            onPress={() => {
-              handleCloseMenu();
-              navigation.navigate('QRScanner');
-            }}
-          />
-          <Menu.Item
-            leadingIcon={() => (
-              <MaterialCommunityIconsIcons
-                style={styles.menuIcons}
-                name="theme-light-dark"
-                size={26}
-              />
-            )}
-            title="Theme"
-            titleStyle={{color: jersAppTheme.title}}
-            onPress={() => {
-              handleCloseMenu();
-              navigation.navigate('Themes', {id: userData?._id});
-            }}
-          />
-          <Menu.Item
-            leadingIcon={() => (
-              <View>
-                {isloading ? (
-                  <ActivityIndicator
-                    animating={true}
-                    color={jersAppTheme.appBar}
-                  />
-                ) : (
-                  <AntDesignIcons
-                    style={styles.menuIcons}
-                    name="logout"
-                    size={24}
-                  />
-                )}
-              </View>
-            )}
-            title="Logout"
-            titleStyle={{color: jersAppTheme.title}}
-            onPress={logout}
-          />
-        </View>
+
         <Tab.Navigator
           screenOptions={{
             tabBarStyle: {
-              backgroundColor: 'red',
+              backgroundColor: 'transparent',
             },
           }}
           tabBar={props => <AnimatedTabBar {...props} />}>
@@ -412,7 +289,7 @@ const AnimatedTabBar = ({
     tabBarContainer: {
       flexDirection: 'row',
       justifyContent: 'space-evenly',
-      marginBottom: 10,
+      marginBottom: 11,
     },
   });
   return (

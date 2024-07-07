@@ -24,9 +24,14 @@ import {GetGroupByID} from '../src/controllers/group';
 import Loader from '../src/components/Loader';
 import IoniconsIcon from 'react-native-vector-icons/Ionicons';
 import FastImage from 'react-native-fast-image';
+import {useSocketHook} from '../utils/socket';
+import {getGroupMsg} from '../src/controllers/groupMsg';
+import {Avatar} from 'react-native-paper';
 
 export default function GroupMsg({navigation, route}) {
   const {Data, jersAppTheme} = useContext(MyContext);
+  const {socketSendGroupMsg, socket, socketJoinGroup, socketRemoveGroup} =
+    useSocketHook();
   const {id} = route.params;
   const {
     data: GroupData,
@@ -37,6 +42,16 @@ export default function GroupMsg({navigation, route}) {
     queryFn: () =>
       GetGroupByID({id: Data?._id, token: Data?.accessToken, groupID: id}),
     enabled: !!Data && !!Data._id,
+  });
+  const {
+    data: Messages,
+    refetch: fetchMessages,
+    isLoading: isMsgLoading,
+  } = useQuery({
+    queryKey: ['messages'],
+    queryFn: () =>
+      getGroupMsg({id: Data?._id, token: Data?.accessToken, groupID: id}),
+    enabled: !!Data && !!Data._id && !!Data.accessToken && !!id,
   });
   useFocusEffect(
     useCallback(() => {
@@ -86,20 +101,21 @@ export default function GroupMsg({navigation, route}) {
           </View>
         ),
       });
-    }, [navigation]),
+    }, [navigation, id, GroupData]),
   );
 
   const [formDatas, setformDatas] = useState({
     msg: '',
-    userName: '',
+    sender_id: Data?._id,
+    group_id: id,
   });
   const [enableSendBtn, setenableSendBtn] = useState(false);
   const [chatArray, setchatArray] = useState([]);
   const [isMsgLongPressed, setisMsgLongPressed] = useState([]);
   const [isModelOpen, setisModelOpen] = useState(false);
-  const [receiverDetails, setreceiverDetails] = useState({});
   const [msgID, setmsgID] = useState('');
   const [isDelete, setisDelete] = useState(false);
+  const [usersInGroup, setusersInGroup] = useState([]);
   const scrollViewRef = useRef();
   const getTime = timeStamp => {
     const date = new Date(timeStamp);
@@ -118,6 +134,7 @@ export default function GroupMsg({navigation, route}) {
     handleLongPress,
     handlePress,
     time,
+    elem,
   }) => {
     return (
       <TouchableWithoutFeedback
@@ -130,84 +147,121 @@ export default function GroupMsg({navigation, route}) {
             backgroundColor: isSelected ? '#e9edef0d' : '',
             justifyContent: 'center',
             padding: 5,
-            paddingHorizontal: 25,
+            paddingHorizontal: 20,
           }}>
-          <View
-            style={{
-              minWidth: 50,
-              backgroundColor: received
-                ? jersAppTheme.bubbleReceiverBgColor
-                : jersAppTheme.bubbleSenderBgColor,
-              borderRadius: 15,
-              padding: 5,
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderTopLeftRadius: received ? 0 : 15,
-              borderTopEndRadius: received ? 15 : 0,
-              paddingVertical: 10,
-              flexDirection: 'row',
-              gap: 8,
-              paddingHorizontal: 10,
-            }}>
-            <Text
-              style={{
-                color: received
-                  ? jersAppTheme.bubbleReceiverTextColor
-                  : jersAppTheme.bubbleSenderTextColor,
-              }}>
-              {text}
-            </Text>
+          <View style={{flexDirection: 'row', gap: 3}}>
+            {received && (
+              <Avatar.Image
+                size={30}
+                source={
+                  elem && elem.image
+                    ? {uri: elem.image.url}
+                    : require('../src/assets/user.png')
+                }
+              />
+            )}
             <View
               style={{
-                justifyContent: 'flex-end',
-                height: 20,
+                minWidth: 50,
+                marginTop: received ? 10 : 0,
+                backgroundColor: received
+                  ? jersAppTheme.bubbleReceiverBgColor
+                  : jersAppTheme.bubbleSenderBgColor,
+                borderRadius: 15,
+                borderTopLeftRadius: received ? 0 : 15,
+                borderTopEndRadius: received ? 15 : 0,
+                flexDirection: 'column',
               }}>
-              <Text
+              {received && (
+                <Text
+                  style={{
+                    color: received
+                      ? jersAppTheme.bubbleReceiverTextColor
+                      : jersAppTheme.bubbleSenderTextColor,
+                    marginLeft: 4,
+                  }}>
+                  {elem?.name}
+                </Text>
+              )}
+              <View
                 style={{
-                  color: received
-                    ? jersAppTheme.bubblesReceiverSubTextColor
-                    : jersAppTheme.bubblesSenderSubTextColor,
-                  fontSize: 10,
+                  marginBottom: 10,
+                  marginTop: 5,
+                  flexDirection: 'row',
+                  paddingHorizontal: 10,
+                  gap: 8,
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}>
-                {time}
-              </Text>
+                <Text
+                  style={{
+                    color: received
+                      ? jersAppTheme.bubbleReceiverTextColor
+                      : jersAppTheme.bubbleSenderTextColor,
+                  }}>
+                  {text}
+                </Text>
+                <View
+                  style={{
+                    justifyContent: 'flex-end',
+                    height: 20,
+                  }}>
+                  <Text
+                    style={{
+                      color: received
+                        ? jersAppTheme.bubblesReceiverSubTextColor
+                        : jersAppTheme.bubblesSenderSubTextColor,
+                      fontSize: 10,
+                    }}>
+                    {time}
+                  </Text>
+                </View>
+              </View>
             </View>
           </View>
         </View>
       </TouchableWithoutFeedback>
     );
   };
-  //  useFocusEffect(
-  //    React.useCallback(() => {
-  //      if (socket) {
-  //        socketUserID(userID ? userID : userData._id);
-  //        socketUserConnected({
-  //          id: userID ? userID : userData._id,
-  //          status: 'online',
-  //        });
-  //        socketUserWatching({
-  //          id: userID ? userID : userData._id,
-  //          receiverId,
-  //        });
-  //        Keyboard.addListener('keyboardDidHide', () => {
-  //          socketUserTyped({id: userID ? userID : userData._id, receiverId});
-  //        });
-  //        Keyboard.addListener('keyboardDidShow', () => {
-  //          socketUserTyping({
-  //            id: userID ? userID : userData._id,
-  //            receiverId,
-  //          });
-  //          setisTyping(null);
-  //        });
-  //      }
-  //      return () => {
-  //        if (socket) {
-  //          socketUserWatched({id: userID ? userID : userData._id, receiverId});
-  //          setisWatching(null);
-  //        }
-  //      };
-  //    }, [socket]),
-  //  );
+  useFocusEffect(
+    React.useCallback(() => {
+      if (socket) {
+        socketJoinGroup({groupID: id, userID: Data?._id});
+        //  socketUserID(userID ? userID : userData._id);
+        //  socketUserConnected({
+        //    id: userID ? userID : userData._id,
+        //    status: 'online',
+        //  });
+        //  socketUserWatching({
+        //    id: userID ? userID : userData._id,
+        //    receiverId,
+        //  });
+        //  Keyboard.addListener('keyboardDidHide', () => {
+        //    socketUserTyped({id: userID ? userID : userData._id, receiverId});
+        //  });
+        //  Keyboard.addListener('keyboardDidShow', () => {
+        //    socketUserTyping({
+        //      id: userID ? userID : userData._id,
+        //      receiverId,
+        //    });
+        //    setisTyping(null);
+        //  });
+        socket.on('new_group_msg', () => {
+          fetchMessages();
+        });
+        socket.on('userInGroup', data => {
+          setusersInGroup(data);
+        });
+      }
+      return () => {
+        if (socket) {
+          socketRemoveGroup({groupID: id, userID: Data?._id});
+          //  socketUserWatched({id: userID ? userID : userData._id, receiverId});
+          //  setisWatching(null);
+        }
+      };
+    }, [socket]),
+  );
 
   useEffect(() => {
     if (formDatas.msg !== '') {
@@ -219,7 +273,11 @@ export default function GroupMsg({navigation, route}) {
 
   const handleSubmit = e => {
     e.preventDefault();
-    if (formDatas.msg !== '') {
+    if (
+      formDatas.msg !== '' &&
+      formDatas.group_id !== '' &&
+      formDatas.sender_id !== ''
+    ) {
       //  socket.emit('message', {
       //    chatID: chatID,
       //    sender: userData._id,
@@ -227,12 +285,10 @@ export default function GroupMsg({navigation, route}) {
       //    message: formDatas.msg,
       //    name: userData.name,
       //  });
-
-      setformDatas({
-        msg: '',
-        userName: '',
-      });
+      socketSendGroupMsg(formDatas);
+      setformDatas(prev => ({...prev, msg: ''}));
       //  handleSocket();
+      fetchMessages();
       Keyboard.dismiss();
     }
   };
@@ -323,33 +379,42 @@ export default function GroupMsg({navigation, route}) {
       justifyContent: 'center',
     },
   });
-  const messages = [];
   return (
-    <SurfaceLayout>
+    <SurfaceLayout
+      ids={usersInGroup
+        ?.filter(i => i.userID != Data?._id && i.groupID == id)
+        .map(i => i.userID)}>
       {isLoading ? (
         <Loader />
-      ) : messages.length > 0 ? (
+      ) : Messages?.length > 0 ? (
         <FlatList
           onContentSizeChange={() => {
             scrollViewRef.current?.scrollToEnd({animated: true});
           }}
           ref={scrollViewRef}
           scrollEnabled
-          data={chatArray}
+          data={
+            Messages
+              ? Messages.map(elem => ({...elem, time: getTime(elem.createdAt)}))
+              : Messages
+          }
           contentContainerStyle={{
             paddingBottom: 0,
+            flex: 1,
+            justifyContent: 'flex-end',
             //   paddingBottom: UserWatching ? 40 : 0,
           }}
           renderItem={({item, index}) => (
             <BubbleMsg
-              text={item.message}
+              text={item.msg}
               time={item.time}
-              received={item.sender !== userData._id}
+              elem={item}
+              received={item.sender_id !== Data?._id}
               isSelected={isMsgLongPressed[index]?.isSelected}
-              handlePress={handlePress}
-              handleLongPress={() => {
-                handleLongPress(index, item._id);
-              }}
+              // handlePress={handlePress}
+              // handleLongPress={() => {
+              //   handleLongPress(index, item._id);
+              // }}
             />
           )}
           keyExtractor={item => item._id}
