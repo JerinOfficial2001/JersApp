@@ -30,6 +30,7 @@ import {getGroupMsg} from '../src/controllers/groupMsg';
 import {Avatar} from 'react-native-paper';
 import {getTime, groupMessagesByDate} from '../utils/methods/Date&Time';
 import SectionHeader from '../src/components/SectionHeader';
+import {GetMembers} from '../src/controllers/members';
 
 export default function GroupMsg({navigation, route}) {
   const {Data, jersAppTheme} = useContext(MyContext);
@@ -56,6 +57,15 @@ export default function GroupMsg({navigation, route}) {
       getGroupMsg({id: Data?._id, token: Data?.accessToken, groupID: id}),
     enabled: !!Data && !!Data._id && !!Data.accessToken && !!id,
   });
+  const {data: allMembers} = useQuery({
+    queryKey: ['DBcontacts'],
+    queryFn: () =>
+      GetMembers({token: Data.accessToken, id: Data._id, groupID: id}),
+    enabled: !!Data && !!Data._id,
+  });
+  const idsToSendMsg = allMembers
+    ?.map(i => i.user_id)
+    ?.filter(i => i !== Data?._id);
   useFocusEffect(
     useCallback(() => {
       navigation.setOptions({
@@ -263,6 +273,9 @@ export default function GroupMsg({navigation, route}) {
       formDatas.group_id !== '' &&
       formDatas.sender_id !== ''
     ) {
+      formDatas.receivers = idsToSendMsg;
+      formDatas.name = Data?.name;
+      formDatas.group_name = GroupData?.group_name;
       socketSendGroupMsg(formDatas);
       setformDatas(prev => ({...prev, msg: ''}));
       fetchMessages();
