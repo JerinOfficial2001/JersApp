@@ -13,6 +13,7 @@ export const SocketProvider = ({children}) => {
   const [isWatching, setisWatching] = useState(null);
   const [isTyping, setisTyping] = useState(null);
   const [newMsgCount, setnewMsgCount] = useState(null);
+  const [updatedRoleStatus, setupdatedRoleStatus] = useState(null);
   useEffect(() => {
     const connection = io(socketServerApi);
     setsocket(connection);
@@ -30,6 +31,9 @@ export const SocketProvider = ({children}) => {
     });
     connection.on('newMsgs', data => {
       setnewMsgCount(data);
+    });
+    connection.on('role_updation_result', data => {
+      setupdatedRoleStatus(data);
     });
     return () => {
       if (socket) {
@@ -68,6 +72,15 @@ export const SocketProvider = ({children}) => {
   const socketSendGroupMsg = data => {
     socket?.emit('send_group_msg', data);
   };
+  const socketUpdateRole = data => {
+    socket?.emit('update_role', data);
+  };
+  const socketRemoveMember = data => {
+    socket?.emit('remove_member', data);
+  };
+  const socketAddMember = data => {
+    socket?.emit('add_member', data);
+  };
   const isOnline = id => {
     const isActive = activeUsers?.find(res => res.id == id);
     return isActive;
@@ -95,6 +108,11 @@ export const SocketProvider = ({children}) => {
         socketJoinGroup,
         socketRemoveGroup,
         socketSendGroupMsg,
+        socketUpdateRole,
+        updatedRoleStatus,
+        setupdatedRoleStatus,
+        socketRemoveMember,
+        socketAddMember,
       }}>
       {children}
     </SocketContext.Provider>

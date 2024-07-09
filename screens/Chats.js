@@ -16,6 +16,7 @@ import {checkApplicationPermission} from '../src/controllers/permissions';
 import {eventEmitter} from '../src/notification.android';
 import {useSocketHook} from '../utils/socket';
 import Loader from '../src/components/Loader';
+import {getCreatedDay} from '../utils/methods/Date&Time';
 
 export default function Chats(props) {
   useEffect(() => {
@@ -36,18 +37,6 @@ export default function Chats(props) {
 
   const {setisDelete, isModelOpen, setisModelOpen, setopenMenu, setactiveTab} =
     useContext(TopBarContext);
-
-  const getDate = timestamps => {
-    const date = new Date(timestamps);
-    const properDate =
-      date.getDate() < 10 ? '0' + date.getDate() : date.getDate();
-    const properMonth =
-      date.getMonth() < 10 ? '0' + date.getMonth() : date.getMonth();
-    const formatedDate = `${properDate}/${properMonth}/${
-      date.getFullYear() % 100
-    }`;
-    return formatedDate;
-  };
 
   const getAllChats = async () => {
     const response = await getContactByUserId(Data._id);
@@ -103,13 +92,6 @@ export default function Chats(props) {
       }
     }, [socket]),
   );
-  // useFocusEffect(
-  //   React.useCallback(() => {
-  //     if (data) {
-
-  //     }
-  //   }, []),
-  // );
   const handleDeleteContact = () => {
     if (receiversId && Contact_id) {
       deleteContactById(Data._id, receiversId, Contact_id).then(data => {
@@ -155,7 +137,7 @@ export default function Chats(props) {
             {data?.length > 0 ? (
               data?.map((elem, index) => {
                 const isSelected = isMsgLongPressed[index]?.isSelected;
-                elem.date = getDate(elem.createdAt);
+                elem.date = getCreatedDay(elem);
                 // console.log(JSON.stringify(elem, null, 2));
                 return (
                   <View

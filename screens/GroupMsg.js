@@ -8,6 +8,7 @@ import {
   FlatList,
   TextInput,
   Keyboard,
+  SectionList,
 } from 'react-native';
 import React, {
   useCallback,
@@ -27,6 +28,8 @@ import FastImage from 'react-native-fast-image';
 import {useSocketHook} from '../utils/socket';
 import {getGroupMsg} from '../src/controllers/groupMsg';
 import {Avatar} from 'react-native-paper';
+import {getTime, groupMessagesByDate} from '../utils/methods/Date&Time';
+import SectionHeader from '../src/components/SectionHeader';
 
 export default function GroupMsg({navigation, route}) {
   const {Data, jersAppTheme} = useContext(MyContext);
@@ -117,16 +120,7 @@ export default function GroupMsg({navigation, route}) {
   const [isDelete, setisDelete] = useState(false);
   const [usersInGroup, setusersInGroup] = useState([]);
   const scrollViewRef = useRef();
-  const getTime = timeStamp => {
-    const date = new Date(timeStamp);
-    let hours = date.getHours();
-    const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
-    return hours + ':' + formattedMinutes + ' ' + ampm;
-  };
+
   const BubbleMsg = ({
     text,
     received,
@@ -227,15 +221,6 @@ export default function GroupMsg({navigation, route}) {
     React.useCallback(() => {
       if (socket) {
         socketJoinGroup({groupID: id, userID: Data?._id});
-        //  socketUserID(userID ? userID : userData._id);
-        //  socketUserConnected({
-        //    id: userID ? userID : userData._id,
-        //    status: 'online',
-        //  });
-        //  socketUserWatching({
-        //    id: userID ? userID : userData._id,
-        //    receiverId,
-        //  });
         //  Keyboard.addListener('keyboardDidHide', () => {
         //    socketUserTyped({id: userID ? userID : userData._id, receiverId});
         //  });
@@ -278,16 +263,8 @@ export default function GroupMsg({navigation, route}) {
       formDatas.group_id !== '' &&
       formDatas.sender_id !== ''
     ) {
-      //  socket.emit('message', {
-      //    chatID: chatID,
-      //    sender: userData._id,
-      //    receiver: id,
-      //    message: formDatas.msg,
-      //    name: userData.name,
-      //  });
       socketSendGroupMsg(formDatas);
       setformDatas(prev => ({...prev, msg: ''}));
-      //  handleSocket();
       fetchMessages();
       Keyboard.dismiss();
     }
@@ -307,23 +284,7 @@ export default function GroupMsg({navigation, route}) {
       });
     }
   };
-  const handleSocket = async () => {
-    if (socket) {
-      socket.on('message', data => {
-        if (chatID && data) {
-          const filteredMsg = data.filter(msg => msg.chatID == chatID);
-          if (filteredMsg) {
-            setchatArray(
-              filteredMsg.map(elem => ({
-                ...elem,
-                time: getTime(elem.createdAt),
-              })),
-            );
-          }
-        }
-      });
-    }
-  };
+
   const handleOnchange = (value, name) => {
     setformDatas(prev => ({...prev, [name]: value}));
   };
@@ -379,6 +340,18 @@ export default function GroupMsg({navigation, route}) {
       justifyContent: 'center',
     },
   });
+  const groupedMessages = groupMessagesByDate(Messages);
+  const sections = groupedMessages
+    ? Object.keys(groupedMessages).map(date => ({
+        title: date,
+        data: groupedMessages[date].map(elem => ({
+          ...elem,
+          time: getTime(elem.createdAt),
+        })),
+      }))
+    : [];
+
+  const [listViewHeight, setListViewHeight] = useState(undefined);
   return (
     <SurfaceLayout
       ids={usersInGroup
@@ -386,38 +359,47 @@ export default function GroupMsg({navigation, route}) {
         .map(i => i.userID)}>
       {isLoading ? (
         <Loader />
-      ) : Messages?.length > 0 ? (
-        <FlatList
-          onContentSizeChange={() => {
-            scrollViewRef.current?.scrollToEnd({animated: true});
-          }}
+      ) : sections?.length > 0 ? (
+        <SectionList
+          stickySectionHeadersEnabled
           ref={scrollViewRef}
-          scrollEnabled
-          data={
-            Messages
-              ? Messages.map(elem => ({...elem, time: getTime(elem.createdAt)}))
-              : Messages
-          }
+          onLayout={event => {
+            setListViewHeight(event.nativeEvent.layout.height);
+          }}
+          onContentSizeChange={(w, h) => {
+            scrollViewRef?.current?.getScrollResponder()?.scrollTo({
+              y: h - listViewHeight,
+            });
+          }}
           contentContainerStyle={{
-            paddingBottom: 0,
-            flex: 1,
             justifyContent: 'flex-end',
+            paddingBottom: 0,
+            flexGrow: 1,
             //   paddingBottom: UserWatching ? 40 : 0,
           }}
-          renderItem={({item, index}) => (
-            <BubbleMsg
-              text={item.msg}
-              time={item.time}
-              elem={item}
-              received={item.sender_id !== Data?._id}
-              isSelected={isMsgLongPressed[index]?.isSelected}
-              // handlePress={handlePress}
-              // handleLongPress={() => {
-              //   handleLongPress(index, item._id);
-              // }}
-            />
+          scrollEnabled
+          sections={sections}
+          keyExtractor={(item, index) => item._id}
+          renderItem={({item, index}) => {
+            return (
+              <BubbleMsg
+                text={item.msg}
+                time={item.time}
+                elem={item}
+                received={item.sender_id !== Data?._id}
+                isSelected={isMsgLongPressed[index]?.isSelected}
+                // handlePress={handlePress}
+                // handleLongPress={() => {
+                //   handleLongPress(index, item._id);
+                // }}
+              />
+            );
+          }}
+          renderSectionHeader={({section}) => (
+            <SectionHeader title={section.title} />
           )}
-          keyExtractor={item => item._id}
+          ListHeaderComponentStyle={{marginBottom: 10}}
+          ItemSeparatorComponent={() => <View style={{height: 5}} />}
         />
       ) : (
         <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>

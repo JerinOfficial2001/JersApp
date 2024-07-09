@@ -21,6 +21,7 @@ const MyComponent = ({
   isSelected,
   showSelectedIcon,
   customImg,
+  isDisabled,
 }) => {
   const navigation = useNavigation();
   // const [theme, settheme] = useState(JersAppThemeSchema);
@@ -158,7 +159,9 @@ const MyComponent = ({
               }}>
               <Text
                 style={{
-                  color: jersAppTheme.title,
+                  color: isDisabled
+                    ? jersAppTheme.disabled
+                    : jersAppTheme.title,
                   fontWeight: 'bold',
                   fontSize: 15,
                 }}>
@@ -211,10 +214,11 @@ const MyComponent = ({
             status?.userName) && (
             <Text
               style={{
-                color:
-                  status?.title || status?.userName
-                    ? jersAppTheme.title
-                    : jersAppTheme.subText,
+                color: isDisabled
+                  ? jersAppTheme.disabled
+                  : status?.title || status?.userName
+                  ? jersAppTheme.title
+                  : jersAppTheme.subText,
                 width: '85%',
               }}
               numberOfLines={1}>
@@ -266,7 +270,8 @@ const MyComponent = ({
             </View>
           </View>
         )}
-        {contact && contact.role && contact.role !== 'MEMBER' && (
+        {((contact && contact.role && contact.role !== 'MEMBER') ||
+          isDisabled) && (
           <View
             style={{
               position: 'absolute',
@@ -280,7 +285,9 @@ const MyComponent = ({
               borderRadius: 50,
               paddingHorizontal: 10,
             }}>
-            <Text style={{color: 'green'}}>{contact.role}</Text>
+            <Text style={{color: 'green'}}>
+              {isDisabled ? 'Already in group' : contact.role}
+            </Text>
           </View>
         )}
       </View>

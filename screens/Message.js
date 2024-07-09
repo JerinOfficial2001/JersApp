@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
+  SectionList,
 } from 'react-native';
 import {addContact, getContactByUserId} from '../src/controllers/contacts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -29,6 +30,8 @@ import {MyContext} from '../App';
 import {useSocketHook} from '../utils/socket';
 import {useQuery} from '@tanstack/react-query';
 import SurfaceLayout from '../src/Layouts/SurfaceLayout';
+import {getTime, groupMessagesByDate} from '../utils/methods/Date&Time';
+import SectionHeader from '../src/components/SectionHeader';
 
 export default function Message({route, navigation, ...props}) {
   const {id, userID, receiverId, roomID} = route.params;
@@ -44,6 +47,17 @@ export default function Message({route, navigation, ...props}) {
     socketUserConnected,
     setisWatching,
   } = useSocketHook();
+
+  // const {
+  //   data: AllMessages,
+  //   refetch,
+  //   isLoading,
+  // } = useQuery({
+  //   queryKey: ['group'],
+  //   queryFn: () =>
+  //     GetGroupByID({id: Data?._id, token: Data?.accessToken, groupID: id}),
+  //   enabled: !!Data && !!Data._id,
+  // });
 
   const [isTyping, setisTyping] = useState(null);
   useEffect(() => {
@@ -65,19 +79,9 @@ export default function Message({route, navigation, ...props}) {
   const [receiverDetails, setreceiverDetails] = useState({});
   const [msgID, setmsgID] = useState('');
   const [isDelete, setisDelete] = useState(false);
-  // const [jersAppTheme, setjersAppTheme] = useState(JersAppThemeSchema);
   const {jersAppTheme, setpageName, Data} = useContext(MyContext);
   const scrollViewRef = useRef();
-  const getTime = timeStamp => {
-    const date = new Date(timeStamp);
-    let hours = date.getHours();
-    const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
-    return hours + ':' + formattedMinutes + ' ' + ampm;
-  };
+
   const BubbleMsg = ({
     text,
     received,
@@ -183,6 +187,11 @@ export default function Message({route, navigation, ...props}) {
       setenableSendBtn(false);
     }
   }, [formDatas.msg]);
+  const scrollToEnd = (w, h) => {
+    scrollViewRef?.current?.getScrollResponder()?.scrollTo({
+      y: h - listViewHeight,
+    });
+  };
 
   const fetchData = () => {
     const userDetails = Data;
@@ -192,10 +201,6 @@ export default function Message({route, navigation, ...props}) {
         const res = users.data.find(user => user.ContactDetails._id == id);
         if (res) {
           setreceiverDetails(res);
-
-          // navigation.setOptions({
-          //   title: res ? res.ContactDetails.displayName : 'Message',
-          // });
         }
       }
     });
@@ -204,7 +209,8 @@ export default function Message({route, navigation, ...props}) {
         setchatID(chat._id);
         getMessage(chat._id).then(msg => {
           if (msg) {
-            scrollViewRef.current?.scrollToEnd({animated: true});
+            // scrollViewRef.current?.scrollToEnd({animated: true});
+            // scrollToEnd();
             setchatArray(
               msg.map(elem => {
                 return {
@@ -334,11 +340,20 @@ export default function Message({route, navigation, ...props}) {
       justifyContent: 'center',
     },
   });
+
   const UserTyping =
     isTyping && isTyping?.id == receiverId ? isTyping.isTyping : false;
   const UserWatching =
     isWatching && isWatching?.id == receiverId ? isWatching.isWatching : false;
 
+  const groupedMessages = groupMessagesByDate(chatArray);
+  const sections = groupedMessages
+    ? Object.keys(groupedMessages).map(date => ({
+        title: date,
+        data: groupedMessages[date],
+      }))
+    : [];
+  const [listViewHeight, setListViewHeight] = useState(undefined);
   return (
     <View style={{flex: 1, backgroundColor: jersAppTheme.appBar}}>
       <TopBar
@@ -369,42 +384,42 @@ export default function Message({route, navigation, ...props}) {
               }}
             />
           )}
-          <FlatList
-            onContentSizeChange={() => {
-              scrollViewRef.current?.scrollToEnd({animated: true});
-            }}
+          <SectionList
+            stickySectionHeadersEnabled
             ref={scrollViewRef}
-            scrollEnabled
-            data={chatArray}
+            onLayout={event => {
+              setListViewHeight(event.nativeEvent.layout.height);
+            }}
+            onContentSizeChange={(w, h) => scrollToEnd(w, h)}
             contentContainerStyle={{
+              justifyContent: 'flex-end',
+              flexGrow: 1,
               paddingBottom: UserWatching ? 40 : 0,
             }}
-            renderItem={({item, index}) => (
-              <BubbleMsg
-                text={item.message}
-                time={item.time}
-                received={item.sender !== userData._id}
-                isSelected={isMsgLongPressed[index]?.isSelected}
-                handlePress={handlePress}
-                handleLongPress={() => {
-                  handleLongPress(index, item._id);
-                }}
-              />
+            scrollEnabled
+            sections={sections}
+            keyExtractor={(item, index) => item._id}
+            renderItem={({item, index}) => {
+              return (
+                <BubbleMsg
+                  text={item.message}
+                  time={item.time}
+                  received={item.sender !== userData._id}
+                  isSelected={isMsgLongPressed[index]?.isSelected}
+                  handlePress={handlePress}
+                  handleLongPress={() => {
+                    handleLongPress(index, item._id);
+                  }}
+                />
+              );
+            }}
+            renderSectionHeader={({section}) => (
+              <SectionHeader title={section.title} />
             )}
-            keyExtractor={item => item._id}
+            ListHeaderComponentStyle={{marginBottom: 10}}
+            ItemSeparatorComponent={() => <View style={{height: 5}} />}
           />
-          {/* <ScrollView>
-          {chatArray.map((item, index) => {
-            return (
-              <BubbleMsg
-                key={index}
-                id={item._id}
-                text={item.message}
-                received={item.sender !== userData._id}
-              />
-            );
-          })}
-        </ScrollView> */}
+
           <View style={styles.inputContainer}>
             <TextInput
               placeholder="Message"

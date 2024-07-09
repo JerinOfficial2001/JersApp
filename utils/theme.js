@@ -23,6 +23,7 @@ export const themeSchema = {
     selectedColor: '#D9D9D924',
     placeholderColor: 'gray',
     loader: '#151B26',
+    disabled: '#515151a8',
   },
   Whatsapp: {
     name: 'Whatsapp',
@@ -48,6 +49,7 @@ export const themeSchema = {
     selectedColor: '#99999924',
     placeholderColor: 'gray',
     loader: 'white',
+    disabled: '#515151a8',
   },
   DarkMode: {
     name: 'DarkMode',
@@ -73,6 +75,7 @@ export const themeSchema = {
     selectedColor: '#D9D9D924',
     placeholderColor: 'gray',
     loader: '#0E0E0E',
+    disabled: '#515151a8',
   },
 };
 export const WhatsappThemeSchema = {

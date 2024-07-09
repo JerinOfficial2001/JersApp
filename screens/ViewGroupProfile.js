@@ -1,5 +1,5 @@
-import {View, Text, StyleSheet} from 'react-native';
-import React, {useContext} from 'react';
+import {View, Text, StyleSheet, ToastAndroid} from 'react-native';
+import React, {useContext, useEffect, useState} from 'react';
 import SurfaceLayout from '../src/Layouts/SurfaceLayout';
 import Loader from '../src/components/Loader';
 import {useQuery} from '@tanstack/react-query';
@@ -10,10 +10,17 @@ import {MyContext} from '../App';
 import {GetMembers} from '../src/controllers/members';
 import {Button} from 'react-native-paper';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import UserModal from '../src/components/UserModal';
+import {useSocketHook} from '../utils/socket';
 
-export default function ViewGroupProfile({route}) {
+export default function ViewGroupProfile({route, navigation}) {
   const {id, image, name, members} = route.params;
   const {jersAppTheme, Data} = useContext(MyContext);
+  const [openModel, setopenModel] = useState(false);
+
+  const {updatedRoleStatus, setupdatedRoleStatus} = useSocketHook();
+
+  const [dataForUserModal, setdataForUserModal] = useState(null);
   const {
     data: allMembers,
     refetch,
@@ -34,31 +41,78 @@ export default function ViewGroupProfile({route}) {
       elevation: 2,
     },
   });
+  const IsAdmin = members => {
+    const myAcc = members?.find(elem => elem.user_id == Data?._id);
+    const result = myAcc?.role == 'ADMIN';
+    return result;
+  };
+  const IsMemberAdmin = id => {
+    const myAcc = allMembers.find(elem => elem._id == id);
+    const result = myAcc?.role == 'ADMIN';
+    return result;
+  };
+  const handleOpenUserModal = data => {
+    setdataForUserModal(data);
+    setopenModel(true);
+  };
+  useEffect(() => {
+    if (updatedRoleStatus) {
+      refetch();
+      setopenModel(false);
+      setupdatedRoleStatus(null);
+    }
+  }, [updatedRoleStatus]);
+  const userIds = allMembers ? allMembers.map(i => i.user_id) : [];
   return (
-    <SurfaceLayout group={{name, image, members}}>
+    <SurfaceLayout group={{name, image, members, IsAdmin: IsAdmin(allMembers)}}>
       {isLoading ? (
         <Loader />
       ) : allMembers?.length > 0 ? (
         <FlatList
-          data={[
-            {
-              _id: 0,
-              name: 'Add members',
-              customImg: (
-                <EntypoIcon
-                  color={jersAppTheme.headerText}
-                  size={23}
-                  name="add-user"
-                />
-              ),
-            },
-            ...allMembers,
-          ]}
+          data={
+            IsAdmin(allMembers)
+              ? [
+                  {
+                    _id: 0,
+                    name: 'Add members',
+                    customImg: (
+                      <EntypoIcon
+                        color={jersAppTheme.headerText}
+                        size={23}
+                        name="add-user"
+                      />
+                    ),
+                  },
+                  ...allMembers,
+                ]
+              : allMembers
+          }
           renderItem={({item}) => (
             <MyComponent
-              // onclick={() => {
-              //   toggleSelection(item._id);
-              // }}
+              onclick={() => {
+                if (item.name == 'Add members') {
+                  navigation.navigate('AddParticipants', {
+                    dataFromGroup: {
+                      ids: userIds,
+                      GroupData: {
+                        id,
+                        name,
+                        image,
+                        members,
+                      },
+                    },
+                  });
+                } else {
+                  handleOpenUserModal({
+                    IsAdmin: IsAdmin(allMembers),
+                    isMemberAdmin: IsMemberAdmin(item._id),
+                    name: item.name,
+                    id: item._id,
+                    user_id: item.user_id,
+                    groupID: id,
+                  });
+                }
+              }}
               customImg={item.customImg}
               contactPg
               contact={item}
@@ -97,6 +151,13 @@ export default function ViewGroupProfile({route}) {
           </View>
         </Button>
       </View>
+      <UserModal
+        modalData={dataForUserModal}
+        visible={openModel}
+        handleModelClose={() => {
+          setopenModel(false), setdataForUserModal(null);
+        }}
+      />
     </SurfaceLayout>
   );
 }

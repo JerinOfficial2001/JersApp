@@ -71,7 +71,9 @@ export default function Groups(props) {
     <SurfaceLayout
       title="Groups"
       ShowNavigationBtn={true}
-      onClick={() => props.navigation.navigate('AddParticipants')}>
+      onClick={() =>
+        props.navigation.navigate('AddParticipants', {idsFromGroup: null})
+      }>
       {isLoading ? (
         <Loader />
       ) : (

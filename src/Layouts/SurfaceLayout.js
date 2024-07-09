@@ -1,10 +1,11 @@
 import {View, Text, TouchableOpacity, FlatList} from 'react-native';
 import React, {useContext, useEffect, useState} from 'react';
 import {MyContext} from '../../App';
-import {Avatar, IconButton} from 'react-native-paper';
+import {ActivityIndicator, Avatar, IconButton} from 'react-native-paper';
 import Plus from '../assets/svg/plus';
-import AntDesignIcon from 'react-native-vector-icons/AntDesign';
 import {GetUsersFromIds, getAllUsers} from '../controllers/auth';
+import AntDesignIcon from 'react-native-vector-icons/AntDesign';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {useMutation, useQuery} from '@tanstack/react-query';
 
 export default function SurfaceLayout({
@@ -16,6 +17,7 @@ export default function SurfaceLayout({
   showBack,
   group,
   ids,
+  isProcessing,
 }) {
   const {jersAppTheme, selectedIds} = useContext(MyContext);
   const [UsersInArray, setUsersInArray] = useState([]);
@@ -118,23 +120,65 @@ export default function SurfaceLayout({
             justifyContent: 'center',
             alignItems: 'center',
           }}>
-          <Avatar.Image
-            size={100}
-            source={
-              group.image
-                ? {uri: group.image.url}
-                : require('../assets/user.png')
-            }
-            style={{marginBottom: 15}}
-          />
-          <Text
+          <View>
+            <Avatar.Image
+              size={100}
+              source={
+                group.image
+                  ? {uri: group.image.url}
+                  : require('../assets/user.png')
+              }
+              style={{marginBottom: 15}}
+            />
+            {group.IsAdmin && (
+              <TouchableOpacity
+                style={{
+                  position: 'absolute',
+                  right: 2,
+                  bottom: 15,
+                  backgroundColor: jersAppTheme.badgeColor,
+                  borderRadius: 50,
+                  padding: 5,
+                }}>
+                <MaterialIcons
+                  size={20}
+                  name="photo-camera"
+                  color={jersAppTheme.headerText}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+          <View
             style={{
-              color: jersAppTheme.headerText,
-              fontSize: 20,
-              fontWeight: 'bold',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 4,
             }}>
-            {group.name}
-          </Text>
+            <Text
+              style={{
+                color: jersAppTheme.headerText,
+                fontSize: 20,
+                fontWeight: 'bold',
+                marginLeft: 25,
+              }}>
+              {group.name}
+            </Text>
+            {group.IsAdmin && (
+              <TouchableOpacity
+                style={{
+                  borderRadius: 50,
+                  padding: 5,
+                }}>
+                <AntDesignIcon
+                  size={20}
+                  name="edit"
+                  color={jersAppTheme.headerText}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+
           <Text
             style={{
               color: jersAppTheme.subText,
@@ -199,7 +243,12 @@ export default function SurfaceLayout({
           }}
           icon={() => (
             <View>
-              {title == 'Groups' ? (
+              {isProcessing ? (
+                <ActivityIndicator
+                  animating={true}
+                  color={jersAppTheme.headerText}
+                />
+              ) : title == 'Groups' ? (
                 <Plus color={jersAppTheme.headerText} />
               ) : (
                 <AntDesignIcon
