@@ -14,6 +14,8 @@ export const SocketProvider = ({children}) => {
   const [isTyping, setisTyping] = useState(null);
   const [newMsgCount, setnewMsgCount] = useState(null);
   const [updatedRoleStatus, setupdatedRoleStatus] = useState(null);
+  const [offer, setoffer] = useState(null);
+  const [answer, setanswer] = useState(null);
   useEffect(() => {
     const connection = io(socketServerApi);
     setsocket(connection);
@@ -34,6 +36,12 @@ export const SocketProvider = ({children}) => {
     });
     connection.on('role_updation_result', data => {
       setupdatedRoleStatus(data);
+    });
+    connection.on('offer', data => {
+      setoffer(data);
+    });
+    connection.on('answer', data => {
+      setanswer(data);
     });
     return () => {
       if (socket) {
@@ -81,6 +89,9 @@ export const SocketProvider = ({children}) => {
   const socketAddMember = data => {
     socket?.emit('add_member', data);
   };
+  const socketJoinUserVcall = data => {
+    socket?.emit('videocall', JSON.stringify({sdp: data}));
+  };
   const isOnline = id => {
     const isActive = activeUsers?.find(res => res.id == id);
     return isActive;
@@ -89,6 +100,11 @@ export const SocketProvider = ({children}) => {
   return (
     <SocketContext.Provider
       value={{
+        answer,
+        setanswer,
+        offer,
+        setoffer,
+        socketJoinUserVcall,
         socketUserWatching,
         socketUserTyping,
         socketUserTyped,

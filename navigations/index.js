@@ -21,6 +21,7 @@ import AddParticipants from '../screens/AddParticipants';
 import CreateGroup from '../screens/CreateGroup';
 import GroupMsg from '../screens/GroupMsg';
 import ViewGroupProfile from '../screens/ViewGroupProfile';
+import VideoCall from '../screens/VideoCall';
 
 const Stack = createStackNavigator();
 
@@ -197,6 +198,18 @@ export default function Navigator() {
           }}
           name="ViewGroupProfile"
           component={ViewGroupProfile}
+        />
+        <Stack.Screen
+          options={{
+            headerStyle: {
+              backgroundColor: jersAppTheme.appBar,
+              elevation: 0,
+            },
+            title: 'VideoCall',
+            headerTintColor: 'white',
+          }}
+          name="VideoCall"
+          component={VideoCall}
         />
       </Stack.Navigator>
 

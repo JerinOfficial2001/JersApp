@@ -3,6 +3,7 @@ import {Image, Text, TouchableOpacity, View, StyleSheet} from 'react-native';
 import {DarkThemeSchema, JersAppThemeSchema} from '../../utils/theme';
 import {MyContext} from '../../App';
 import MenuComponent from './MenuComponent';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 // import {MyContext, MyContextType} from '../../App';
 
 interface TopBarProps {
@@ -14,6 +15,7 @@ interface TopBarProps {
   subtitle?: string;
   isTyping?: boolean;
   MenuComponent?: React.ReactNode;
+  showVideo?: boolean;
 }
 
 const TopBar: React.FC<TopBarProps> = ({
@@ -25,6 +27,7 @@ const TopBar: React.FC<TopBarProps> = ({
   subtitle,
   isTyping,
   MenuComponent,
+  showVideo,
 }) => {
   const {jersAppTheme, setpageName} = useContext<any>(MyContext);
 
@@ -48,8 +51,9 @@ const TopBar: React.FC<TopBarProps> = ({
           )}
         </View>
       </View>
-      {/* <TouchableOpacity onPress={rightOnPress}>
-        {isDelete ? (
+      {showVideo && (
+        <TouchableOpacity onPress={rightOnPress}>
+          {/* {isDelete ? (
           <Image source={require('../assets/delete.png')} style={styles.icon} />
         ) : (
           !arrow && (
@@ -58,8 +62,10 @@ const TopBar: React.FC<TopBarProps> = ({
               style={styles.icon}
             />
           )
-        )}
-      </TouchableOpacity> */}
+        )} */}
+          <Ionicons name="videocam" size={26} color={jersAppTheme.themeText} />
+        </TouchableOpacity>
+      )}
       {MenuComponent}
     </View>
   );

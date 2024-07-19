@@ -17,6 +17,7 @@ import {eventEmitter} from '../src/notification.android';
 import {useSocketHook} from '../utils/socket';
 import Loader from '../src/components/Loader';
 import {getCreatedDay} from '../utils/methods/Date&Time';
+import {Button} from 'react-native-paper';
 
 export default function Chats(props) {
   useEffect(() => {

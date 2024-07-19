@@ -32,6 +32,7 @@ import {useQuery} from '@tanstack/react-query';
 import SurfaceLayout from '../src/Layouts/SurfaceLayout';
 import {getTime, groupMessagesByDate} from '../utils/methods/Date&Time';
 import SectionHeader from '../src/components/SectionHeader';
+import VideoCallModal from '../src/components/VideoCallModal';
 
 export default function Message({route, navigation, ...props}) {
   const {id, userID, receiverId, roomID} = route.params;
@@ -81,7 +82,7 @@ export default function Message({route, navigation, ...props}) {
   const [isDelete, setisDelete] = useState(false);
   const {jersAppTheme, setpageName, Data} = useContext(MyContext);
   const scrollViewRef = useRef();
-
+  const [isOpenVideo, setisOpenVideo] = useState(false);
   const BubbleMsg = ({
     text,
     received,
@@ -363,8 +364,13 @@ export default function Message({route, navigation, ...props}) {
         title={receiverDetails ? receiverDetails.name : 'Message'}
         lefOnPress={() => navigation.navigate('Home')}
         rightOnPress={() => {
-          setisModelOpen(true);
+          // setisModelOpen(true);
+          navigation.navigate('VideoCall', {
+            receiverId,
+          });
+          // setisOpenVideo(true);
         }}
+        showVideo={true}
         isDelete={isDelete}
       />
       <Pressable style={{flex: 1}} onPress={handlePress}>
@@ -446,6 +452,15 @@ export default function Message({route, navigation, ...props}) {
           handleModelClose={handleModelClose}
           visible={isModelOpen}
           handleDelete={handleDeleteMsg}
+        />
+        <VideoCallModal
+          receiverId={receiverId}
+          Data={Data}
+          handleModelClose={() => {
+            setisOpenVideo(false);
+          }}
+          visible={isOpenVideo}
+          // handleDelete={handleDeleteMsg}
         />
       </Pressable>
     </View>
