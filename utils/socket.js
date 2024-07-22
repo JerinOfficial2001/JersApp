@@ -41,6 +41,7 @@ export const SocketProvider = ({children}) => {
       setoffer(data);
     });
     connection.on('answer', data => {
+      console.log('socket answer');
       setanswer(data);
     });
     return () => {

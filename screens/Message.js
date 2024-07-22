@@ -47,6 +47,7 @@ export default function Message({route, navigation, ...props}) {
     socketUserID,
     socketUserConnected,
     setisWatching,
+    offer,
   } = useSocketHook();
 
   // const {
@@ -65,7 +66,13 @@ export default function Message({route, navigation, ...props}) {
     socket.on('user_typing', data => {
       setisTyping(data);
     });
-  }, []);
+    socket.on('offer', data => {
+      navigation.navigate('VideoCall', {
+        receiverId,
+        type: data,
+      });
+    });
+  }, [socket]);
 
   const [formDatas, setformDatas] = useState({
     msg: '',

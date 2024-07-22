@@ -7,8 +7,15 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import {View, Text, Button, Alert} from 'react-native';
-import io from 'socket.io-client';
+import {
+  View,
+  Text,
+  Button,
+  Alert,
+  TouchableOpacity,
+  StyleSheet,
+  Pressable,
+} from 'react-native';
 import {
   RTCView,
   RTCPeerConnection,
@@ -19,23 +26,34 @@ import {
 import {MyContext} from '../App';
 import {useSocketHook} from '../utils/socket';
 import {useFocusEffect} from '@react-navigation/native';
+import SurfaceLayout from '../src/Layouts/SurfaceLayout';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import {IconButton} from 'react-native-paper';
 
 const VideoCall = ({route, navigation, ...props}) => {
   const {Data} = useContext(MyContext);
-  const {receiverId} = route.params;
+  const {receiverId, type} = route.params;
 
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
   // const [peerConnection, setPeerConnection] = useState(null);
   const [isCalling, setIsCalling] = useState(false);
   const [incomingCall, setincomingCall] = useState(null);
+  const [answerData, setanswerData] = useState(null);
 
   const localStreamRef = useRef(null);
   const remoteStreamRef = useRef(null);
   const peerConnection = useRef(null);
   const {socket, offer, setoffer, answer, setanswer} = useSocketHook();
-
+  const [reSizeVideo, setreSizeVideo] = useState(false);
   useEffect(() => {
+    if (type) {
+      setincomingCall(type);
+      handleIncomingCall(type);
+    } else {
+      startCall();
+      setIsCalling(true);
+    }
     const getLocalStream = async () => {
       try {
         const stream = await mediaDevices.getUserMedia({
@@ -75,23 +93,6 @@ const VideoCall = ({route, navigation, ...props}) => {
       localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
     }
 
-    // Handle incoming ICE candidates
-    pc.onicecandidate = event => {
-      if (event.candidate) {
-        socket.emit('icecandidate', {
-          from: Data?._id,
-          to: receiverId,
-          candidate: event.candidate,
-        });
-      }
-    };
-
-    // Handle incoming streams
-    pc.ontrack = event => {
-      setRemoteStream(event.streams[0]);
-      remoteStreamRef.current = event.streams[0];
-    };
-
     // Start signaling with the peer
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
@@ -99,72 +100,24 @@ const VideoCall = ({route, navigation, ...props}) => {
       to: receiverId,
       offer,
       from: Data._id,
-      localStream,
     });
   };
-  const handleIncomingCall = async data => {
-    console.log('handleIncomingCall', peerConnection.current);
-    // if (!peerConnection.current) return;
-    if (peerConnection.current) {
-      await peerConnection.current.setRemoteDescription(
-        new RTCSessionDescription(data.offer),
-      );
-      const answer = await peerConnection.current.createAnswer();
-      await peerConnection.current.setLocalDescription(answer);
-      console.log('testAnswer', answer);
-      setincomingCall(answer);
-    } else {
-      Alert.alert('handleIncomingCall null');
-    }
-  };
-  const attendCall = data => {
-    console.log('attendCall', incomingCall);
-    socket.emit('answer', {
-      from: Data._id,
-      to: receiverId,
-      answer: incomingCall,
-      remoteStream,
-    });
-  };
-  const handleAnswerCall = async data => {
-    console.log('answer call', peerConnection.current);
-    if (!peerConnection.current) return;
-    await peerConnection.current.setRemoteDescription(
-      new RTCSessionDescription(data.answer),
-    );
-  };
-  const endCall = () => {
-    setanswer(null);
-    setoffer(null);
-    navigation.goBack();
-  };
-  // Handle incoming offers and answers
-  useEffect(() => {
-    console.log('offer', offer);
-    if (!offer) return;
-    handleIncomingCall(offer);
-  }, [offer]);
-  useEffect(() => {
-    console.log('answer', answer);
-    if (!answer) return;
-    handleAnswerCall(answer);
-  }, [answer]);
 
   useEffect(() => {
     if (!socket || !peerConnection) return;
 
-    socket.on('offer', async data => {
-      setincomingCall(data);
+    // socket.on('offer', async data => {
+    //   setincomingCall(data);
+    //   handleIncomingCall(data);
+    //   // if (!peerConnection.current) return;
 
-      // if (!peerConnection.current) return;
-
-      // await peerConnection.current.setRemoteDescription(
-      //   new RTCSessionDescription(data.offer),
-      // );
-      // const answer = await peerConnection.current.createAnswer();
-      // await peerConnection.current.setLocalDescription(answer);
-      // socket.emit('answer', {from: Data._id, to: data.from, answer});
-    });
+    //   // await peerConnection.current.setRemoteDescription(
+    //   //   new RTCSessionDescription(data.offer),
+    //   // );
+    //   // const answer = await peerConnection.current.createAnswer();
+    //   // await peerConnection.current.setLocalDescription(answer);
+    //   // socket.emit('answer', {from: Data._id, to: data.from, answer});
+    // });
 
     // socket.on('answer', async data => {
     //   if (!peerConnection.current) return;
@@ -183,60 +136,187 @@ const VideoCall = ({route, navigation, ...props}) => {
         console.error('Error adding ICE candidate:', error);
       }
     });
-
+    if (peerConnection.current) {
+      const pc = peerConnection.current;
+      pc.onicecandidate = event => {
+        console.log('testOnIceCandidate');
+        if (event.candidate) {
+          console.log('Sending ICE candidate to remote peer:', event.candidate);
+          socket.emit('icecandidate', {
+            from: Data?._id,
+            to: receiverId,
+            candidate: event.candidate,
+          });
+        }
+      };
+      pc.ontrack = event => {
+        console.log('Received remote stream:', event.streams);
+        if (event.streams && event.streams.length > 0) {
+          setRemoteStream(event.streams[0]);
+          remoteStreamRef.current = event.streams[0];
+        }
+      };
+      pc.oniceconnectionstatechange = event => {
+        console.log('ICE connection state change:', pc.iceConnectionState);
+      };
+    }
     return () => {
       socket.off('offer');
       socket.off('answer');
       socket.off('icecandidate');
     };
-  }, [socket, peerConnection]);
+  }, [socket, peerConnection, peerConnection?.current]);
+  //*From Receiver function *//
+  const handleIncomingCall = async data => {
+    const configuration = {
+      iceServers: [{urls: 'stun:stun.l.google.com:19302'}],
+    };
+    const pc = new RTCPeerConnection(configuration);
 
+    peerConnection.current = pc;
+
+    console.log('handleIncomingCall');
+
+    if (pc) {
+      await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+    } else {
+      Alert.alert('handleIncomingCall null');
+    }
+  };
+  const attendCall = async data => {
+    if (peerConnection.current) {
+      const answer = await peerConnection.current.createAnswer();
+      console.log(answer, 'PC answer');
+      await peerConnection.current.setLocalDescription(answer);
+
+      socket.emit('answer', {
+        from: Data._id,
+        to: receiverId,
+        answer: answer,
+        remoteStream: '',
+      });
+    } else {
+      Alert.alert('attendCall null');
+    }
+  };
+  const handleAnswerCall = async data => {
+    console.log('handleAnswerCall');
+
+    if (!peerConnection.current) {
+      console.warn('Peer connection is not initialized.');
+      return;
+    }
+
+    try {
+      await peerConnection.current.setRemoteDescription(
+        new RTCSessionDescription(data.answer),
+      );
+      setIsCalling(false);
+    } catch (error) {
+      console.error('Error setting remote description:', error);
+      return;
+    }
+  };
+
+  const endCall = () => {
+    setanswer(null);
+    setoffer(null);
+    navigation.goBack();
+  };
+  // Handle incoming offers and answers
+  // useEffect(() => {
+  //   console.log('offer');
+  //   if (!offer) return;
+  //   handleIncomingCall(offer);
+  // }, [offer]);
+  useEffect(() => {
+    if (!answer) return;
+    handleAnswerCall(answer);
+  }, [answer]);
+  const styles = StyleSheet.create({
+    floatVideo: {
+      position: 'absolute',
+      top: 20,
+      right: 20,
+      width: 100,
+      height: 200,
+    },
+    mainVideo: {
+      width: '100%',
+      height: '100%',
+    },
+  });
+  const handleVideoResize = () => {
+    setreSizeVideo(!reSizeVideo);
+  };
   return (
-    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-      <View style={{marginBottom: 20}}>
-        <Text>Local Stream</Text>
+    <SurfaceLayout title={'name'}>
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          flexDirection: 'column',
+        }}>
         {localStream && (
-          <RTCView
-            streamURL={localStream.toURL()}
-            style={{width: 200, height: 150}}
-          />
+          <Pressable
+            // onPress={reSizeVideo ? handleVideoResize : undefined}
+            style={!reSizeVideo ? styles.mainVideo : styles.floatVideo}>
+            <RTCView
+              streamURL={localStream.toURL()}
+              style={{height: '100%', width: '100%'}}
+            />
+          </Pressable>
+        )}
+        {remoteStream && (
+          <Pressable
+            // onPress={!reSizeVideo ? handleVideoResize : undefined}
+            style={reSizeVideo ? styles.mainVideo : styles.floatVideo}>
+            <RTCView
+              streamURL={remoteStream.toURL()}
+              style={{height: '100%', width: '100%'}}
+            />
+          </Pressable>
+        )}
+
+        {incomingCall && (
+          <TouchableOpacity
+            style={{
+              backgroundColor: 'green',
+              height: 60,
+              width: 60,
+              borderRadius: 100,
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'absolute',
+              bottom: 30,
+              left: 50,
+            }}
+            onPress={attendCall}>
+            <MaterialIcons name="call" size={30} color={'white'} />
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity
+          style={{
+            backgroundColor: 'red',
+            height: 60,
+            width: 60,
+            borderRadius: 100,
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'absolute',
+            bottom: 30,
+            right: incomingCall ? 50 : '',
+          }}
+          onPress={endCall}>
+          <MaterialIcons name="call-end" size={30} color={'white'} />
+        </TouchableOpacity>
+        {isCalling && (
+          <Text style={{position: 'absolute', bottom: 100, color: 'white'}}>
+            Calling...
+          </Text>
         )}
       </View>
-      <View style={{marginBottom: 20}}>
-        <Text>Remote Stream</Text>
-        {remoteStream ||
-          (answer && (
-            <RTCView
-              streamURL={
-                remoteStream.toURL() || remoteStream?.remoteStream.toURL()
-              }
-              style={{width: 200, height: 150}}
-            />
-          ))}
-      </View>
-      <Button
-        title={isCalling ? 'Calling...' : 'Start Call'}
-        disabled={isCalling || !localStream}
-        onPress={() => {
-          setIsCalling(true);
-          startCall();
-        }}
-      />
-      {incomingCall && (
-        <Button
-          title="Attend"
-          // disabled={isCalling || !localStream}
-          onPress={attendCall}
-        />
-      )}
-      {incomingCall && (
-        <Button
-          title="Decline"
-          // disabled={isCalling || !localStream}
-          onPress={endCall}
-        />
-      )}
-    </View>
+    </SurfaceLayout>
   );
 };
 
