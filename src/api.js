@@ -7,3 +7,5 @@ export const expressApi = 'https://whatsapp-api-wine.vercel.app';
 // export const expressApi = 'http://10.60.36.87:8080';
 // export const expressApi = 'http://192.168.186.174:8080';
 // MyMobIP=192.168.163.174
+// Ipro-Wifi=172.20.21.149
+// unifIpro-Wifi=10.60.36.87
