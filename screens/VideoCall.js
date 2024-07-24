@@ -28,6 +28,7 @@ import {useSocketHook} from '../utils/socket';
 import {useFocusEffect} from '@react-navigation/native';
 import SurfaceLayout from '../src/Layouts/SurfaceLayout';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const VideoCall = ({route, navigation, ...props}) => {
   const {Data} = useContext(MyContext);
@@ -45,6 +46,18 @@ const VideoCall = ({route, navigation, ...props}) => {
   const [peerConnection, setpeerConnection] = useState(null);
   const {socket, offer, setoffer, answer, setanswer} = useSocketHook();
   const [reSizeVideo, setreSizeVideo] = useState(false);
+
+  const configuration = {
+    configuration: {
+      offerToReceiveAudio: true,
+      offerToReceiveVideo: true,
+    },
+    iceServers: [
+      {urls: 'stun:stun.l.google.com:19302'},
+      {urls: 'stun:stun1.l.google.com:19302'},
+    ],
+  };
+  const pc = new RTCPeerConnection(configuration);
   useEffect(() => {
     const getLocalStream = async () => {
       try {
@@ -56,11 +69,12 @@ const VideoCall = ({route, navigation, ...props}) => {
           .then(stream => {
             setLocalStream(stream);
             localStreamRef.current = stream;
+
             if (type) {
               setincomingCall(type);
-              handleIncomingCall(type);
+              handleIncomingCall(type, stream);
             } else {
-              // startCall();
+              startCall(stream);
               setIsCalling(true);
             }
           });
@@ -84,56 +98,9 @@ const VideoCall = ({route, navigation, ...props}) => {
   const handlePeerConnection = (key, value) => {
     setpeerConnection(prev => ({...prev, [key]: value}));
   };
-  const configuration = {
-    configuration: {
-      offerToReceiveAudio: true,
-      offerToReceiveVideo: true,
-    },
-    iceServers: [
-      {urls: 'stun:stun.l.google.com:19302'},
-      {urls: 'stun:stun1.l.google.com:19302'},
-    ],
-  };
-  const startCall = async () => {
-    const pc = new RTCPeerConnection(configuration);
-
-    if (localStream) {
-      localStream.getTracks().forEach(track => {
-        return pc.addTrack(track, localStream);
-      });
-    }
-    console.log('testTrackSetting', pc);
-
-    // Start signaling with the peer
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    socket.emit('offer', {
-      to: receiverId,
-      offer,
-      from: Data._id,
-    });
-    setpeerConnection(pc);
-  };
 
   useEffect(() => {
     if (!socket || !peerConnection) return;
-
-    socket.on('callend', data => {
-      if (data && data.state) {
-        setanswer(null);
-        setoffer(null);
-        setpeerConnection(null);
-
-        navigation.navigate('Message', {
-          id: receiverId,
-          receiverId,
-          userID: Data._id,
-        });
-      }
-    });
-    socket.on('answer', async data => {
-      handleAnswerCall(data);
-    });
 
     socket.on('icecandidate', async data => {
       if (!peerConnection) return;
@@ -143,6 +110,28 @@ const VideoCall = ({route, navigation, ...props}) => {
         );
       } catch (error) {
         console.error('Error adding ICE candidate:', error);
+      }
+    });
+
+    socket.on('answer', async data => {
+      console.log('answer');
+      handleAnswerCall(data);
+    });
+
+    socket.on('callend', data => {
+      if (data && data.state) {
+        setanswer(null);
+        setoffer(null);
+        setpeerConnection(null);
+        setRemoteStream(null);
+        setLocalStream(null);
+        setreceiverPC(null);
+
+        navigation.navigate('Message', {
+          id: receiverId,
+          receiverId,
+          userID: Data._id,
+        });
       }
     });
 
@@ -157,6 +146,7 @@ const VideoCall = ({route, navigation, ...props}) => {
     if (!peerConnection) return;
     peerConnection.onicecandidate = event => {
       if (event.candidate) {
+        console.log('peerConnection', peerConnection);
         // console.log('Sending ICE candidate to remote peer:', event.candidate);
         socket.emit('icecandidate', {
           from: Data?._id,
@@ -167,7 +157,7 @@ const VideoCall = ({route, navigation, ...props}) => {
     };
 
     peerConnection.oniceconnectionstatechange = event => {
-      console.log('peerConnection', peerConnection);
+      // console.log('peerConnection', peerConnection);
 
       console.log(
         'ICE connection state change:',
@@ -176,42 +166,30 @@ const VideoCall = ({route, navigation, ...props}) => {
     };
     peerConnection.ontrack = event => {
       console.log('Received remote stream:', event.streams);
-      if (event.streams && event.streams.length > 0) {
+      if (event.streams) {
         setRemoteStream(event.streams[0]);
         remoteStreamRef.current = event.streams[0];
+      } else {
+        console.log('No streams on track');
       }
     };
   }, [peerConnection]);
 
-  //*From Receiver function *//
-  const handleIncomingCall = async data => {
-    const pc = new RTCPeerConnection(configuration);
-
-    console.log('handleIncomingCall');
-
-    if (pc) {
-      await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-    } else {
-      Alert.alert('handleIncomingCall null');
-    }
-    setpeerConnection(pc);
-  };
-  const attendCall = async data => {
-    if (peerConnection) {
-      const answer = await peerConnection.createAnswer();
-      await peerConnection.setLocalDescription(
-        new RTCSessionDescription(answer),
-      );
-
-      socket.emit('answer', {
-        from: Data._id,
-        to: receiverId,
-        answer: answer,
-        remoteStream: '',
+  const startCall = async stream => {
+    if (stream) {
+      stream.getTracks().forEach(track => {
+        return pc.addTrack(track, stream);
       });
-    } else {
-      Alert.alert('attendCall null');
     }
+    // Start signaling with the peer
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    socket.emit('offer', {
+      to: receiverId,
+      offer,
+      from: Data._id,
+    });
+    setpeerConnection(pc);
   };
   const handleAnswerCall = async data => {
     console.log('handleAnswerCall');
@@ -225,10 +203,78 @@ const VideoCall = ({route, navigation, ...props}) => {
       await peerConnection.setRemoteDescription(
         new RTCSessionDescription(data.answer),
       );
+      setpeerConnection(peerConnection);
       setIsCalling(false);
     } catch (error) {
       console.error('Error setting remote description:', error);
       return;
+    }
+  };
+  //*Receiver function *//
+  const ReceivversPC = new RTCPeerConnection(configuration);
+  const [receiverPC, setreceiverPC] = useState(null);
+  useEffect(() => {
+    if (!receiverPC) return;
+    receiverPC.onicecandidate = event => {
+      if (event.candidate) {
+        console.log('receiverPC', receiverPC);
+        // console.log('Sending ICE candidate to remote peer:', event.candidate);
+        socket.emit('icecandidate', {
+          from: Data?._id,
+          to: receiverId,
+          candidate: event.candidate,
+        });
+      }
+    };
+
+    receiverPC.oniceconnectionstatechange = event => {
+      // console.log('receiverPC', receiverPC);
+
+      console.log(
+        'ICE connection state change:',
+        receiverPC.iceConnectionState,
+      );
+    };
+    receiverPC.ontrack = event => {
+      console.log('Received remote stream:', event.streams);
+      if (event.streams) {
+        setRemoteStream(event.streams[0]);
+        remoteStreamRef.current = event.streams[0];
+      } else {
+        console.log('No streams on track');
+      }
+    };
+  }, [receiverPC]);
+  const handleIncomingCall = async (data, stream) => {
+    console.log('handleIncomingCall', stream);
+    stream.getTracks().forEach(track => {
+      ReceivversPC.addTrack(track, stream);
+    });
+    if (ReceivversPC) {
+      await ReceivversPC.setRemoteDescription(
+        new RTCSessionDescription(data.offer),
+      );
+    } else {
+      Alert.alert('handleIncomingCall null');
+    }
+    setreceiverPC(ReceivversPC);
+  };
+  const attendCall = async data => {
+    console.log('attend', receiverPC);
+    if (receiverPC) {
+      const answer = await receiverPC.createAnswer();
+      await receiverPC.setLocalDescription(new RTCSessionDescription(answer));
+
+      setreceiverPC(receiverPC);
+      socket.emit('answer', {
+        from: Data._id,
+        to: receiverId,
+        answer: answer,
+        remoteStream: '',
+      });
+      setincomingCall(null);
+    } else {
+      Alert.alert('attendCall null');
     }
   };
 
@@ -241,6 +287,9 @@ const VideoCall = ({route, navigation, ...props}) => {
     setoffer(null);
     navigation.goBack();
     setpeerConnection(null);
+    setRemoteStream(null);
+    setLocalStream(null);
+    setreceiverPC(null);
   };
   // Handle incoming offers and answers
   // useEffect(() => {
@@ -268,10 +317,12 @@ const VideoCall = ({route, navigation, ...props}) => {
   const handleVideoResize = () => {
     setreSizeVideo(!reSizeVideo);
   };
+  console.log('remoteStream', remoteStream);
+  console.log('localStream', localStream);
 
   return (
     <SurfaceLayout title={'name'}>
-      <Button title="call" onPress={startCall} />
+      {/* <Button title="call" onPress={startCall} /> */}
       <View
         style={{
           flex: 1,
@@ -288,7 +339,8 @@ const VideoCall = ({route, navigation, ...props}) => {
             />
           </Pressable>
         )}
-        {remoteStream && (
+
+        {remoteStream ? (
           <Pressable
             // onPress={!reSizeVideo ? handleVideoResize : undefined}
             style={reSizeVideo ? styles.mainVideo : styles.floatVideo}>
@@ -297,6 +349,18 @@ const VideoCall = ({route, navigation, ...props}) => {
               style={{height: '100%', width: '100%'}}
             />
           </Pressable>
+        ) : (
+          <View
+            style={[
+              reSizeVideo ? styles.mainVideo : styles.floatVideo,
+              {
+                backgroundColor: 'black',
+                justifyContent: 'center',
+                alignItems: 'center',
+              },
+            ]}>
+            <Ionicons name="videocam" size={26} color={'white'} />
+          </View>
         )}
 
         {incomingCall && (
