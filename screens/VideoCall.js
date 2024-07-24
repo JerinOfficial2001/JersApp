@@ -36,11 +36,9 @@ const VideoCall = ({route, navigation, ...props}) => {
 
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
-  // const [peerConnection, setPeerConnection] = useState(null);
   const [isCalling, setIsCalling] = useState(false);
   const [incomingCall, setincomingCall] = useState(null);
   const [answerData, setanswerData] = useState(null);
-
   const localStreamRef = useRef(null);
   const remoteStreamRef = useRef(null);
   const [peerConnection, setpeerConnection] = useState(null);
@@ -95,19 +93,21 @@ const VideoCall = ({route, navigation, ...props}) => {
       }
     };
   }, []);
-  const handlePeerConnection = (key, value) => {
-    setpeerConnection(prev => ({...prev, [key]: value}));
-  };
 
   useEffect(() => {
     if (!socket || !peerConnection) return;
 
     socket.on('icecandidate', async data => {
-      if (!peerConnection) return;
       try {
-        await peerConnection.addIceCandidate(
-          new RTCIceCandidate(data.candidate),
-        );
+        if (peerConnection) {
+          await peerConnection.addIceCandidate(
+            new RTCIceCandidate(data.candidate),
+          );
+        } else if (pc) {
+          await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+        } else {
+          console.log('Pc and Peerconnection is empty');
+        }
       } catch (error) {
         console.error('Error adding ICE candidate:', error);
       }
@@ -140,39 +140,72 @@ const VideoCall = ({route, navigation, ...props}) => {
       socket.off('answer');
       socket.off('icecandidate');
     };
-  }, [socket, peerConnection]);
+  }, [socket, peerConnection, pc]);
 
   useEffect(() => {
-    if (!peerConnection) return;
-    peerConnection.onicecandidate = event => {
-      if (event.candidate) {
-        console.log('peerConnection', peerConnection);
-        // console.log('Sending ICE candidate to remote peer:', event.candidate);
-        socket.emit('icecandidate', {
-          from: Data?._id,
-          to: receiverId,
-          candidate: event.candidate,
-        });
-      }
-    };
+    if (peerConnection) {
+      peerConnection.onicecandidate = event => {
+        if (event.candidate) {
+          console.log('peerConnection', peerConnection);
+          // console.log('Sending ICE candidate to remote peer:', event.candidate);
+          socket.emit('icecandidate', {
+            from: Data?._id,
+            to: receiverId,
+            candidate: event.candidate,
+          });
+        }
+      };
 
-    peerConnection.oniceconnectionstatechange = event => {
-      // console.log('peerConnection', peerConnection);
+      peerConnection.oniceconnectionstatechange = event => {
+        // console.log('peerConnection', peerConnection);
 
-      console.log(
-        'ICE connection state change:',
-        peerConnection.iceConnectionState,
-      );
-    };
-    peerConnection.ontrack = event => {
-      console.log('Received remote stream:', event.streams);
-      if (event.streams) {
-        setRemoteStream(event.streams[0]);
-        remoteStreamRef.current = event.streams[0];
-      } else {
-        console.log('No streams on track');
-      }
-    };
+        console.log(
+          'ICE connection state change:',
+          peerConnection.iceConnectionState,
+        );
+      };
+      peerConnection.ontrack = event => {
+        console.log('Received remote stream:', event.streams);
+        if (event.streams) {
+          setRemoteStream(event.streams[0]);
+          remoteStreamRef.current = event.streams[0];
+        } else {
+          console.log('No streams on track');
+        }
+      };
+    } else if (pc) {
+      pc.onicecandidate = event => {
+        if (event.candidate) {
+          console.log('peerConnection', peerConnection);
+          // console.log('Sending ICE candidate to remote peer:', event.candidate);
+          socket.emit('icecandidate', {
+            from: Data?._id,
+            to: receiverId,
+            candidate: event.candidate,
+          });
+        }
+      };
+
+      pc.oniceconnectionstatechange = event => {
+        // console.log('peerConnection', peerConnection);
+
+        console.log(
+          'ICE connection state change:',
+          peerConnection.iceConnectionState,
+        );
+      };
+      pc.ontrack = event => {
+        console.log('Received remote stream:', event.streams);
+        if (event.streams) {
+          setRemoteStream(event.streams[0]);
+          remoteStreamRef.current = event.streams[0];
+        } else {
+          console.log('No streams on track');
+        }
+      };
+    } else {
+      console.log('onIceCandidate pc and peerconnection is empty');
+    }
   }, [peerConnection]);
 
   const startCall = async stream => {
@@ -246,26 +279,26 @@ const VideoCall = ({route, navigation, ...props}) => {
     };
   }, [receiverPC]);
   const handleIncomingCall = async (data, stream) => {
-    console.log('handleIncomingCall', stream);
     stream.getTracks().forEach(track => {
-      ReceivversPC.addTrack(track, stream);
+      pc.addTrack(track, stream);
     });
-    if (ReceivversPC) {
-      await ReceivversPC.setRemoteDescription(
-        new RTCSessionDescription(data.offer),
-      );
+    if (pc) {
+      await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+      console.log('handleIncomingCall', pc);
     } else {
       Alert.alert('handleIncomingCall null');
     }
-    setreceiverPC(ReceivversPC);
+    setpeerConnection(pc);
   };
   const attendCall = async data => {
-    console.log('attend', receiverPC);
-    if (receiverPC) {
-      const answer = await receiverPC.createAnswer();
-      await receiverPC.setLocalDescription(new RTCSessionDescription(answer));
+    console.log('attend', peerConnection);
+    if (peerConnection) {
+      const answer = await peerConnection.createAnswer();
+      await peerConnection.setLocalDescription(
+        new RTCSessionDescription(answer),
+      );
 
-      setreceiverPC(receiverPC);
+      setpeerConnection(peerConnection);
       socket.emit('answer', {
         from: Data._id,
         to: receiverId,
@@ -318,7 +351,6 @@ const VideoCall = ({route, navigation, ...props}) => {
     setreSizeVideo(!reSizeVideo);
   };
   console.log('remoteStream', remoteStream);
-  console.log('localStream', localStream);
 
   return (
     <SurfaceLayout title={'name'}>
