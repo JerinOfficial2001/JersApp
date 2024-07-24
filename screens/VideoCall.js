@@ -44,6 +44,7 @@ const VideoCall = ({route, navigation, ...props}) => {
   const [peerConnection, setpeerConnection] = useState(null);
   const {socket, offer, setoffer, answer, setanswer} = useSocketHook();
   const [reSizeVideo, setreSizeVideo] = useState(false);
+  const [isCallAccepted, setisCallAccepted] = useState(false);
 
   const configuration = {
     configuration: {
@@ -120,13 +121,14 @@ const VideoCall = ({route, navigation, ...props}) => {
 
     socket.on('callend', data => {
       if (data && data.state) {
+        setremoteUrl('');
         setanswer(null);
         setoffer(null);
         setpeerConnection(null);
         setRemoteStream(null);
         setLocalStream(null);
         setreceiverPC(null);
-
+        setisCallAccepted(false);
         navigation.navigate('Message', {
           id: receiverId,
           receiverId,
@@ -146,7 +148,7 @@ const VideoCall = ({route, navigation, ...props}) => {
     if (peerConnection) {
       peerConnection.onicecandidate = event => {
         if (event.candidate) {
-          console.log('peerConnection', peerConnection);
+          // console.log('peerConnection', peerConnection);
           // console.log('Sending ICE candidate to remote peer:', event.candidate);
           socket.emit('icecandidate', {
             from: Data?._id,
@@ -165,7 +167,7 @@ const VideoCall = ({route, navigation, ...props}) => {
         );
       };
       peerConnection.ontrack = event => {
-        console.log('Received remote stream:', event.streams);
+        // console.log('Received remote stream:', event.streams);
         if (event.streams) {
           setRemoteStream(event.streams[0]);
           remoteStreamRef.current = event.streams[0];
@@ -176,7 +178,7 @@ const VideoCall = ({route, navigation, ...props}) => {
     } else if (pc) {
       pc.onicecandidate = event => {
         if (event.candidate) {
-          console.log('peerConnection', peerConnection);
+          // console.log('peerConnection', peerConnection);
           // console.log('Sending ICE candidate to remote peer:', event.candidate);
           socket.emit('icecandidate', {
             from: Data?._id,
@@ -195,7 +197,7 @@ const VideoCall = ({route, navigation, ...props}) => {
         );
       };
       pc.ontrack = event => {
-        console.log('Received remote stream:', event.streams);
+        // console.log('Received remote stream:', event.streams);
         if (event.streams) {
           setRemoteStream(event.streams[0]);
           remoteStreamRef.current = event.streams[0];
@@ -238,6 +240,7 @@ const VideoCall = ({route, navigation, ...props}) => {
       );
       setpeerConnection(peerConnection);
       setIsCalling(false);
+      setisCallAccepted(true);
     } catch (error) {
       console.error('Error setting remote description:', error);
       return;
@@ -284,14 +287,13 @@ const VideoCall = ({route, navigation, ...props}) => {
     });
     if (pc) {
       await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-      console.log('handleIncomingCall', pc);
+      // console.log('handleIncomingCall', pc);
     } else {
       Alert.alert('handleIncomingCall null');
     }
     setpeerConnection(pc);
   };
   const attendCall = async data => {
-    console.log('attend', peerConnection);
     if (peerConnection) {
       const answer = await peerConnection.createAnswer();
       await peerConnection.setLocalDescription(
@@ -305,17 +307,32 @@ const VideoCall = ({route, navigation, ...props}) => {
         answer: answer,
         remoteStream: '',
       });
-      setincomingCall(null);
+      setisCallAccepted(true);
     } else {
       Alert.alert('attendCall null');
     }
   };
+  const [remoteUrl, setremoteUrl] = useState('');
+  useEffect(() => {
+    if (isCallAccepted) {
+      console.log('remoteStream', {
+        state: remoteStream && isCallAccepted,
+        remoteStream: remoteStream.toURL(),
+        isCallAccepted,
+      });
+      setremoteUrl(remoteStream.toURL());
+      Alert.alert(remoteStream.toURL());
+    } else {
+      console.log('isCallAccepted', isCallAccepted);
+    }
+  }, [isCallAccepted]);
 
   const endCall = () => {
     socket.emit('callend', {
       from: Data._id,
       to: receiverId,
     });
+    setremoteUrl('');
     setanswer(null);
     setoffer(null);
     navigation.goBack();
@@ -323,6 +340,7 @@ const VideoCall = ({route, navigation, ...props}) => {
     setRemoteStream(null);
     setLocalStream(null);
     setreceiverPC(null);
+    setisCallAccepted(false);
   };
   // Handle incoming offers and answers
   // useEffect(() => {
@@ -350,7 +368,6 @@ const VideoCall = ({route, navigation, ...props}) => {
   const handleVideoResize = () => {
     setreSizeVideo(!reSizeVideo);
   };
-  console.log('remoteStream', remoteStream);
 
   return (
     <SurfaceLayout title={'name'}>
@@ -367,35 +384,34 @@ const VideoCall = ({route, navigation, ...props}) => {
             style={!reSizeVideo ? styles.mainVideo : styles.floatVideo}>
             <RTCView
               streamURL={localStream.toURL()}
-              style={{height: '100%', width: '100%'}}
+              mirror={true}
+              style={{height: '100%', width: '100%', objectFit: 'contain'}}
             />
           </Pressable>
         )}
 
-        {remoteStream ? (
+        {remoteUrl && (
           <Pressable
             // onPress={!reSizeVideo ? handleVideoResize : undefined}
             style={reSizeVideo ? styles.mainVideo : styles.floatVideo}>
             <RTCView
-              streamURL={remoteStream.toURL()}
+              streamURL={remoteUrl}
               style={{height: '100%', width: '100%'}}
             />
           </Pressable>
-        ) : (
-          <View
-            style={[
-              reSizeVideo ? styles.mainVideo : styles.floatVideo,
-              {
-                backgroundColor: 'black',
-                justifyContent: 'center',
-                alignItems: 'center',
-              },
-            ]}>
-            <Ionicons name="videocam" size={26} color={'white'} />
-          </View>
         )}
-
-        {incomingCall && (
+        {/* <View
+          style={[
+            reSizeVideo ? styles.mainVideo : styles.floatVideo,
+            {
+              backgroundColor: 'black',
+              justifyContent: 'center',
+              alignItems: 'center',
+            },
+          ]}>
+          <Ionicons name="videocam" size={26} color={'white'} />
+        </View> */}
+        {incomingCall && !isCallAccepted && (
           <TouchableOpacity
             style={{
               backgroundColor: 'green',
@@ -422,7 +438,7 @@ const VideoCall = ({route, navigation, ...props}) => {
             justifyContent: 'center',
             position: 'absolute',
             bottom: 30,
-            right: incomingCall ? 50 : '',
+            right: incomingCall && !isCallAccepted ? 50 : '',
           }}
           onPress={endCall}>
           <MaterialIcons name="call-end" size={30} color={'white'} />
