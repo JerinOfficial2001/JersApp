@@ -2,6 +2,7 @@ import React, {useContext, useEffect, useState} from 'react';
 import {ScrollView, Text, View} from 'react-native';
 import MyComponent from '../src/components/MyComponent';
 import {
+  addAndGetAllContact,
   addContact,
   requestContactsPermission,
 } from '../src/controllers/contacts';
@@ -10,11 +11,9 @@ import {getAllUsers} from '../src/controllers/auth';
 import {MyContext} from '../App';
 import SurfaceLayout from '../src/Layouts/SurfaceLayout';
 import Loader from '../src/components/Loader';
+import {useQuery} from '@tanstack/react-query';
 
 export default function AllContacts(props) {
-  const [contacts, setContacts] = useState([]);
-  const [userData, setUserData] = useState({});
-  const [loading, setLoading] = useState(true);
   const {jersAppTheme, Data} = useContext(MyContext);
 
   function cleanPhoneNumber(phoneNumber) {
@@ -29,71 +28,62 @@ export default function AllContacts(props) {
       if (permissionsGranted) {
         const dbContact = await getAllUsers();
         if (dbContact) {
-          const mobContacts = permissionsGranted.map(contact =>
-            cleanPhoneNumber(contact.phoneNumbers[0]?.number),
-          );
-          const apiContacts = dbContact.map(contact => contact.mobNum);
-          let commonMobNumbers = apiContacts.filter(contact =>
-            mobContacts.includes(cleanPhoneNumber(contact)),
-          );
-          const apiUserDatas = commonMobNumbers.map(num => {
-            const commonObj = dbContact.find(
-              user => cleanPhoneNumber(user.mobNum) == num,
+          const mobContacts = permissionsGranted.map(contact => ({
+            phone: cleanPhoneNumber(contact.phoneNumbers[0]?.number),
+            givenName: contact.givenName,
+          }));
+          const apiUserDatas = dbContact.map(num => {
+            const commonObj = mobContacts.find(
+              user => cleanPhoneNumber(user.phone) == num.mobNum,
             );
-            if (commonObj._id == Data?._id) {
-              return {...commonObj, name: 'Me'};
+            commonObj.user_id = Data?._id;
+            delete commonObj.phone;
+            delete num.chats;
+            delete num.contacts;
+            delete num.groups;
+            delete num.theme;
+            if (num._id == Data?._id) {
+              delete commonObj.givenName;
+              return {...commonObj, givenName: 'Me', ...num};
             } else {
-              return commonObj;
+              return {...commonObj, ...num};
             }
           });
-          setContacts(apiUserDatas);
-          setLoading(false);
+          return apiUserDatas;
+        } else {
+          return [];
         }
+      } else {
+        return [];
       }
     } catch (error) {
       console.error('Error fetching contacts:', error);
     }
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const storedData = await AsyncStorage.getItem('userData');
-        const storedUserData = JSON.parse(storedData);
-        if (storedUserData) {
-          setUserData(storedUserData);
-          await getContacts();
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const {data: contacts, isLoading: loadingContacts} = useQuery({
+    queryKey: ['contacts'],
+    queryFn: getContacts,
+  });
+  const {data: allContacts, isLoading: loadingAllContacts} = useQuery({
+    queryKey: ['allContacts', {contacts}],
+    queryFn: addAndGetAllContact,
+    enabled: !!contacts,
+  });
 
   const handleClick = elem => {
-    addContact(
-      elem,
-      userData?._id,
-      elem.name,
-      // elem.displayName,
-      elem.mobNum,
-      // elem.phoneNumbers[0]?.number,
-      props,
-    );
+    addContact(elem._id, props);
   };
 
   return (
     <SurfaceLayout title="Contacts">
-      {loading ? (
+      {loadingAllContacts || loadingContacts ? (
         <Loader />
-      ) : contacts.length > 0 ? (
+      ) : allContacts?.length > 0 ? (
         <ScrollView
           contentContainerStyle={{
             paddingHorizontal: 5,
           }}>
-          {contacts.map((elem, index) => (
+          {allContacts?.map((elem, index) => (
             <MyComponent
               contactPg
               contact={elem}

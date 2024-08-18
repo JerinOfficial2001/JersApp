@@ -29,7 +29,7 @@ const MyComponent = ({
 
   const [lastMsgUserName, setlastMsgUserName] = useState('');
   useEffect(() => {
-    if (contact?.user_id && contact?.ContactDetails?._id) {
+    if (contact?.user_id) {
       getUser(contact?.user_id);
     }
   }, [contact]);
@@ -165,11 +165,7 @@ const MyComponent = ({
                   fontWeight: 'bold',
                   fontSize: 15,
                 }}>
-                {!contactPg
-                  ? contact.ContactDetails?.name
-                  : contact
-                  ? contact.name
-                  : 'Name'}
+                {!contactPg ? contact.given_name : 'Name'}
               </Text>
               {!contactPg && (
                 <View
@@ -207,7 +203,7 @@ const MyComponent = ({
               )}
             </View>
           )}
-          {(contact?.mobNum ||
+          {(contact?.phone ||
             contact?.lastMsg ||
             status?.title ||
             contact?.lastMsg ||
@@ -223,9 +219,7 @@ const MyComponent = ({
               }}
               numberOfLines={1}>
               {contactPg
-                ? contact
-                  ? contact.mobNum
-                  : 'Phone Number'
+                ? contact?.phone
                 : status
                 ? status?.title
                   ? status?.title

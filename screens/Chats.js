@@ -58,21 +58,6 @@ export default function Chats(props) {
     socketUserID,
     socketUserConnected,
   } = useSocketHook();
-  const {mutateAsync: AddChat} = useMutation({
-    mutationFn: data => {
-      createChat(data);
-      return data;
-    },
-    onSuccess: data => {
-      socket.emit('roomID', data.roomID);
-      props.navigation.navigate('Message', {
-        id: data.elem.ContactDetails?._id,
-        userID: Data._id,
-        receiverId: data.receiver,
-        roomID: data.roomID,
-      });
-    },
-  });
 
   useFocusEffect(
     React.useCallback(() => {
@@ -151,14 +136,13 @@ export default function Chats(props) {
                       newMsgcount={elem.msgCount}
                       contact={elem}
                       onclick={() => {
-                        const Ids = [Data._id, elem.ContactDetails._id]
-                          .sort()
-                          .join('_');
+                        const Ids = [Data._id, elem.user_id].sort().join('_');
 
-                        AddChat({
-                          sender: Data._id,
-                          receiver: elem.ContactDetails._id,
-                          elem: elem,
+                        socket.emit('roomID', Ids);
+                        props.navigation.navigate('Message', {
+                          id: elem.user_id,
+                          userID: Data._id,
+                          receiverId: elem.user_id,
                           roomID: Ids,
                         });
                         handlePress();

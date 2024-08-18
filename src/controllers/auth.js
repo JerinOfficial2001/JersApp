@@ -5,15 +5,11 @@ import axios from 'axios';
 
 export const login = async (mobNum, password, props) => {
   try {
-    const response = await fetch(expressApi + '/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({mobNum, password}),
+    const {data} = await axios.post(expressApi + '/api/auth/login', {
+      mobNum,
+      password,
     });
-    const data = await response.json();
+
     // Uncomment and modify the following based on your data structure
     if (data.status === 'ok') {
       const {token} = data.data;

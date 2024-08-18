@@ -1,6 +1,8 @@
-import {PermissionsAndroid} from 'react-native';
+import {PermissionsAndroid, ToastAndroid} from 'react-native';
 import Contacts from 'react-native-contacts';
 import {expressApi} from '../api';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const requestContactsPermission = async () => {
   try {
@@ -38,36 +40,34 @@ export const getContactByUserId = async id => {
     console.log(error);
   }
 };
-export const addContact = async (
-  ContactDetails,
-  user_id,
-  name,
-  Contact_id,
-  props,
-) => {
+export const addContact = async (id, props) => {
+  const cachedData = await AsyncStorage.getItem('userData');
+  const userData = cachedData ? JSON.parse(cachedData) : false;
   try {
-    const response = await fetch(expressApi + '/api/contact', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
+    const {data} = await axios.post(
+      expressApi + '/api/contact?userID=' + userData._id,
+      {id},
+      {
+        headers: {
+          Authorization: `Bearer ${userData.accessToken}`,
+        },
       },
-      body: JSON.stringify({ContactDetails, user_id, name, Contact_id}),
-    }).then(res => res.json());
-    if (response.status == 'error') {
-      if (response.message === 'already registered') {
+    );
+
+    if (data.status == 'error') {
+      if (data.message === 'already registered') {
         props.navigation.navigate('Message', {
-          id: response.data,
+          id: data.data,
         });
       } else {
         props.navigation.navigate('Home');
-        return response.data;
+        return data.data;
       }
     } else {
-      if (response.status == 'ok') {
+      if (data.status == 'ok') {
         props.navigation.navigate('Home');
       } else {
-        console.log(response);
+        console.log(data);
       }
     }
   } catch (error) {
@@ -91,5 +91,35 @@ export const deleteContactById = async (sender_id, receiver_id, contact_id) => {
     return response;
   } catch (error) {
     console.log(error);
+  }
+};
+export const addAndGetAllContact = async query => {
+  const contacts = {contacts: query.queryKey[1].contacts};
+  const cachedData = await AsyncStorage.getItem('userData');
+  const userData = cachedData ? JSON.parse(cachedData) : false;
+  if (userData) {
+    try {
+      const {data} = await axios.post(
+        expressApi + '/api/addAndGetAllContacts?userID=' + userData._id,
+        contacts,
+        {
+          headers: {
+            Authorization: `Bearer ${userData.accessToken}`,
+          },
+        },
+      );
+      console.log(data);
+      if (data.status == 'ok') {
+        return data.data;
+      } else {
+        ToastAndroid.show(data.message, ToastAndroid.SHORT);
+        return [];
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  } else {
+    ToastAndroid.show('Un-Authorized', ToastAndroid.SHORT);
+    return [];
   }
 };
