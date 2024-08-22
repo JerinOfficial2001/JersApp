@@ -7,7 +7,6 @@ import {
   PaperProvider,
   IconButton,
 } from 'react-native-paper';
-import InputField from './InputField';
 import {Image, StyleSheet, TouchableOpacity, View} from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';

@@ -51,6 +51,7 @@ export const AddMemberToGroup = async ({token, groupID, id, formData}) => {
         },
       },
     );
+    console.log(data, 'groupCreation');
     if (data) {
       return data;
     } else {

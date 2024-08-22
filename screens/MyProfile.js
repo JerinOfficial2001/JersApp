@@ -11,7 +11,7 @@ import {
 import DocumentPicker from 'react-native-document-picker';
 import ProfilePicModel from '../src/components/ProfilePicModel';
 import {GetUsersByID, UpdateProfile} from '../src/controllers/auth';
-import {MyContext} from '../App';
+import {MyContext, queryClient} from '../App';
 import SurfaceLayout from '../src/Layouts/SurfaceLayout';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function MyProfile({route, ...props}) {
@@ -68,6 +68,7 @@ export default function MyProfile({route, ...props}) {
         if (response?.status == 'ok') {
           ToastAndroid.show(response.message, ToastAndroid.SHORT);
           AsyncStorage.setItem('userData', JSON.stringify(response.data));
+          queryClient.invalidateQueries({queryKey: ['chats']});
         } else {
           ToastAndroid.show(response.message, ToastAndroid.SHORT);
         }

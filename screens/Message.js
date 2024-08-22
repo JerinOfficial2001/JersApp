@@ -1,6 +1,5 @@
 import React, {useContext, useEffect, useState, useRef} from 'react';
 import {
-  FlatList,
   Image,
   ImageBackground,
   Keyboard,
@@ -13,29 +12,29 @@ import {
   TouchableWithoutFeedback,
   View,
   SectionList,
+  NativeModules,
+  Alert,
 } from 'react-native';
-import {addContact, getContactByUserId} from '../src/controllers/contacts';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  deleteMessageById,
-  getAllChats,
-  getMessage,
-} from '../src/controllers/chats';
+import {deleteMessageById, getMessage} from '../src/controllers/chats';
 import {useFocusEffect} from '@react-navigation/native';
 import TopBar from '../src/components/TopBar';
 import DeleteModal from '../src/components/DeleteModel';
 import Send from '../src/assets/svg/send';
-import {JersAppThemeSchema} from '../utils/theme';
 import {MyContext} from '../App';
 import {useSocketHook} from '../utils/socket';
 import {useQuery} from '@tanstack/react-query';
-import SurfaceLayout from '../src/Layouts/SurfaceLayout';
 import {getTime, groupMessagesByDate} from '../utils/methods/Date&Time';
 import SectionHeader from '../src/components/SectionHeader';
 import VideoCallModal from '../src/components/VideoCallModal';
-
+import Loader from '../src/components/Loader';
+import {isContactExist} from '../utils/methods/cleanPhoneNo';
+import {requestAddContactPermission} from '../src/controllers/contacts';
+import {Button} from 'react-native-paper';
+import {Linking} from 'react-native';
+import ActionSheetModal from '../src/components/ActionSheetModal';
+import {getGroupedMessages} from '../src/controllers/LocalStorage/Message';
 export default function Message({route, navigation, ...props}) {
-  const {id, userID, receiverId, roomID} = route.params;
+  const {id, userID, roomID, Contact_id, name, userName, phone} = route.params;
   const {
     socket,
     socketUserWatching,
@@ -50,46 +49,83 @@ export default function Message({route, navigation, ...props}) {
     offer,
   } = useSocketHook();
 
-  // const {
-  //   data: AllMessages,
-  //   refetch,
-  //   isLoading,
-  // } = useQuery({
-  //   queryKey: ['group'],
-  //   queryFn: () =>
-  //     GetGroupByID({id: Data?._id, token: Data?.accessToken, groupID: id}),
-  //   enabled: !!Data && !!Data._id,
-  // });
-
   const [isTyping, setisTyping] = useState(null);
+  const [formDatas, setformDatas] = useState({
+    msg: '',
+    userName: '',
+  });
+  const [enableSendBtn, setenableSendBtn] = useState(false);
+  const [isMsgLongPressed, setisMsgLongPressed] = useState([]);
+  const [isModelOpen, setisModelOpen] = useState(false);
+  const [msgID, setmsgID] = useState('');
+  const [isDelete, setisDelete] = useState(false);
+  const {jersAppTheme, setpageName, Data} = useContext(MyContext);
+  const scrollViewRef = useRef();
+  const [isOpenVideo, setisOpenVideo] = useState(false);
+  const [isAlreadyInContact, setisAlreadyInContact] = useState(true);
+  const [openAddContactModal, setopenAddContactModal] = useState(false);
   useEffect(() => {
     socket.on('user_typing', data => {
       setisTyping(data);
     });
     socket.on('offer', data => {
       navigation.navigate('VideoCall', {
-        receiverId,
+        receiverId: id,
         type: data,
       });
     });
   }, [socket]);
-
-  const [formDatas, setformDatas] = useState({
-    msg: '',
-    userName: '',
+  useFocusEffect(
+    React.useCallback(() => {
+      if (socket) {
+        socketUserID(userID ? userID : Data?._id);
+        socketUserConnected({
+          id: userID ? userID : Data?._id,
+          status: 'online',
+        });
+        socketUserWatching({
+          id: userID ? userID : Data?._id,
+          receiverId: id,
+        });
+        Keyboard.addListener('keyboardDidHide', () => {
+          socketUserTyped({id: userID ? userID : Data?._id, receiverId: id});
+        });
+        Keyboard.addListener('keyboardDidShow', () => {
+          socketUserTyping({
+            id: userID ? userID : Data?._id,
+            receiverId: id,
+          });
+          setisTyping(null);
+        });
+      }
+      return () => {
+        if (socket) {
+          socketUserWatched({
+            id: userID ? userID : Data?._id,
+            receiverId: id,
+          });
+          setisWatching(null);
+        }
+      };
+    }, [socket]),
+  );
+  useEffect(() => {
+    if (formDatas.msg !== '') {
+      setenableSendBtn(true);
+    } else {
+      setenableSendBtn(false);
+    }
+  }, [formDatas.msg]);
+  const {
+    data: messages,
+    isLoading,
+    refetch: refetchMessages,
+  } = useQuery({
+    queryKey: ['messages', roomID],
+    queryFn: getMessage,
+    enabled: !!roomID,
   });
-  const [userData, setuserData] = useState({});
-  const [enableSendBtn, setenableSendBtn] = useState(false);
-  const [chatArray, setchatArray] = useState([]);
-  const [chatID, setchatID] = useState('');
-  const [isMsgLongPressed, setisMsgLongPressed] = useState([]);
-  const [isModelOpen, setisModelOpen] = useState(false);
-  const [receiverDetails, setreceiverDetails] = useState({});
-  const [msgID, setmsgID] = useState('');
-  const [isDelete, setisDelete] = useState(false);
-  const {jersAppTheme, setpageName, Data} = useContext(MyContext);
-  const scrollViewRef = useRef();
-  const [isOpenVideo, setisOpenVideo] = useState(false);
+
   const BubbleMsg = ({
     text,
     received,
@@ -156,88 +192,33 @@ export default function Message({route, navigation, ...props}) {
       </TouchableWithoutFeedback>
     );
   };
-  useFocusEffect(
-    React.useCallback(() => {
-      if (socket) {
-        socketUserID(userID ? userID : userData._id);
-        socketUserConnected({
-          id: userID ? userID : userData._id,
-          status: 'online',
-        });
-        socketUserWatching({
-          id: userID ? userID : userData._id,
-          receiverId,
-        });
-        Keyboard.addListener('keyboardDidHide', () => {
-          socketUserTyped({id: userID ? userID : userData._id, receiverId});
-        });
-        Keyboard.addListener('keyboardDidShow', () => {
-          socketUserTyping({
-            id: userID ? userID : userData._id,
-            receiverId,
-          });
-          setisTyping(null);
-        });
-      }
-      return () => {
-        if (socket) {
-          socketUserWatched({id: userID ? userID : userData._id, receiverId});
-          setisWatching(null);
-        }
-      };
-    }, [socket]),
-  );
-
-  useEffect(() => {
-    if (formDatas.msg !== '') {
-      setenableSendBtn(true);
-    } else {
-      setenableSendBtn(false);
-    }
-  }, [formDatas.msg]);
   const scrollToEnd = (w, h) => {
     scrollViewRef?.current?.getScrollResponder()?.scrollTo({
       y: h - listViewHeight,
     });
   };
-
-  const fetchData = () => {
-    const userDetails = Data;
-    setuserData(userDetails);
-    getContactByUserId(userDetails._id).then(users => {
-      if (users.data) {
-        const res = users.data.find(user => user.ContactDetails._id == id);
-        if (res) {
-          setreceiverDetails(res);
-        }
+  const handleContactExist = async () => {
+    const result = await isContactExist(phone);
+    if (!result) {
+      setisAlreadyInContact(false);
+    }
+  };
+  const handleOpenContact = async () => {
+    const isApproved = await requestAddContactPermission();
+    if (isApproved) {
+      try {
+        Linking.openURL('content://com.android.contacts/contacts');
+      } catch (error) {
+        Alert.alert('Error', 'Failed to open contact creation screen');
       }
-    });
-    getAllChats(userDetails._id, id).then(chat => {
-      if (chat) {
-        setchatID(chat._id);
-        getMessage(chat._id).then(msg => {
-          if (msg) {
-            // scrollViewRef.current?.scrollToEnd({animated: true});
-            // scrollToEnd();
-            setchatArray(
-              msg.map(elem => {
-                return {
-                  ...elem,
-                  time: getTime(elem.createdAt),
-                };
-              }),
-            );
-            setisMsgLongPressed(msg.map(item => ({isSelected: false})));
-          }
-        });
-      }
-    });
+    } else {
+      console.log('rejected');
+    }
   };
   useFocusEffect(
     React.useCallback(() => {
-      handleSocket();
       if (Data) {
-        fetchData();
+        handleContactExist();
       }
       setpageName('Message');
     }, [Data]),
@@ -246,19 +227,20 @@ export default function Message({route, navigation, ...props}) {
     e.preventDefault();
     if (formDatas.msg !== '') {
       socket.emit('message', {
-        chatID: chatID,
-        sender: userData._id,
+        chatID: roomID,
+        sender: Data?._id,
         receiver: id,
         message: formDatas.msg,
-        name: userData.name,
+        name: Data?.name,
+        Contact_id,
       });
 
       setformDatas({
         msg: '',
         userName: '',
       });
-      handleSocket();
       Keyboard.dismiss();
+      refetchMessages();
     }
   };
   const handleDeleteMsg = () => {
@@ -276,23 +258,7 @@ export default function Message({route, navigation, ...props}) {
       });
     }
   };
-  const handleSocket = async () => {
-    if (socket) {
-      socket.on('message', data => {
-        if (chatID && data) {
-          const filteredMsg = data.filter(msg => msg.chatID == chatID);
-          if (filteredMsg) {
-            setchatArray(
-              filteredMsg.map(elem => ({
-                ...elem,
-                time: getTime(elem.createdAt),
-              })),
-            );
-          }
-        }
-      });
-    }
-  };
+
   const handleOnchange = (value, name) => {
     setformDatas(prev => ({...prev, [name]: value}));
   };
@@ -349,33 +315,42 @@ export default function Message({route, navigation, ...props}) {
     },
   });
 
-  const UserTyping =
-    isTyping && isTyping?.id == receiverId ? isTyping.isTyping : false;
+  const UserTyping = isTyping && isTyping?.id == id ? isTyping.isTyping : false;
   const UserWatching =
-    isWatching && isWatching?.id == receiverId ? isWatching.isWatching : false;
+    isWatching && isWatching?.id == id ? isWatching.isWatching : false;
 
-  const groupedMessages = groupMessagesByDate(chatArray);
-  const sections = groupedMessages
-    ? Object.keys(groupedMessages).map(date => ({
-        title: date,
-        data: groupedMessages[date],
-      }))
-    : [];
   const [listViewHeight, setListViewHeight] = useState(undefined);
+
+  const groupedMessages = groupMessagesByDate(messages);
+  const {
+    data: sections,
+    isLoading: messagesLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['allMessages'],
+    queryFn: () => getGroupedMessages(groupedMessages),
+    enabled: !!groupedMessages,
+  });
+  useEffect(() => {
+    if (messages) {
+      console.log('test');
+      setisMsgLongPressed(messages?.map(item => ({isSelected: false})));
+      refetch();
+    }
+  }, [messages]);
   return (
     <View style={{flex: 1, backgroundColor: jersAppTheme.appBar}}>
       <TopBar
         isTyping={UserTyping}
-        subtitle={isOnline(receiverId)}
+        subtitle={isOnline(id)}
         arrow={true}
-        title={receiverDetails ? receiverDetails.name : 'Message'}
+        title={name}
         lefOnPress={() => navigation.navigate('Home')}
         rightOnPress={() => {
-          // setisModelOpen(true);
           navigation.navigate('VideoCall', {
-            receiverId,
+            receiverId: id,
           });
-          // setisOpenVideo(true);
         }}
         showVideo={true}
         isDelete={isDelete}
@@ -385,6 +360,60 @@ export default function Message({route, navigation, ...props}) {
           imageStyle={{borderTopRightRadius: 25, borderTopLeftRadius: 25}}
           source={require('../src/assets/chatBg.png')} // specify the path to your image
           style={styles.backgroundImage}>
+          {!isAlreadyInContact && (
+            <View
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginVertical: 12,
+              }}>
+              <View
+                style={{
+                  width: '90%',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 10,
+                  backgroundColor: jersAppTheme.main,
+                  borderRadius: 20,
+                  padding: 15,
+                }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    gap: 10,
+                    alignItems: 'flex-end',
+                  }}>
+                  <Text>{name}</Text>
+                  <Text style={{fontSize: 12}}>{'~ ' + userName}</Text>
+                </View>
+                <Text>Not in contact</Text>
+                <View
+                  style={{
+                    width: '100%',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'row',
+                    gap: 10,
+                  }}>
+                  <Button
+                    onPress={handleOpenContact}
+                    style={{borderColor: 'gray', borderWidth: 1}}
+                    textColor="gray">
+                    Open Contacts
+                  </Button>
+                  <Button
+                    onPress={() => {
+                      setopenAddContactModal(true);
+                    }}
+                    style={{borderColor: 'gray', borderWidth: 1}}
+                    textColor="green">
+                    Add
+                  </Button>
+                </View>
+              </View>
+            </View>
+          )}
           {UserWatching && (
             <Image
               source={require('../src/assets/crossAvatar.png')}
@@ -397,41 +426,46 @@ export default function Message({route, navigation, ...props}) {
               }}
             />
           )}
-          <SectionList
-            stickySectionHeadersEnabled
-            ref={scrollViewRef}
-            onLayout={event => {
-              setListViewHeight(event.nativeEvent.layout.height);
-            }}
-            onContentSizeChange={(w, h) => scrollToEnd(w, h)}
-            contentContainerStyle={{
-              justifyContent: 'flex-end',
-              flexGrow: 1,
-              paddingBottom: UserWatching ? 40 : 0,
-            }}
-            scrollEnabled
-            sections={sections}
-            keyExtractor={(item, index) => item._id}
-            renderItem={({item, index}) => {
-              return (
-                <BubbleMsg
-                  text={item.message}
-                  time={item.time}
-                  received={item.sender !== userData._id}
-                  isSelected={isMsgLongPressed[index]?.isSelected}
-                  handlePress={handlePress}
-                  handleLongPress={() => {
-                    handleLongPress(index, item._id);
-                  }}
-                />
-              );
-            }}
-            renderSectionHeader={({section}) => (
-              <SectionHeader title={section.title} />
-            )}
-            ListHeaderComponentStyle={{marginBottom: 10}}
-            ItemSeparatorComponent={() => <View style={{height: 5}} />}
-          />
+          {messagesLoading ? (
+            <Loader color={'gray'} />
+          ) : (
+            <SectionList
+              stickySectionHeadersEnabled
+              ref={scrollViewRef}
+              onLayout={event => {
+                setListViewHeight(event.nativeEvent.layout.height);
+              }}
+              onContentSizeChange={(w, h) => scrollToEnd(w, h)}
+              contentContainerStyle={{
+                justifyContent: 'flex-end',
+                flexGrow: 1,
+                paddingBottom: UserWatching ? 40 : 0,
+              }}
+              scrollEnabled
+              sections={sections}
+              keyExtractor={(item, index) => item._id}
+              renderItem={({item, index}) => {
+                const date = getTime(item.createdAt);
+                return (
+                  <BubbleMsg
+                    text={item.message}
+                    time={date}
+                    received={item.sender !== Data?._id}
+                    isSelected={isMsgLongPressed[index]?.isSelected}
+                    handlePress={handlePress}
+                    handleLongPress={() => {
+                      handleLongPress(index, item._id);
+                    }}
+                  />
+                );
+              }}
+              renderSectionHeader={({section}) => (
+                <SectionHeader title={section.title} />
+              )}
+              ListHeaderComponentStyle={{marginBottom: 10}}
+              ItemSeparatorComponent={() => <View style={{height: 5}} />}
+            />
+          )}
 
           <View style={styles.inputContainer}>
             <TextInput
@@ -460,14 +494,18 @@ export default function Message({route, navigation, ...props}) {
           visible={isModelOpen}
           handleDelete={handleDeleteMsg}
         />
-        <VideoCallModal
-          receiverId={receiverId}
+        {/* <VideoCallModal
+          receiverId={id}
           Data={Data}
           handleModelClose={() => {
             setisOpenVideo(false);
           }}
           visible={isOpenVideo}
           // handleDelete={handleDeleteMsg}
+        /> */}
+        <ActionSheetModal
+          open={openAddContactModal}
+          close={setopenAddContactModal}
         />
       </Pressable>
     </View>

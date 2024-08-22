@@ -1,6 +1,5 @@
 import * as React from 'react';
 import {Modal, Portal, Text, Button, PaperProvider} from 'react-native-paper';
-import InputField from './InputField';
 import {Image, TouchableOpacity, View} from 'react-native';
 
 const DeleteModal = ({handleModelClose, visible, handleDelete}) => {

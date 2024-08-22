@@ -6,18 +6,13 @@ import {MyContext} from '../App';
 import {TopBarContext} from '../navigations/tabNavigation';
 import SurfaceLayout from '../src/Layouts/SurfaceLayout';
 import DeleteModal from '../src/components/DeleteModel';
-import MyComponent from '../src/components/MyComponent';
-import {createChat} from '../src/controllers/chats';
-import {
-  deleteContactById,
-  getContactByUserId,
-} from '../src/controllers/contacts';
+import {deleteContactById, getAccountChats} from '../src/controllers/contacts';
 import {checkApplicationPermission} from '../src/controllers/permissions';
 import {eventEmitter} from '../src/notification.android';
 import {useSocketHook} from '../utils/socket';
 import Loader from '../src/components/Loader';
 import {getCreatedDay} from '../utils/methods/Date&Time';
-import {Button} from 'react-native-paper';
+import ContactCard from '../src/components/ContactCard';
 
 export default function Chats(props) {
   useEffect(() => {
@@ -36,14 +31,14 @@ export default function Chats(props) {
   const [receiversId, setreceiversId] = useState('');
   const [Contact_id, setContact_id] = useState('');
 
-  const {setisDelete, isModelOpen, setisModelOpen, setopenMenu, setactiveTab} =
+  const {setisDelete, isModelOpen, setisModelOpen, setopenMenu} =
     useContext(TopBarContext);
 
   const getAllChats = async () => {
-    const response = await getContactByUserId(Data._id);
-    if (response.status === 'ok') {
-      setisMsgLongPressed(response.data.map(() => ({isSelected: false})));
-      return response.data;
+    const response = await getAccountChats();
+    if (response) {
+      setisMsgLongPressed(response.map(() => ({isSelected: false})));
+      return response;
     }
   };
   const {data, refetch, isLoading} = useQuery({
@@ -57,6 +52,7 @@ export default function Chats(props) {
     socket,
     socketUserID,
     socketUserConnected,
+    handleNavigationToMessage,
   } = useSocketHook();
 
   useFocusEffect(
@@ -68,7 +64,7 @@ export default function Chats(props) {
     React.useCallback(() => {
       if (socket) {
         socket.on('connect', () => {
-          console.log('connected');
+          // console.log('connected');
         });
         socketUserID(Data._id);
         socketUserConnected({
@@ -124,7 +120,6 @@ export default function Chats(props) {
               data?.map((elem, index) => {
                 const isSelected = isMsgLongPressed[index]?.isSelected;
                 elem.date = getCreatedDay(elem);
-                // console.log(JSON.stringify(elem, null, 2));
                 return (
                   <View
                     key={index}
@@ -132,33 +127,30 @@ export default function Chats(props) {
                       backgroundColor: isSelected ? 'gray' : 'transparent',
                       borderRadius: 10,
                     }}>
-                    <MyComponent
-                      newMsgcount={elem.msgCount}
-                      contact={elem}
+                    <ContactCard
+                      id={elem?._id}
+                      url={elem?.image ? elem?.image.url : ''}
+                      badgeCount={elem?.msgCount}
+                      name={
+                        elem?.given_name
+                          ? elem?.given_name
+                          : '+91 ' + elem?.phone
+                      }
+                      date={elem?.date}
+                      lastMsg={{
+                        msg: elem?.lastMsg.msg,
+                        name:
+                          typeof elem?.lastMsg.name != 'string'
+                            ? '+91 ' + elem?.lastMsg.name
+                            : elem?.lastMsg.name,
+                      }}
                       onclick={() => {
-                        const Ids = [Data._id, elem.user_id].sort().join('_');
-
-                        socket.emit('roomID', Ids);
-                        props.navigation.navigate('Message', {
-                          id: elem.user_id,
-                          userID: Data._id,
-                          receiverId: elem.user_id,
-                          roomID: Ids,
-                        });
-                        handlePress();
-
-                        socket.emit('clearNewMsg', {
-                          id: Data._id,
-                          Contact_id: elem._id,
-                        });
                         setnewMsgCount(null);
+                        handlePress();
+                        handleNavigationToMessage(elem._id, props);
                       }}
                       onLongPress={() => {
-                        handleLongPress(
-                          index,
-                          elem.ContactDetails._id,
-                          elem.Contact_id,
-                        );
+                        handleLongPress(index, elem?.user_id, elem?._id);
                       }}
                     />
                   </View>

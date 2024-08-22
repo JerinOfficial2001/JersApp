@@ -30,11 +30,17 @@ export const getMessage = async chatID => {
     }).then(res => res.json());
 
     if (response.status == 'ok') {
-      const filteredMsg = response.data.filter(msg => msg.chatID == chatID);
+      const filteredMsg = response.data.filter(
+        msg => msg.chatID == chatID.queryKey[1],
+      );
 
       if (filteredMsg) {
         return filteredMsg;
+      } else {
+        return [];
       }
+    } else {
+      return [];
     }
   } catch (error) {
     console.error('Error sending private message:', error);

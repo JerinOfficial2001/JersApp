@@ -5,11 +5,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {themeSchema} from './utils/theme';
 import {QueryClientProvider, QueryClient} from '@tanstack/react-query';
 import {SocketProvider} from './utils/socket';
-import {View} from 'react-native';
+import {SheetProvider} from 'react-native-actions-sheet';
 
 export const MyContext = createContext({});
 
-const queryClient = new QueryClient();
+export const queryClient = new QueryClient();
 export default function App() {
   const [Data, setuserData] = useState(null);
   const [themeHandler, setthemeHandler] = useState('JersApp');
@@ -47,7 +47,9 @@ export default function App() {
             setSelectedIds,
           }}>
           <Provider>
-            <Navigator />
+            <SheetProvider context="global">
+              <Navigator />
+            </SheetProvider>
           </Provider>
         </MyContext.Provider>
       </SocketProvider>

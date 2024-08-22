@@ -14,7 +14,6 @@ import EntypoIcons from 'react-native-vector-icons/Entypo';
 import AntDesignIcons from 'react-native-vector-icons/AntDesign';
 import {MyContext} from '../../App';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {GetUsersByID, logoutWithToken} from '../controllers/auth';
 import {useSocketHook} from '../../utils/socket';
 
 export default function MenuComponent({
@@ -39,24 +38,12 @@ export default function MenuComponent({
 
   const logout = () => {
     setisloading(true);
-    AsyncStorage.getItem('token').then(data => {
-      const parsedToken = data ? JSON.parse(data) : false;
-      if (parsedToken) {
-        logoutWithToken(parsedToken).then(res => {
-          if (res.status == 'ok') {
-            socketLogout(Data?._id);
-            AsyncStorage.removeItem('userData');
-            navigation.navigate('Login');
-            handleCloseMenu();
-            ToastAndroid.show(res.message, ToastAndroid.SHORT);
-          }
-          setisloading(false);
-        });
-      } else {
-        ToastAndroid.show('Logout Failed', ToastAndroid.SHORT);
-        setisloading(false);
-      }
-    });
+    socketLogout(Data?._id);
+    AsyncStorage.removeItem('userData');
+    navigation.navigate('Login');
+    handleCloseMenu();
+    ToastAndroid.show('Logged out successfully', ToastAndroid.SHORT);
+    setisloading(false);
   };
   const MenuButton = () => (
     <TouchableOpacity onPress={() => setopenMenu(true)}>

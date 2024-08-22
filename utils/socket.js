@@ -2,6 +2,10 @@ import {createContext, useContext, useEffect, useState} from 'react';
 import {io} from 'socket.io-client';
 import {socketServerApi} from '../src/api';
 import {showNotification} from '../src/notification.android';
+import {queryClient} from '../App';
+import {ToastAndroid} from 'react-native';
+import {GET_FROM_STORAGE} from './ayncStorage/getAndSet';
+import {getContactByID} from '../src/controllers/contacts';
 const SocketContext = createContext(null);
 export const useSocketHook = () => {
   const socket = useContext(SocketContext);
@@ -21,6 +25,7 @@ export const SocketProvider = ({children}) => {
     setsocket(connection);
     connection.on('notification', data => {
       showNotification(data.name, data.msg);
+      queryClient.invalidateQueries({queryKey: ['messages']});
     });
     connection.on('user_connected', data => {
       setactiveUsers(data);
@@ -93,11 +98,37 @@ export const SocketProvider = ({children}) => {
   const socketJoinUserVcall = data => {
     socket?.emit('videocall', JSON.stringify({sdp: data}));
   };
+  const socketLinkWeb = data => {
+    socket?.emit('webID', data);
+  };
   const isOnline = id => {
     const isActive = activeUsers?.find(res => res.id == id);
     return isActive;
   };
 
+  const handleNavigationToMessage = async (id, props) => {
+    const Data = await GET_FROM_STORAGE('userData');
+    const ContactData = await getContactByID(id);
+    if (!ContactData || !id || !Data) return ToastAndroid.show('Invalid ID');
+    const Ids = [Data._id, ContactData?.user_id].sort().join('_');
+    socket.emit('roomID', Ids);
+    props.navigation.navigate('Message', {
+      id: ContactData?.user_id,
+      userID: Data._id,
+      roomID: Ids,
+      Contact_id: ContactData?._id,
+      name: ContactData?.given_name
+        ? ContactData?.given_name
+        : '+91 ' + ContactData?.phone,
+      userName: ContactData?.name,
+      phone: ContactData?.phone,
+    });
+
+    socket.emit('clearNewMsg', {
+      id: Data._id,
+      Contact_id: ContactData?._id,
+    });
+  };
   return (
     <SocketContext.Provider
       value={{
@@ -130,6 +161,8 @@ export const SocketProvider = ({children}) => {
         setupdatedRoleStatus,
         socketRemoveMember,
         socketAddMember,
+        socketLinkWeb,
+        handleNavigationToMessage,
       }}>
       {children}
     </SocketContext.Provider>

@@ -22,14 +22,7 @@ export const login = async (mobNum, password, props) => {
       });
 
       const userData = await userDataResponse.json();
-      const tokenRes = await fetch(expressApi + '/api/auth/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({token}),
-      }).then(res => res.json());
+
       if (userData) {
         if (userData.status === 'ok') {
           // Store user data in AsyncStorage
@@ -104,26 +97,6 @@ export const GetUsersByID = async id => {
     }
   } catch (error) {
     console.error('GetUsersByID Err:', error.message);
-  }
-};
-export const logoutWithToken = async token => {
-  try {
-    const response = await fetch(expressApi + '/api/auth/logout', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({token}),
-    }).then(res => res.json());
-    if (response.status == 'ok') {
-      AsyncStorage.removeItem('token');
-      return response;
-    } else {
-      ToastAndroid.show(response.message, ToastAndroid.SHORT);
-    }
-  } catch (error) {
-    console.error('Error logout:', error.message);
   }
 };
 export const UpdateProfile = async DATA => {

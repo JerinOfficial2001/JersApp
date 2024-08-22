@@ -19,6 +19,7 @@ import Loader from '../src/components/Loader';
 import {Button, IconButton} from 'react-native-paper';
 import Plus from '../src/assets/svg/plus';
 import {GetGroups} from '../src/controllers/group';
+import ContactCard from '../src/components/ContactCard';
 
 export default function Groups(props) {
   const {Data, jersAppTheme, setpageName, setSelectedIds} =
@@ -32,7 +33,7 @@ export default function Groups(props) {
 
   const {data, refetch, isLoading} = useQuery({
     queryKey: ['groups'],
-    queryFn: () => GetGroups({id: Data?._id, token: Data?.accessToken}),
+    queryFn: () => GetGroups(),
     enabled: !!Data && !!Data._id,
   });
   const {
@@ -86,12 +87,9 @@ export default function Groups(props) {
                   style={{
                     borderRadius: 3,
                   }}>
-                  <MyComponent
+                  <ContactCard
                     // newMsgcount={elem.msgCount}
-                    contact={{
-                      _id: elem._id,
-                      ContactDetails: {name: elem.group_name},
-                    }}
+                    name={elem.group_name}
                     onclick={() => {
                       props.navigation.navigate('GroupMsg', {
                         id: elem._id,

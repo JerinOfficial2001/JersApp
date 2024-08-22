@@ -1,25 +1,33 @@
 import axios from 'axios';
 import {expressApi} from '../api';
 import {ToastAndroid} from 'react-native';
+import {GET_FROM_STORAGE} from '../../utils/ayncStorage/getAndSet';
 
-export const GetGroups = async ({token, id}) => {
-  try {
-    const {data} = await axios.get(
-      `${expressApi}/api/group/getGroups?userID=${id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
+export const GetGroups = async () => {
+  const userData = await GET_FROM_STORAGE('userData');
+  if (userData) {
+    try {
+      const {data} = await axios.get(
+        `${expressApi}/api/group/getGroups?userID=${userData._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${userData.accessToken}`,
+          },
         },
-      },
-    );
-    if (data.status == 'ok') {
-      return data.data;
-    } else {
-      ToastAndroid.show(data.message, ToastAndroid.SHORT);
-      console.log(data.message, 'GetGroupsERR');
+      );
+      if (data.status == 'ok') {
+        return data.data;
+      } else {
+        ToastAndroid.show(data.message, ToastAndroid.SHORT);
+        console.log(data.message, 'GetGroupsERR');
+        return [];
+      }
+    } catch (error) {
+      console.log('GetGroupsERR Err:', error);
     }
-  } catch (error) {
-    console.log('GetGroupsERR Err:', error);
+  } else {
+    ToastAndroid.show('Un-autorized', ToastAndroid.SHORT);
+    return [];
   }
 };
 export const GetGroupByID = async ({token, id, groupID}) => {

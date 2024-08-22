@@ -12,6 +12,7 @@ import {Button} from 'react-native-paper';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import UserModal from '../src/components/UserModal';
 import {useSocketHook} from '../utils/socket';
+import ContactCard from '../src/components/ContactCard';
 
 export default function ViewGroupProfile({route, navigation}) {
   const {id, image, name, members} = route.params;
@@ -88,7 +89,7 @@ export default function ViewGroupProfile({route, navigation}) {
               : allMembers
           }
           renderItem={({item}) => (
-            <MyComponent
+            <ContactCard
               onclick={() => {
                 if (item.name == 'Add members') {
                   navigation.navigate('AddParticipants', {
@@ -113,9 +114,10 @@ export default function ViewGroupProfile({route, navigation}) {
                   });
                 }
               }}
-              customImg={item.customImg}
-              contactPg
-              contact={item}
+              url={item.image ? item.image.url : ''}
+              role={item.role}
+              name={item.name}
+              id={item._id}
             />
           )}
           keyExtractor={item => item._id}

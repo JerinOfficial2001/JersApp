@@ -1,8 +1,9 @@
-import {PermissionsAndroid, ToastAndroid} from 'react-native';
+import {Alert, Linking, PermissionsAndroid, ToastAndroid} from 'react-native';
 import Contacts from 'react-native-contacts';
 import {expressApi} from '../api';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {GET_FROM_STORAGE} from '../../utils/ayncStorage/getAndSet';
 
 export const requestContactsPermission = async () => {
   try {
@@ -26,52 +27,120 @@ export const requestContactsPermission = async () => {
     console.warn(err);
   }
 };
-export const getContactByUserId = async id => {
+export const requestAddContactPermission = async () => {
+  if (Platform.OS === 'android') {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.WRITE_CONTACTS,
+        {
+          title: 'Contact Permission',
+          message: 'App needs access to your contacts.',
+          buttonNeutral: 'Ask Me Later',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
+        },
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (err) {
+      console.warn(err);
+    }
+  }
+};
+
+export const getAccountChats = async () => {
+  const userData = await GET_FROM_STORAGE('userData');
   try {
-    const response = await fetch(expressApi + `/api/contact?user_id=${id}`, {
+    const response = await fetch(
+      expressApi + `/api/chats?user_id=${userData?._id}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      },
+    ).then(res => res.json());
+    if (response.status == 'ok') {
+      return response.data;
+    } else {
+      return [];
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+export const getContactByUserId = async () => {
+  const userData = await GET_FROM_STORAGE('userData');
+  try {
+    const response = await fetch(
+      expressApi + `/api/contact?user_id=${userData?._id}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      },
+    ).then(res => res.json());
+    if (response.status == 'ok') {
+      return response.data;
+    } else {
+      return [];
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+export const getContactByID = async id => {
+  try {
+    const response = await fetch(expressApi + `/api/contact/${id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
     }).then(res => res.json());
-    return response;
+    if (response.status == 'ok') {
+      return response.data;
+    } else {
+      return null;
+    }
   } catch (error) {
     console.log(error);
   }
 };
-export const addContact = async (id, props) => {
-  const cachedData = await AsyncStorage.getItem('userData');
-  const userData = cachedData ? JSON.parse(cachedData) : false;
-  try {
-    const {data} = await axios.post(
-      expressApi + '/api/contact?userID=' + userData._id,
-      {id},
-      {
-        headers: {
-          Authorization: `Bearer ${userData.accessToken}`,
+export const addChat = async (id, props) => {
+  const userData = await GET_FROM_STORAGE('userData');
+  if (userData) {
+    try {
+      const {data} = await axios.post(
+        expressApi + '/api/contact?userID=' + userData._id,
+        {id},
+        {
+          headers: {
+            Authorization: `Bearer ${userData.accessToken}`,
+          },
         },
-      },
-    );
+      );
 
-    if (data.status == 'error') {
-      if (data.message === 'already registered') {
-        props.navigation.navigate('Message', {
-          id: data.data,
-        });
+      if (data.status == 'error') {
+        return data;
       } else {
-        props.navigation.navigate('Home');
-        return data.data;
+        if (data.status == 'ok') {
+          props.navigation.navigate('Home');
+        } else {
+          console.log(data);
+        }
       }
-    } else {
-      if (data.status == 'ok') {
-        props.navigation.navigate('Home');
-      } else {
-        console.log(data);
-      }
+    } catch (error) {
+      console.log(error);
     }
-  } catch (error) {
-    console.log(error);
+  } else {
+    ToastAndroid.show('Un-authenticated', ToastAndroid.SHORT);
   }
 };
 export const deleteContactById = async (sender_id, receiver_id, contact_id) => {
@@ -94,7 +163,7 @@ export const deleteContactById = async (sender_id, receiver_id, contact_id) => {
   }
 };
 export const addAndGetAllContact = async query => {
-  const contacts = {contacts: query.queryKey[1].contacts};
+  const contacts = {contacts: query};
   const cachedData = await AsyncStorage.getItem('userData');
   const userData = cachedData ? JSON.parse(cachedData) : false;
   if (userData) {
@@ -108,7 +177,6 @@ export const addAndGetAllContact = async query => {
           },
         },
       );
-      console.log(data);
       if (data.status == 'ok') {
         return data.data;
       } else {
