@@ -63,8 +63,8 @@ export default function Chats(props) {
   useFocusEffect(
     React.useCallback(() => {
       if (socket) {
-        socket.on('connect', () => {
-          // console.log('connected');
+        socket.on('Contact', () => {
+          refetch();
         });
         socketUserID(Data._id);
         socketUserConnected({
@@ -137,13 +137,17 @@ export default function Chats(props) {
                           : '+91 ' + elem?.phone
                       }
                       date={elem?.date}
-                      lastMsg={{
-                        msg: elem?.lastMsg.msg,
-                        name:
-                          typeof elem?.lastMsg.name != 'string'
-                            ? '+91 ' + elem?.lastMsg.name
-                            : elem?.lastMsg.name,
-                      }}
+                      lastMsg={
+                        elem.lastMsg
+                          ? {
+                              msg: elem?.lastMsg.msg,
+                              name:
+                                typeof elem?.lastMsg.name != 'string'
+                                  ? '+91 ' + elem?.lastMsg.name
+                                  : elem?.lastMsg.name,
+                            }
+                          : ''
+                      }
                       onclick={() => {
                         setnewMsgCount(null);
                         handlePress();

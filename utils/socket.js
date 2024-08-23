@@ -98,8 +98,11 @@ export const SocketProvider = ({children}) => {
   const socketJoinUserVcall = data => {
     socket?.emit('videocall', JSON.stringify({sdp: data}));
   };
-  const socketLinkWeb = data => {
-    socket?.emit('webID', data);
+  const socketLinkWeb = async data => {
+    const userData = await GET_FROM_STORAGE('userData');
+    if (userData) {
+      socket?.emit('webAuthToken', {id: data, token: userData?.accessToken});
+    }
   };
   const isOnline = id => {
     const isActive = activeUsers?.find(res => res.id == id);

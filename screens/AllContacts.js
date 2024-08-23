@@ -113,6 +113,7 @@ export default function AllContacts(props) {
               name={elem.given_name ? elem.given_name : '+91 ' + elem.phone}
               title={'+91 ' + elem.phone}
               date={!elem.given_name ? '~' + elem.name : ''}
+              url={elem?.image ? elem?.image.url : ''}
             />
           ))}
         </ScrollView>

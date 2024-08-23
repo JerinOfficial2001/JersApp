@@ -8,7 +8,7 @@ import {DarkThemeSchema} from '../utils/theme';
 import {useSocketHook} from '../utils/socket';
 export default function QRScanner() {
   const {socketLinkWeb} = useSocketHook();
-  const [QRdata, setQRdata] = useState([]);
+  const [QRdata, setQRdata] = useState('');
   const [theme, settheme] = useState(DarkThemeSchema);
 
   const [isQRenabled, setisQRenabled] = useState(false);
@@ -57,9 +57,9 @@ export default function QRScanner() {
           </Button>
           <QRCodeScanner
             onRead={data => {
-              setQRdata(data.id);
+              setQRdata(data.data);
               setisQRenabled(false);
-              socketLinkWeb(data.id);
+              socketLinkWeb(data.data);
             }}
             cameraStyle={styles.camera}
           />
