@@ -15,7 +15,11 @@ import {
   NativeModules,
   Alert,
 } from 'react-native';
-import {deleteMessageById, getMessage} from '../src/controllers/chats';
+import {
+  deleteMessageById,
+  getMessage,
+  sendMessage,
+} from '../src/controllers/chats';
 import {useFocusEffect} from '@react-navigation/native';
 import TopBar from '../src/components/TopBar';
 import DeleteModal from '../src/components/DeleteModel';
@@ -34,7 +38,9 @@ import {Linking} from 'react-native';
 import ActionSheetModal from '../src/components/ActionSheetModal';
 import {getGroupedMessages} from '../src/controllers/LocalStorage/Message';
 export default function Message({route, navigation, ...props}) {
-  const {id, userID, roomID, Contact_id, name, userName, phone} = route.params;
+  const {id, userID, roomID, Contact_id, name, userName, phone, newMsgCount} =
+    route.params;
+
   const {
     socket,
     socketUserWatching,
@@ -226,13 +232,19 @@ export default function Message({route, navigation, ...props}) {
   const handleSubmit = e => {
     e.preventDefault();
     if (formDatas.msg !== '') {
+      sendMessage({
+        chatID: roomID,
+        sender: Data?._id,
+        receiver: id,
+        message: formDatas.msg,
+        name: Data?.name,
+      });
       socket.emit('message', {
         chatID: roomID,
         sender: Data?._id,
         receiver: id,
         message: formDatas.msg,
         name: Data?.name,
-        Contact_id,
       });
 
       setformDatas({
@@ -334,11 +346,10 @@ export default function Message({route, navigation, ...props}) {
   });
   useEffect(() => {
     if (messages) {
-      console.log('test');
       setisMsgLongPressed(messages?.map(item => ({isSelected: false})));
       refetch();
     }
-  }, [messages]);
+  }, [messages, newMsgCount]);
   return (
     <View style={{flex: 1, backgroundColor: jersAppTheme.appBar}}>
       <TopBar

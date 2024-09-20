@@ -1,31 +1,31 @@
+import axios from 'axios';
+import {GET_USERDATA} from '../../utils/ayncStorage/getAndSet';
 import {nextApi, expressApi} from '../api';
 
-export const sendMessage = async data => {
+export const sendMessage = async formData => {
+  const userData = await GET_USERDATA();
+
   try {
-    const response = await fetch(expressApi + '/api/chat/add', {
-      method: 'POST',
+    const {data} = await axios.post(expressApi + '/api/message', formData, {
       headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
+        Authorization: `Bearer ${userData?.accessToken}`,
       },
-      body: JSON.stringify({
-        from: data.username,
-        to: data.recipient,
-        text: data.text,
-        recipient: data.recipient,
-      }),
-    }).then(res => res.json());
+    });
+
+    return data;
   } catch (error) {
     console.error('Error sending private message:', error);
   }
 };
 export const getMessage = async chatID => {
+  const userData = await GET_USERDATA();
   try {
     const response = await fetch(expressApi + '/api/message', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${userData?.accessToken}`,
       },
     }).then(res => res.json());
 

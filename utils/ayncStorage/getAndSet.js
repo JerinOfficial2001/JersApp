@@ -16,3 +16,12 @@ export const POST_TO_STORAGE = async (key, value) => {
     console.log('Error occured while getting data from storage');
   }
 };
+export const GET_USERDATA = async () => {
+  try {
+    const result = await AsyncStorage.getItem('userData');
+    const storededData = result ? JSON.parse(result) : null;
+    return storededData;
+  } catch (error) {
+    console.log('Error occured while getting data from storage');
+  }
+};

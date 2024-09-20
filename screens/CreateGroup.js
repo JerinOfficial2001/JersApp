@@ -77,7 +77,6 @@ export default function CreateGroup({navigation, route, ...props}) {
     },
   });
   const handleCreateNewGroup = () => {
-    console.log('test');
     if (!err && formData.group_name !== '') {
       handleFormData('isDeleteImg', false);
 
