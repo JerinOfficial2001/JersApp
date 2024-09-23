@@ -1,5 +1,6 @@
 import axios from 'axios';
 import {expressApi} from '../api';
+import {GET_USERDATA} from '../../utils/ayncStorage/getAndSet';
 
 export const AddStatus = async formData => {
   try {
@@ -19,15 +20,19 @@ export const AddStatus = async formData => {
   }
 };
 export const GetAllStatus = async () => {
+  const userData = await GET_USERDATA();
   try {
-    const {data} = await axios.get(expressApi + '/api/status/get');
+    const {data} = await axios.get(
+      expressApi + '/api/status/get?userID=' + userData._id,
+    );
+
     if (data.status == 'ok') {
       return data.data;
     } else {
-      console.log(data.message, 'StatusERR');
+      return [];
     }
   } catch (error) {
-    console.log('AddStatus Err:', error);
+    console.log('GETStatus Err:', error);
   }
 };
 export const GetStatusByID = async id => {
@@ -39,7 +44,7 @@ export const GetStatusByID = async id => {
       console.log(data.message, 'StatusERR');
     }
   } catch (error) {
-    console.log('AddStatus Err:', error);
+    console.log('GETBYIDStatus Err:', error);
   }
 };
 export const DeleteStatus = async id => {
@@ -51,6 +56,6 @@ export const DeleteStatus = async id => {
       console.log(data.message, 'StatusERR');
     }
   } catch (error) {
-    console.log('AddStatus Err:', error);
+    console.log('DELETEStatus Err:', error);
   }
 };

@@ -20,7 +20,7 @@ import React, {
 import SurfaceLayout from '../src/Layouts/SurfaceLayout';
 import {useFocusEffect} from '@react-navigation/native';
 import {useQuery} from '@tanstack/react-query';
-import {MyContext} from '../App';
+import {MyContext, queryClient} from '../App';
 import {GetGroupByID} from '../src/controllers/group';
 import Loader from '../src/components/Loader';
 import IoniconsIcon from 'react-native-vector-icons/Ionicons';
@@ -52,7 +52,7 @@ export default function GroupMsg({navigation, route}) {
     refetch: fetchMessages,
     isLoading: isMsgLoading,
   } = useQuery({
-    queryKey: ['messages'],
+    queryKey: ['grpmessages'],
     queryFn: () =>
       getGroupMsg({id: Data?._id, token: Data?.accessToken, groupID: id}),
     enabled: !!Data && !!Data._id && !!Data.accessToken && !!id,
@@ -241,9 +241,9 @@ export default function GroupMsg({navigation, route}) {
         //    });
         //    setisTyping(null);
         //  });
-        socket.on('new_group_msg', () => {
-          fetchMessages();
-        });
+        // socket.on('new_group_msg', () => {
+        //   fetchMessages();
+        // });
         socket.on('userInGroup', data => {
           setusersInGroup(data);
         });
@@ -370,7 +370,7 @@ export default function GroupMsg({navigation, route}) {
       ids={usersInGroup
         ?.filter(i => i.userID != Data?._id && i.groupID == id)
         .map(i => i.userID)}>
-      {isLoading ? (
+      {isLoading || isMsgLoading ? (
         <Loader />
       ) : sections?.length > 0 ? (
         <SectionList

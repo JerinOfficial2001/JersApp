@@ -39,6 +39,12 @@ export const SocketProvider = ({children}) => {
     connection.on('newMsgs', data => {
       setnewMsgCount(data);
     });
+    connection.on('message', data => {
+      queryClient.invalidateQueries({queryKey: ['messages']});
+    });
+    connection.on('new_group_msg', () => {
+      queryClient.invalidateQueries({queryKey: ['grpmessages']});
+    });
     connection.on('role_updation_result', data => {
       setupdatedRoleStatus(data);
     });

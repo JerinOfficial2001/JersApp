@@ -11,6 +11,7 @@ export const getGroupMsg = async ({token, id, groupID}) => {
         },
       },
     );
+
     if (data) {
       return data.data;
     } else {
