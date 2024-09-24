@@ -1,15 +1,11 @@
 import {
-  Image,
-  TouchableOpacity,
   View,
   Text,
-  ToastAndroid,
   StyleSheet,
   Pressable,
   LayoutChangeEvent,
 } from 'react-native';
 import React, {
-  createContext,
   useContext,
   useEffect,
   useReducer,
@@ -20,18 +16,8 @@ import AuthModal from '../src/components/AuthModal';
 import Chats from '../screens/Chats';
 import Status from '../screens/Status';
 import TopBar from '../src/components/TopBar';
-import {
-  ActivityIndicator,
-  Avatar,
-  IconButton,
-  MD2Colors,
-  Menu,
-} from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {GetUsersByID, logoutWithToken} from '../src/controllers/auth';
-import {DarkThemeSchema, JersAppThemeSchema} from '../utils/theme';
-import Plus from '../src/assets/svg/plus';
-import Camera from '../src/assets/svg/camera';
+import {GetUsersByID} from '../src/controllers/auth';
 import {MyContext} from '../App';
 import {TopBarContext} from './tabNavigation';
 import {
@@ -41,9 +27,6 @@ import {
 } from '@react-navigation/bottom-tabs';
 import MaterialCommunityIcons from 'react-native-vector-icons/Ionicons';
 import FontAwesomeIcons from 'react-native-vector-icons/FontAwesome';
-import MaterialCommunityIconsIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import EntypoIcons from 'react-native-vector-icons/Entypo';
-import AntDesignIcons from 'react-native-vector-icons/AntDesign';
 import Animated, {
   useAnimatedStyle,
   useDerivedValue,
@@ -51,8 +34,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import {Path, Svg} from 'react-native-svg';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import Lottie from 'lottie-react-native';
-import AddStatus from '../screens/AddStatus';
 import AllContacts from '../screens/AllContacts';
 import {useSocketHook} from '../utils/socket';
 import {StackScreenProps} from '@react-navigation/stack';
@@ -68,8 +49,6 @@ interface UserData {
   // Add other fields as necessary
 }
 
-interface BottomTabNavigatorProps extends StackScreenProps<any> {}
-
 export default function BottomTabNavigator() {
   const navigation = useNavigation<any>();
   const {socketLogout}: any = useSocketHook();
@@ -77,7 +56,6 @@ export default function BottomTabNavigator() {
   const [isDelete, setisDelete] = useState(false);
   const [isModelOpen, setisModelOpen] = useState(false);
   const [openMenu, setopenMenu] = useState(false);
-  const [isloading, setisloading] = useState(false);
   const [userData, setuserData] = useState<UserData | null>(null);
   const [activeTab, setactiveTab] = useState('CHATS');
   const [addStatus, setaddStatus] = useState(false);

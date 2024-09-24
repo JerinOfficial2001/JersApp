@@ -20,6 +20,7 @@ export const SocketProvider = ({children}) => {
   const [updatedRoleStatus, setupdatedRoleStatus] = useState(null);
   const [offer, setoffer] = useState(null);
   const [answer, setanswer] = useState(null);
+  const [activeWebSessions, setactiveWebSessions] = useState([]);
   useEffect(() => {
     const connection = io(socketServerApi);
     setsocket(connection);
@@ -47,6 +48,10 @@ export const SocketProvider = ({children}) => {
     });
     connection.on('role_updation_result', data => {
       setupdatedRoleStatus(data);
+    });
+    connection.on('authenticated', data => {
+      ToastAndroid.show('Linked with JersApp-web Account');
+      setactiveWebSessions(data.activeSessions);
     });
     connection.on('offer', data => {
       setoffer(data);
@@ -107,7 +112,18 @@ export const SocketProvider = ({children}) => {
   const socketLinkWeb = async data => {
     const userData = await GET_FROM_STORAGE('userData');
     if (userData) {
-      socket?.emit('webAuthToken', {id: data, token: userData?.accessToken});
+      socket?.emit('webAuthToken', {
+        id: data,
+        token: userData?.accessToken,
+        user_id: userData?._id,
+        app_socket_id: socket.id,
+      });
+    }
+  };
+  const socketUnLinkWeb = async id => {
+    const userData = await GET_FROM_STORAGE('userData');
+    if (userData) {
+      socket?.emit('webAuthLogout', {id, userID: userData?._id});
     }
   };
   const isOnline = id => {
@@ -171,7 +187,9 @@ export const SocketProvider = ({children}) => {
         socketRemoveMember,
         socketAddMember,
         socketLinkWeb,
+        socketUnLinkWeb,
         handleNavigationToMessage,
+        activeWebSessions,
       }}>
       {children}
     </SocketContext.Provider>

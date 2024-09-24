@@ -81,7 +81,7 @@ export default function MenuComponent({
             size={24}
           />
         )}
-        title="JersApp web"
+        title="Linked devices"
         titleStyle={{color: jersAppTheme.title}}
         onPress={() => {
           handleCloseMenu();

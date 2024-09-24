@@ -22,6 +22,7 @@ import CreateGroup from '../screens/CreateGroup';
 import GroupMsg from '../screens/GroupMsg';
 import ViewGroupProfile from '../screens/ViewGroupProfile';
 import VideoCall from '../screens/VideoCall';
+import CherryVChat from '../screens/CherryVChat';
 
 const Stack = createStackNavigator();
 
@@ -109,6 +110,7 @@ export default function Navigator() {
               elevation: 0,
             },
             headerTintColor: 'white',
+            title: 'Linked devices',
           }}
           name="QRScanner"
           component={QRScanner}
@@ -210,6 +212,18 @@ export default function Navigator() {
           }}
           name="VideoCall"
           component={VideoCall}
+        />
+        <Stack.Screen
+          options={{
+            headerStyle: {
+              backgroundColor: jersAppTheme.appBar,
+              elevation: 0,
+            },
+            title: 'CherryVChat',
+            headerTintColor: 'white',
+          }}
+          name="CherryVChat"
+          component={CherryVChat}
         />
       </Stack.Navigator>
 

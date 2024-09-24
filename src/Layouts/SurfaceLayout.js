@@ -6,7 +6,6 @@ import Plus from '../assets/svg/plus';
 import {GetUsersFromIds, getAllUsers} from '../controllers/auth';
 import AntDesignIcon from 'react-native-vector-icons/AntDesign';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {useMutation, useQuery} from '@tanstack/react-query';
 
 export default function SurfaceLayout({
   children,

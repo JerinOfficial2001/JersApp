@@ -171,6 +171,12 @@ export default function Chats(props) {
                 <Text style={{color: 'gray'}}>No Chats</Text>
               </View>
             )}
+            {/* <Button
+              onPress={() => {
+                props.navigation.navigate('CherryVChat');
+              }}>
+              Go to cherrychat
+            </Button> */}
             <DeleteModal
               handleModelClose={handleModelClose}
               visible={isModelOpen}

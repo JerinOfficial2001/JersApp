@@ -350,6 +350,7 @@ export default function Message({route, navigation, ...props}) {
       refetch();
     }
   }, [messages, newMsgCount]);
+
   return (
     <View style={{flex: 1, backgroundColor: jersAppTheme.appBar}}>
       <TopBar

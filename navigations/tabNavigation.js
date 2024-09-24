@@ -147,7 +147,7 @@ export default function TabNavigator({props, navigation}) {
                 source={require('../src/assets/qrscan.png')}
               />
             )}
-            title="JersApp web"
+            title="Linked devices"
             titleStyle={{color: jersAppTheme.title}}
             onPress={() => {
               handleCloseMenu();
