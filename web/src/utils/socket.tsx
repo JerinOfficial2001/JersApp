@@ -324,7 +324,9 @@ export default function SocketProvider({ children }: any) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const isNginx = Socket_URL?.includes("codefam.fun");
     const connection = io(Socket_URL || "", {
+      path: isNginx ? "/jersapp-api/socket.io" : undefined,
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,

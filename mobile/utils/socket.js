@@ -2,6 +2,7 @@ import {createContext, useContext, useEffect, useState} from 'react';
 import {io} from 'socket.io-client';
 import {socketServerApi} from '../src/api';
 import {showNotification} from '../src/notification.android';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const SocketContext = createContext(null);
 export const useSocketHook = () => {
   const socket = useContext(SocketContext);
@@ -17,8 +18,31 @@ export const SocketProvider = ({children}) => {
   const [offer, setoffer] = useState(null);
   const [answer, setanswer] = useState(null);
   useEffect(() => {
-    const connection = io(socketServerApi);
+    const isNginx = socketServerApi?.includes('codefam.fun');
+    const connection = io(socketServerApi, {
+      path: isNginx ? '/jersapp-api/socket.io' : undefined,
+    });
     setsocket(connection);
+
+    connection.on('connect', async () => {
+      try {
+        const userDataStr = await AsyncStorage.getItem('userData');
+        if (userDataStr) {
+          const userData = JSON.parse(userDataStr);
+          if (userData && userData._id) {
+            connection.emit('set_user_id', userData._id);
+            connection.emit('me', userData._id);
+            connection.emit('user_connected', {
+              id: userData._id,
+              status: 'online',
+            });
+            console.log('Mobile socket registered globally for user:', userData._id);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching user data for socket registration:', err);
+      }
+    });
     connection.on('notification', data => {
       showNotification(data.name, data.msg);
     });

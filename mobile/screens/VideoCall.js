@@ -57,7 +57,7 @@ const VideoCall = ({route, navigation, ...props}) => {
     ],
   };
   const pcRef = useRef(null);
-  if (!pcRef.current) {
+  if (!pcRef.current || pcRef.current.signalingState === 'closed') {
     pcRef.current = new RTCPeerConnection(configuration);
   }
   const pc = pcRef.current;
@@ -128,6 +128,10 @@ const VideoCall = ({route, navigation, ...props}) => {
 
     socket.on('callend', data => {
       if (data && data.state) {
+        if (pcRef.current) {
+          pcRef.current.close();
+          pcRef.current = null;
+        }
         setremoteUrl('');
         setanswer(null);
         setoffer(null);
@@ -326,6 +330,10 @@ const VideoCall = ({route, navigation, ...props}) => {
       from: Data._id,
       to: receiverId,
     });
+    if (pcRef.current) {
+      pcRef.current.close();
+      pcRef.current = null;
+    }
     setremoteUrl('');
     setanswer(null);
     setoffer(null);
