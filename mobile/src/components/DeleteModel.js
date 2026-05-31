@@ -20,7 +20,7 @@ const DeleteModal = ({handleModelClose, visible, handleDelete}) => {
         visible={visible}
         onDismiss={handleModelClose}
         contentContainerStyle={containerStyle}>
-        <Text style={{color: 'gray', fontSize: 14}}>Delete message?</Text>
+        <Text style={{color: 'gray', fontSize: 14}}>Delete chat?</Text>
 
         <View
           style={{

@@ -158,6 +158,61 @@ exports.deleteContacts = async (req, res, next) => {
 };
 
 /**
+ * One-sided chat deletion:
+ * Only removes the chat from the current user's chats list.
+ * Does NOT delete the contact doc, shared chat room, or messages,
+ * so the other user's chat and history remain untouched.
+ * If the other user sends a new message, auto-heal in getChats will
+ * re-add the chat to this user's list.
+ */
+exports.deleteChat = async (req, res, next) => {
+  const { user_id, Contact_id } = req.query;
+  try {
+    if (req.user._id.toString() !== user_id) {
+      return res
+        .status(403)
+        .json({ status: "error", message: "Forbidden: You cannot modify this user's chats" });
+    }
+
+    const contact = await JersApp_Contact.findById(Contact_id);
+    if (!contact) {
+      return res.status(200).json({ status: "ok", message: "failed" });
+    }
+
+    // Only remove from this user's chats array (one-sided)
+    await JersApp_Auth.findByIdAndUpdate(user_id, {
+      $pull: { chats: contact._id },
+    });
+
+    // Reset lastMsg and msgCount on the contact doc so it doesn't show stale data
+    await JersApp_Contact.findByIdAndUpdate(Contact_id, {
+      $unset: { lastMsg: "", msgCount: "" },
+    });
+
+    // Find the chat room to clear messages for this user
+    const chatRoom = await JersApp_Chats.findOne({
+      $or: [
+        { sender: user_id, receiver: contact.user_id },
+        { sender: contact.user_id, receiver: user_id },
+      ],
+    });
+
+    // Add user_id to the deletedFor array of all existing messages in this chat
+    if (chatRoom) {
+      await JersApp_Message.updateMany(
+        { chatID: chatRoom._id.toString() },
+        { $addToSet: { deletedFor: user_id } }
+      );
+    }
+
+    res.status(200).json({ status: "ok", message: "Chat removed" });
+  } catch (error) {
+    console.error("deleteChat Error:", error);
+    res.status(500).json({ status: "error", message: "Internal Server Error" });
+  }
+};
+
+/**
  * AddAndGetAllContacts:
  * Receives device contacts (name + phone), finds which ones are JersApp users,
  * creates JersApp_Contact records for new ones, returns the full list.

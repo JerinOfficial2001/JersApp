@@ -18,6 +18,7 @@ import {
   PermissionsAndroid,
 } from 'react-native';
 import DocumentPicker from 'react-native-document-picker';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
 import Video from 'react-native-video';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import { expressApi } from '../src/api';
@@ -26,12 +27,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   createChat,
   deleteMessageById,
+  deleteMessageForMe,
+  deleteMessageForEveryone,
+  addReaction,
+  removeReaction,
   getAllChats,
   getMessage,
 } from '../src/controllers/chats';
 import {useFocusEffect} from '@react-navigation/native';
 import TopBar from '../src/components/TopBar';
-import DeleteModal from '../src/components/DeleteModel';
+import MessageActionModal from '../src/components/MessageActionModal';
 import Send from '../src/assets/svg/send';
 import {JersAppThemeSchema} from '../utils/theme';
 import {MyContext} from '../App';
@@ -155,6 +160,7 @@ export default function Message({route, navigation, ...props}) {
     msg: '',
     userName: '',
   });
+  const [replyingTo, setReplyingTo] = useState(null);
   const [userData, setuserData] = useState({});
   const [enableSendBtn, setenableSendBtn] = useState(false);
   const [chatArray, setchatArray] = useState([]);
@@ -184,12 +190,42 @@ export default function Message({route, navigation, ...props}) {
     status,
     fileUrl,
     fileType,
+    deletedForEveryone,
+    reactions = [],
+    msgId,
+    onReactionPress,
+    replyTo,
+    onSwipeToReply,
   }) => {
     const fullFileUrl = fileUrl ? (fileUrl.startsWith('http') ? fileUrl : expressApi + fileUrl) : '';
+
+    const renderRightActions = () => (
+      <View style={{ width: 60, justifyContent: 'center', alignItems: 'center' }}>
+        <MaterialCommunityIcons name="reply" size={24} color={jersAppTheme.placeholderColor || 'gray'} />
+      </View>
+    );
+
+    if (fileType === 'call_log') {
+      return (
+        <View style={{ alignSelf: 'center', marginVertical: 8, padding: 8, backgroundColor: jersAppTheme.model || '#2D3544', borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <MaterialCommunityIcons name="phone" size={16} color="white" />
+          <Text style={{ color: 'white', fontSize: 12 }}>{text}</Text>
+        </View>
+      );
+    }
+
     return (
-      <TouchableWithoutFeedback
-        onLongPress={handleLongPress}
-        onPress={handlePress}>
+      <Swipeable
+        renderRightActions={renderRightActions}
+        onSwipeableOpen={(direction) => {
+          if (onSwipeToReply) {
+            onSwipeToReply(msgId, text, received ? 'Them' : 'You', fileType);
+          }
+        }}
+      >
+        <TouchableWithoutFeedback
+          onLongPress={handleLongPress}
+          onPress={handlePress}>
         <View
           style={{
             minHeight: 60,
@@ -213,69 +249,121 @@ export default function Message({route, navigation, ...props}) {
               flexDirection: 'column',
               gap: 4,
             }}>
-            {fullFileUrl ? (
-              <View style={{ marginBottom: 4 }}>
-                {fileType === 'image' && (
-                  <Image
-                    source={{ uri: fullFileUrl }}
-                    style={{ width: 220, height: 160, borderRadius: 12 }}
-                    resizeMode="cover"
-                  />
-                )}
-                {fileType === 'video' && (
-                  <Video
-                    source={{ uri: fullFileUrl }}
-                    style={{ width: 220, height: 160, borderRadius: 12, backgroundColor: 'black' }}
-                    controls={true}
-                    paused={true}
-                    resizeMode="contain"
-                  />
-                )}
-                {fileType === 'audio' && (
-                  <AudioPlayer fileUrl={fullFileUrl} received={received} theme={jersAppTheme} />
-                )}
-                {fileType === 'document' && (
-                  <TouchableOpacity
-                    onPress={() => Linking.openURL(fullFileUrl)}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 8,
-                      backgroundColor: '#00000018',
-                      padding: 10,
-                      borderRadius: 10,
-                    }}
-                  >
-                    <MaterialCommunityIcons
-                      name="file-document"
-                      size={22}
-                      color={received ? jersAppTheme.bubbleReceiverTextColor : jersAppTheme.bubbleSenderTextColor}
-                    />
-                    <Text
-                      numberOfLines={1}
-                      style={{
-                        fontSize: 12,
-                        textDecorationLine: 'underline',
-                        color: received ? jersAppTheme.bubbleReceiverTextColor : jersAppTheme.bubbleSenderTextColor,
-                        maxWidth: 160,
-                      }}
-                    >
-                      {fileUrl.split('/').pop() || 'Download File'}
-                    </Text>
-                  </TouchableOpacity>
-                )}
+            {replyTo && (
+              <View style={{
+                backgroundColor: 'rgba(0,0,0,0.1)',
+                borderLeftWidth: 4,
+                borderLeftColor: jersAppTheme.badgeColor || '#34B7F1',
+                borderRadius: 4,
+                padding: 6,
+                marginBottom: 4,
+              }}>
+                <Text style={{ color: jersAppTheme.badgeColor || '#34B7F1', fontSize: 12, fontWeight: 'bold' }}>{replyTo.sender === userData._id ? 'You' : (replyTo.senderName || 'Contact')}</Text>
+                <Text style={{ color: received ? jersAppTheme.bubbleReceiverTextColor : jersAppTheme.bubbleSenderTextColor, fontSize: 11 }} numberOfLines={2}>
+                  {replyTo.fileType ? `📷 ${replyTo.fileType}` : replyTo.message}
+                </Text>
               </View>
-            ) : null}
-            {text ? (
-              <Text
-                style={{
-                  color: received
-                    ? jersAppTheme.bubbleReceiverTextColor
-                    : jersAppTheme.bubbleSenderTextColor,
-                }}>
-                {text}
-              </Text>
-            ) : null}
+            )}
+            {isSelected && !deletedForEveryone && (
+              <View style={{
+                position: 'absolute',
+                top: -45,
+                left: received ? 0 : undefined,
+                right: received ? undefined : 0,
+                backgroundColor: jersAppTheme.model || '#2D3544',
+                flexDirection: 'row',
+                padding: 8,
+                borderRadius: 20,
+                gap: 12,
+                zIndex: 10,
+                elevation: 5,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+              }}>
+                {['👍', '❤️', '😂', '😮', '😢', '🙏'].map(emoji => (
+                  <TouchableOpacity key={emoji} onPress={() => onReactionPress(msgId, emoji)}>
+                    <Text style={{ fontSize: 24 }}>{emoji}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+            {deletedForEveryone ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4 }}>
+                <MaterialCommunityIcons name="block-helper" size={14} color={jersAppTheme.placeholderColor || 'gray'} />
+                <Text style={{ color: jersAppTheme.placeholderColor || 'gray', fontStyle: 'italic', fontSize: 13 }}>
+                  This message was deleted
+                </Text>
+              </View>
+            ) : (
+              <>
+                {fullFileUrl ? (
+                  <View style={{ marginBottom: 4 }}>
+                    {fileType === 'image' && (
+                      <Image
+                        source={{ uri: fullFileUrl }}
+                        style={{ width: 220, height: 160, borderRadius: 12 }}
+                        resizeMode="cover"
+                      />
+                    )}
+                    {fileType === 'video' && (
+                      <Video
+                        source={{ uri: fullFileUrl }}
+                        style={{ width: 220, height: 160, borderRadius: 12, backgroundColor: 'black' }}
+                        controls={true}
+                        paused={true}
+                        resizeMode="contain"
+                      />
+                    )}
+                    {fileType === 'audio' && (
+                      <AudioPlayer fileUrl={fullFileUrl} received={received} theme={jersAppTheme} />
+                    )}
+                    {fileType === 'document' && (
+                      <TouchableOpacity
+                        onPress={() => Linking.openURL(fullFileUrl)}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 8,
+                          backgroundColor: '#00000018',
+                          padding: 10,
+                          borderRadius: 10,
+                        }}
+                      >
+                        <MaterialCommunityIcons
+                          name="file-document"
+                          size={22}
+                          color={received ? jersAppTheme.bubbleReceiverTextColor : jersAppTheme.bubbleSenderTextColor}
+                        />
+                        <Text
+                          numberOfLines={1}
+                          style={{
+                            fontSize: 12,
+                            textDecorationLine: 'underline',
+                            color: received ? jersAppTheme.bubbleReceiverTextColor : jersAppTheme.bubbleSenderTextColor,
+                            maxWidth: 160,
+                          }}
+                        >
+                          {fileUrl.split('/').pop() || 'Download File'}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ) : null}
+                {text ? (
+                  <Text
+                    style={{
+                      color: received
+                        ? jersAppTheme.bubbleReceiverTextColor
+                        : jersAppTheme.bubbleSenderTextColor,
+                    }}>
+                    {text}
+                  </Text>
+                ) : null}
+              </>
+            )}
+            
             <View
               style={{
                 alignSelf: 'flex-end',
@@ -305,9 +393,33 @@ export default function Message({route, navigation, ...props}) {
                 />
               )}
             </View>
+            
+            {reactions && reactions.length > 0 && (
+              <View style={{
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                backgroundColor: jersAppTheme.model || '#2D3544',
+                paddingHorizontal: 6,
+                paddingVertical: 2,
+                borderRadius: 12,
+                position: 'absolute',
+                bottom: -10,
+                right: received ? undefined : 10,
+                left: received ? 10 : undefined,
+                borderWidth: 1,
+                borderColor: jersAppTheme.appBar,
+              }}>
+                {[...new Set(reactions.map(r => r.emoji))].map(emoji => (
+                  <Text key={emoji} style={{ fontSize: 12 }}>
+                    {emoji} {reactions.filter(r => r.emoji === emoji).length > 1 ? reactions.filter(r => r.emoji === emoji).length : ''}
+                  </Text>
+                ))}
+              </View>
+            )}
           </View>
         </View>
       </TouchableWithoutFeedback>
+    </Swipeable>
     );
   };
   useFocusEffect(
@@ -416,10 +528,18 @@ export default function Message({route, navigation, ...props}) {
         message: formDatas.msg,
         name: userData.name,
         Contact_id: receiverDetails?._id,
+        replyTo: replyingTo ? {
+          messageId: replyingTo.msgId,
+          sender: replyingTo.sender === 'You' ? userData._id : id,
+          senderName: replyingTo.sender,
+          message: replyingTo.text,
+          fileType: replyingTo.fileType,
+        } : null,
       };
       socket.emit('message', msgPayload);
 
       setformDatas({msg: '', userName: ''});
+      setReplyingTo(null);
       Keyboard.dismiss();
     }
   };
@@ -545,17 +665,71 @@ export default function Message({route, navigation, ...props}) {
       console.error('stopRecorder error:', err);
     }
   };
-  const handleDeleteMsg = () => {
+  const handleDeleteForMe = () => {
     if (msgID) {
-      deleteMessageById(msgID).then(data => {
-        if (data.status == 'ok' && data.message == 'deleted') {
-          fetchData();
+      deleteMessageForMe(msgID, userData._id || Data?._id).then(res => {
+        if (res.status === 'ok') {
+          // Optimistically update UI
+          setchatArray(prev => prev.filter(msg => msg._id !== msgID));
           handlePress();
           setisModelOpen(false);
-          ToastAndroid.show('Message Deleted', ToastAndroid.SHORT);
+          ToastAndroid.show('Message deleted for me', ToastAndroid.SHORT);
         } else {
           setisModelOpen(false);
-          ToastAndroid.show('Failed', ToastAndroid.SHORT);
+          ToastAndroid.show('Failed to delete', ToastAndroid.SHORT);
+        }
+      });
+    }
+  };
+
+  const handleDeleteForEveryone = () => {
+    if (msgID) {
+      deleteMessageForEveryone(msgID, userData._id || Data?._id).then(res => {
+        if (res.status === 'ok') {
+          // Optimistically update UI
+          setchatArray(prev =>
+            prev.map(msg =>
+              msg._id === msgID
+                ? { ...msg, deletedForEveryone: true, message: '', fileUrl: null, fileType: null, reactions: [] }
+                : msg
+            )
+          );
+          // Emit socket event
+          socket?.emit('delete_for_everyone', { chatID: chatIDRef.current, messageId: msgID });
+          
+          handlePress();
+          setisModelOpen(false);
+          ToastAndroid.show('Message deleted for everyone', ToastAndroid.SHORT);
+        } else {
+          setisModelOpen(false);
+          ToastAndroid.show(res.message || 'Failed to delete', ToastAndroid.SHORT);
+        }
+      });
+    }
+  };
+
+  const handleReaction = (messageId, emoji) => {
+    const userId = userData._id || Data?._id;
+    const msg = chatArray.find(m => m._id === messageId);
+    if (!msg) return;
+
+    // Check if the user already reacted with this emoji
+    const existingReaction = msg.reactions?.find(r => r.userId === userId);
+    
+    if (existingReaction && existingReaction.emoji === emoji) {
+      // Remove reaction if it's the same emoji
+      removeReaction(messageId, userId).then(res => {
+        if (res.status === 'ok') {
+          socket?.emit('message_reaction', { chatID: chatIDRef.current, messageId, userId, type: 'remove' });
+          handlePress(); // Close reaction bar
+        }
+      });
+    } else {
+      // Add or update reaction
+      addReaction(messageId, userId, emoji).then(res => {
+        if (res.status === 'ok') {
+          socket?.emit('message_reaction', { chatID: chatIDRef.current, messageId, userId, emoji, type: 'add' });
+          handlePress(); // Close reaction bar
         }
       });
     }
@@ -599,6 +773,36 @@ export default function Message({route, navigation, ...props}) {
           );
         }
       });
+
+      socket.on('delete_for_everyone', data => {
+        if (data && data.chatID === chatIDRef.current) {
+          setchatArray(prev =>
+            prev.map(msg =>
+              msg._id === data.messageId ? { ...msg, deletedForEveryone: true, message: '', fileUrl: null, fileType: null } : msg
+            )
+          );
+        }
+      });
+
+      socket.on('message_reaction', data => {
+        if (data && data.chatID === chatIDRef.current) {
+          setchatArray(prev =>
+            prev.map(msg => {
+              if (msg._id === data.messageId) {
+                let newReactions = msg.reactions ? [...msg.reactions] : [];
+                if (data.type === 'add') {
+                  newReactions = newReactions.filter(r => r.userId !== data.userId);
+                  newReactions.push({ userId: data.userId, emoji: data.emoji });
+                } else if (data.type === 'remove') {
+                  newReactions = newReactions.filter(r => r.userId !== data.userId);
+                }
+                return { ...msg, reactions: newReactions };
+              }
+              return msg;
+            })
+          );
+        }
+      });
     }
   };
   const handleOnchange = (value, name) => {
@@ -610,7 +814,20 @@ export default function Message({route, navigation, ...props}) {
     setisMsgLongPressed(updatedStates);
     setmsgID(id);
     setisDelete(true);
+    setisModelOpen(true);
   };
+  const handleSingleTap = (index, id) => {
+    const isCurrentlySelected = isMsgLongPressed[index]?.isSelected;
+    const updatedStates = isMsgLongPressed?.map(() => ({isSelected: false}));
+    
+    if (!isCurrentlySelected) {
+      updatedStates[index].isSelected = true;
+      setmsgID(id);
+    }
+    
+    setisMsgLongPressed(updatedStates);
+  };
+
   const handlePress = () => {
     const updatedStates = isMsgLongPressed?.map(() => ({isSelected: false}));
     setisMsgLongPressed(updatedStates);
@@ -743,10 +960,20 @@ export default function Message({route, navigation, ...props}) {
                   time={item.time}
                   received={item.sender !== userData._id}
                   isSelected={isMsgLongPressed[index]?.isSelected}
-                  handlePress={handlePress}
+                  handlePress={() => {
+                    handleSingleTap(index, item._id);
+                  }}
                   status={item.status}
                   fileUrl={item.fileUrl}
                   fileType={item.fileType}
+                  deletedForEveryone={item.deletedForEveryone}
+                  reactions={item.reactions}
+                  msgId={item._id}
+                  replyTo={item.replyTo}
+                  onSwipeToReply={(msgId, text, sender, fileType) => {
+                    setReplyingTo({ msgId, text, sender, fileType });
+                  }}
+                  onReactionPress={handleReaction}
                   handleLongPress={() => {
                     handleLongPress(index, item._id);
                   }}
@@ -760,7 +987,35 @@ export default function Message({route, navigation, ...props}) {
             ItemSeparatorComponent={() => <View style={{height: 5}} />}
           />
 
-          <View style={styles.inputContainer}>
+          {replyingTo && (
+            <View style={{
+              backgroundColor: jersAppTheme.model || '#2D3544',
+              marginHorizontal: 8,
+              borderTopLeftRadius: 12,
+              borderTopRightRadius: 12,
+              padding: 10,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              borderLeftWidth: 4,
+              borderLeftColor: jersAppTheme.badgeColor || '#34B7F1',
+              marginBottom: -6,
+            }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: jersAppTheme.badgeColor || '#34B7F1', fontWeight: 'bold', fontSize: 12 }}>
+                  Replying to {replyingTo.sender}
+                </Text>
+                <Text style={{ color: jersAppTheme.placeholderColor, fontSize: 12 }} numberOfLines={1}>
+                  {replyingTo.fileType ? `📷 ${replyingTo.fileType}` : replyingTo.text}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setReplyingTo(null)}>
+                <MaterialCommunityIcons name="close" size={20} color={jersAppTheme.placeholderColor} />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <View style={[styles.inputContainer, replyingTo ? { marginTop: 0 } : {}]}>
             <TouchableOpacity
               onPress={handlePickDocument}
               style={[
@@ -823,19 +1078,31 @@ export default function Message({route, navigation, ...props}) {
             )}
           </View>
         </ImageBackground>
-        <DeleteModal
-          handleModelClose={handleModelClose}
+        <MessageActionModal
           visible={isModelOpen}
-          handleDelete={handleDeleteMsg}
+          handleClose={handleModelClose}
+          handleDeleteForMe={handleDeleteForMe}
+          handleDeleteForEveryone={handleDeleteForEveryone}
+          showDeleteForEveryone={(() => {
+            if (!msgID) return false;
+            const selectedMsg = chatArray.find(m => m._id === msgID);
+            if (!selectedMsg) return false;
+            if (selectedMsg.sender !== (userData._id || Data?._id)) return false;
+            const ONE_HOUR = 3600000;
+            const now = new Date();
+            const msgTime = new Date(selectedMsg.createdAt || new Date());
+            return (now - msgTime) <= ONE_HOUR;
+          })()}
+          jersAppTheme={jersAppTheme}
         />
         <VideoCallModal
-          receiverId={receiverId}
+          receiverId={id}
           Data={Data}
+          chatID={chatIDRef.current}
           handleModelClose={() => {
             setisOpenVideo(false);
           }}
           visible={isOpenVideo}
-          // handleDelete={handleDeleteMsg}
         />
       </Pressable>
     </View>

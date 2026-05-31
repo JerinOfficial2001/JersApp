@@ -11,7 +11,7 @@ import {
 } from '@livekit/react-native-webrtc';
 import {useSocketHook} from '../../utils/socket';
 
-const VideoCallModal = ({receiverId, handleModelClose, visible, Data}) => {
+const VideoCallModal = ({receiverId, handleModelClose, visible, Data, chatID}) => {
   const containerStyle = {
     backgroundColor: '#3b4a54',
     padding: 20,
@@ -91,6 +91,16 @@ const VideoCallModal = ({receiverId, handleModelClose, visible, Data}) => {
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
     socket.emit('offer', {to: receiverId, offer, from: Data._id});
+
+    // Send call log message
+    socket.emit('message', {
+      chatID: chatID,
+      sender: Data._id,
+      receiver: receiverId,
+      message: 'Voice call',
+      fileType: 'call_log',
+      name: Data.name,
+    });
   };
 
   // Handle incoming offers and answers

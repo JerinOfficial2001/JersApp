@@ -97,3 +97,19 @@ export const deleteContactById = async (sender_id, receiver_id, contact_id) => {
     return {status: 'error', message: error.message};
   }
 };
+
+/**
+ * One-sided chat deletion — only removes chat from current user's list.
+ * Does NOT delete messages or the chat room for the other user.
+ */
+export const deleteChatById = async (user_id, contact_id) => {
+  try {
+    const {data} = await apiClient.delete(
+      `/api/chat?user_id=${user_id}&Contact_id=${contact_id}`,
+    );
+    return data;
+  } catch (error) {
+    console.error('deleteChatById Err:', error.message);
+    return {status: 'error', message: error.message};
+  }
+};

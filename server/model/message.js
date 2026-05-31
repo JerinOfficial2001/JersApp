@@ -16,8 +16,24 @@ const JersApp_MessageSchema = new mongoose.Schema(
     },
     fileType: {
       type: String,
-      enum: ["image", "video", "audio", "document", null],
+      enum: ["image", "video", "audio", "document", "call_log", null],
       default: null,
+    },
+    replyTo: {
+      type: Object, // { messageId: String, sender: String, message: String, fileType: String }
+      default: null,
+    },
+    deletedFor: {
+      type: [String],
+      default: [],
+    },
+    deletedForEveryone: {
+      type: Boolean,
+      default: false,
+    },
+    reactions: {
+      type: [{ userId: String, emoji: String }],
+      default: [],
     },
   },
   {

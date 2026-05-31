@@ -278,6 +278,7 @@ io.on("connection", async (socket) => {
         status: initialStatus,
         fileUrl: obj.fileUrl || null,
         fileType: obj.fileType || null,
+        replyTo: obj.replyTo || null,
       });
       const savedMsg = await newMsg.save();
 
@@ -290,6 +291,7 @@ io.on("connection", async (socket) => {
         status: initialStatus,
         fileUrl: obj.fileUrl || null,
         fileType: obj.fileType || null,
+        replyTo: obj.replyTo || null,
       };
       socket.to(chatID).emit("newMessage", msgPayload);
       // Also emit to sender's socket for confirmation
@@ -359,6 +361,16 @@ io.on("connection", async (socket) => {
     } catch (err) {
       console.error("Error in mark_as_read:", err.message);
     }
+  });
+
+  socket.on("delete_for_everyone", (obj) => {
+    socket.to(obj.chatID).emit("delete_for_everyone", obj);
+    socket.emit("delete_for_everyone", obj);
+  });
+
+  socket.on("message_reaction", (obj) => {
+    socket.to(obj.chatID).emit("message_reaction", obj);
+    socket.emit("message_reaction", obj);
   });
 
   socket.on("user_connected", async (obj) => {

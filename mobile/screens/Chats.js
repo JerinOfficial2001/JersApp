@@ -17,7 +17,7 @@ import {TopBarContext} from '../navigations/tabNavigation';
 import SurfaceLayout from '../src/Layouts/SurfaceLayout';
 import DeleteModal from '../src/components/DeleteModel';
 import {
-  deleteContactById,
+  deleteChatById,
   getContactByUserId,
 } from '../src/controllers/contacts';
 import {checkApplicationPermission} from '../src/controllers/permissions';
@@ -184,8 +184,8 @@ export default function Chats(props) {
   );
 
   const handleDeleteContact = () => {
-    if (receiversId && Contact_id) {
-      deleteContactById(Data._id, receiversId, Contact_id).then(res => {
+    if (Contact_id) {
+      deleteChatById(Data._id, Contact_id).then(res => {
         if (res?.status === 'ok' && res?.message !== 'failed') {
           refetch();
           handlePress();
@@ -206,6 +206,7 @@ export default function Chats(props) {
     setisMsgLongPressed(updatedStates);
     setisDelete(true);
     setreceiversId(id);
+    setisModelOpen(true);
   };
 
   const handlePress = () => {

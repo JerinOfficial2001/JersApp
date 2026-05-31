@@ -2,6 +2,10 @@ const express = require("express");
 const {
   getAllMessage,
   deleteMsgs,
+  deleteForMe,
+  deleteForEveryone,
+  addReaction,
+  removeReaction,
   getLastMessage,
   sendMsg,
 } = require("../controllers/message");
@@ -14,6 +18,10 @@ route.get("/message", authenticateJWT, getAllMessage);
 route.get("/lastMsg/:senderID/:receiverID", authenticateJWT, getLastMessage);
 route.delete("/message", authenticateJWT, deleteMsgs);
 route.post("/message", authenticateJWT, sendMsg);
+route.post("/message/deleteForMe", authenticateJWT, deleteForMe);
+route.post("/message/deleteForEveryone", authenticateJWT, deleteForEveryone);
+route.post("/message/react", authenticateJWT, addReaction);
+route.delete("/message/react", authenticateJWT, removeReaction);
 route.post("/message/upload", authenticateJWT, uploadMessageMedia.single("file"), (req, res) => {
   try {
     if (!req.file) {

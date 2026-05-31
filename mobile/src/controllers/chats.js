@@ -3,12 +3,15 @@ import apiClient from '../services/apiClient';
 
 export const sendMessage = async data => {
   try {
-    await apiClient.post('/api/message', {
+    const response = await apiClient.post('/api/message', {
       chatID: data.chatID,
       sender: data.sender,
       receiver: data.receiver,
       message: data.message,
+      fileType: data.fileType,
+      replyTo: data.replyTo,
     });
+    return response.data;
   } catch (error) {
     console.error('sendMessage Err:', error.message);
   }
@@ -80,6 +83,58 @@ export const deleteMessageById = async id => {
     return data;
   } catch (error) {
     console.error('deleteMessageById Err:', error.message);
+    return {status: 'error', message: error.message};
+  }
+};
+
+export const deleteMessageForMe = async (messageId, userId) => {
+  try {
+    const {data} = await apiClient.post('/api/message/deleteForMe', {
+      messageId,
+      userId,
+    });
+    return data;
+  } catch (error) {
+    console.error('deleteMessageForMe Err:', error.message);
+    return {status: 'error', message: error.message};
+  }
+};
+
+export const deleteMessageForEveryone = async (messageId, userId) => {
+  try {
+    const {data} = await apiClient.post('/api/message/deleteForEveryone', {
+      messageId,
+      userId,
+    });
+    return data;
+  } catch (error) {
+    console.error('deleteMessageForEveryone Err:', error.message);
+    return {status: 'error', message: error.message};
+  }
+};
+
+export const addReaction = async (messageId, userId, emoji) => {
+  try {
+    const {data} = await apiClient.post('/api/message/react', {
+      messageId,
+      userId,
+      emoji,
+    });
+    return data;
+  } catch (error) {
+    console.error('addReaction Err:', error.message);
+    return {status: 'error', message: error.message};
+  }
+};
+
+export const removeReaction = async (messageId, userId) => {
+  try {
+    const {data} = await apiClient.delete('/api/message/react', {
+      data: { messageId, userId },
+    });
+    return data;
+  } catch (error) {
+    console.error('removeReaction Err:', error.message);
     return {status: 'error', message: error.message};
   }
 };
