@@ -48,9 +48,7 @@ export default function SocketProvider({ children }: any) {
   const [isTyping, setisTyping] = useState<any>(null);
   const [appSocketID, setappSocketID] = useState("");
 
-  // WebRTC States
-  const [offer, setoffer] = useState<any>(null);
-  const [answer, setanswer] = useState<any>(null);
+  // LiveKit Call States
   const [callState, setCallState] = useState<"idle" | "calling" | "incoming" | "active">("idle");
   const [incomingCall, setIncomingCall] = useState<any>(null);
   const [isAudioOnly, setIsAudioOnly] = useState(false);
@@ -59,17 +57,20 @@ export default function SocketProvider({ children }: any) {
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(false);
+  const [roomName, setRoomName] = useState<string | null>(null);
+  const [offer, setoffer] = useState<any>(null);
+  const [answer, setanswer] = useState<any>(null);
 
-  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
-  const iceCandidatesQueueRef = useRef<any[]>([]);
+  const roomRef = useRef<any>(null);
 
-  const cleanupCall = () => {
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.getSenders().forEach((sender) => {
-        if (sender.track) sender.track.stop();
-      });
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
+  const cleanupCall = async () => {
+    try {
+      if (roomRef.current) {
+        await roomRef.current.disconnect();
+        roomRef.current = null;
+      }
+    } catch (e) {
+      console.error("Error disconnecting room:", e);
     }
     setLocalStream((prev) => {
       if (prev) {
@@ -83,97 +84,65 @@ export default function SocketProvider({ children }: any) {
     setActiveCallPartner(null);
     setIsMuted(false);
     setIsVideoMuted(false);
-    iceCandidatesQueueRef.current = [];
+    setRoomName(null);
   };
 
   const startCall = async (partnerId: string, audioOnly: boolean = false) => {
     try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("Camera/microphone API is not supported. Please make sure you are using a secure connection (HTTPS or localhost).");
-      }
-
-      // Check which devices are actually connected
-      let hasAudio = false;
-      let hasVideo = false;
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        hasAudio = devices.some((device) => device.kind === "audioinput");
-        hasVideo = devices.some((device) => device.kind === "videoinput");
-      } catch (e) {
-        hasAudio = true;
-        hasVideo = true;
-      }
-
-      if (!hasAudio && !hasVideo) {
-        throw new Error("No camera or microphone detected. Please connect an input device (microphone/webcam) to make calls.");
-      }
-
-      const constraints: MediaStreamConstraints = {
-        audio: hasAudio,
-        video: !audioOnly && hasVideo,
-      };
-
-      if (!audioOnly && !hasVideo) {
-        audioOnly = true;
-        toast.error("No camera detected. Starting audio-only call.");
-      }
-
       setIsAudioOnly(audioOnly);
       setActiveCallPartner(partnerId);
       setCallState("calling");
 
-      let stream: MediaStream;
-      try {
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
-      } catch (err: any) {
-        if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
-          throw new Error("Specified recording device not found. Please connect your microphone/camera.");
-        } else if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-          throw new Error("Permission denied. Please grant camera/microphone access in your browser settings.");
-        } else {
-          throw err;
-        }
-      }
-      setLocalStream(stream);
+      const generatedRoom = `room_${userData?._id}_${partnerId}_${Date.now()}`;
+      setRoomName(generatedRoom);
 
-      const configuration = {
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:19302" },
-        ],
-      };
+      // Fetch LiveKit token
+      const response = await fetch(`/jersapp/get-token?roomName=${generatedRoom}&participantName=${userData?._id}`);
+      const resData = await response.json();
+      const token = resData.token;
 
-      const pc = new RTCPeerConnection(configuration);
-      peerConnectionRef.current = pc;
+      const { Room, RoomEvent } = await import("livekit-client");
+      const room = new Room();
+      roomRef.current = room;
 
-      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
-          socket?.emit("icecandidate", {
-            from: userData?._id,
-            to: partnerId,
-            candidate: event.candidate,
+      room.on(RoomEvent.TrackSubscribed, (track: any) => {
+        if (track.kind === "video") {
+          const stream = new MediaStream([track.mediaStreamTrack]);
+          setRemoteStream(stream);
+        } else if (track.kind === "audio") {
+          const stream = new MediaStream([track.mediaStreamTrack]);
+          setRemoteStream(prev => {
+            if (prev) {
+              prev.addTrack(track.mediaStreamTrack);
+              return new MediaStream(prev.getTracks());
+            }
+            return stream;
           });
         }
-      };
+      });
 
-      pc.ontrack = (event) => {
-        if (event.streams && event.streams[0]) {
-          setRemoteStream(event.streams[0]);
-        }
-      };
+      await room.connect("wss://livekit.codefam.fun", token);
+      await room.localParticipant.enableCameraAndMicrophone();
 
-      const localOffer = await pc.createOffer();
-      await pc.setLocalDescription(localOffer);
+      // Retrieve local streams
+      const localVideoTrack = room.localParticipant.videoTrackPublications.values().next().value?.track;
+      const localAudioTrack = room.localParticipant.audioTrackPublications.values().next().value?.track;
+      
+      const tracks = [];
+      if (localVideoTrack?.mediaStreamTrack) tracks.push(localVideoTrack.mediaStreamTrack);
+      if (localAudioTrack?.mediaStreamTrack) tracks.push(localAudioTrack.mediaStreamTrack);
+      if (tracks.length > 0) {
+        setLocalStream(new MediaStream(tracks));
+      }
 
       socket?.emit("offer", {
         to: partnerId,
-        offer: localOffer,
         from: userData?._id,
-        isAudioOnly: audioOnly,
         name: userData?.name || userData?.userName,
+        roomName: generatedRoom,
+        isAudioOnly: audioOnly,
       });
+
     } catch (error: any) {
       console.error("Error starting call:", error);
       cleanupCall();
@@ -182,99 +151,54 @@ export default function SocketProvider({ children }: any) {
   };
 
   const acceptCall = async () => {
-    if (!incomingCall) return;
+    if (!incomingCall || !roomName) return;
     try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("Camera/microphone API is not supported. Please make sure you are using a secure connection (HTTPS or localhost).");
-      }
-
-      // Check which devices are actually connected
-      let hasAudio = false;
-      let hasVideo = false;
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        hasAudio = devices.some((device) => device.kind === "audioinput");
-        hasVideo = devices.some((device) => device.kind === "videoinput");
-      } catch (e) {
-        hasAudio = true;
-        hasVideo = true;
-      }
-
-      if (!hasAudio && !hasVideo) {
-        throw new Error("No camera or microphone detected. Please connect an input device (microphone/webcam) to accept calls.");
-      }
-
-      const constraints: MediaStreamConstraints = {
-        audio: hasAudio,
-        video: !isAudioOnly && hasVideo,
-      };
-
-      if (!isAudioOnly && !hasVideo) {
-        setIsAudioOnly(true);
-        toast.error("No camera detected. Accepting as audio-only call.");
-      }
-
       setCallState("active");
-      
-      let stream: MediaStream;
-      try {
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
-      } catch (err: any) {
-        if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
-          throw new Error("Specified recording device not found. Please connect your microphone/camera.");
-        } else if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-          throw new Error("Permission denied. Please grant camera/microphone access in your browser settings.");
-        } else {
-          throw err;
-        }
-      }
-      setLocalStream(stream);
 
-      const configuration = {
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:19302" },
-        ],
-      };
+      // Fetch LiveKit token
+      const response = await fetch(`/jersapp/get-token?roomName=${roomName}&participantName=${userData?._id}`);
+      const resData = await response.json();
+      const token = resData.token;
 
-      const pc = new RTCPeerConnection(configuration);
-      peerConnectionRef.current = pc;
+      const { Room, RoomEvent } = await import("livekit-client");
+      const room = new Room();
+      roomRef.current = room;
 
-      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
-          socket?.emit("icecandidate", {
-            from: userData?._id,
-            to: incomingCall.from,
-            candidate: event.candidate,
+      room.on(RoomEvent.TrackSubscribed, (track: any) => {
+        if (track.kind === "video") {
+          const stream = new MediaStream([track.mediaStreamTrack]);
+          setRemoteStream(stream);
+        } else if (track.kind === "audio") {
+          const stream = new MediaStream([track.mediaStreamTrack]);
+          setRemoteStream(prev => {
+            if (prev) {
+              prev.addTrack(track.mediaStreamTrack);
+              return new MediaStream(prev.getTracks());
+            }
+            return stream;
           });
         }
-      };
+      });
 
-      pc.ontrack = (event) => {
-        if (event.streams && event.streams[0]) {
-          setRemoteStream(event.streams[0]);
-        }
-      };
+      await room.connect("wss://livekit.codefam.fun", token);
+      await room.localParticipant.enableCameraAndMicrophone();
 
-      await pc.setRemoteDescription(new RTCSessionDescription(incomingCall.offer));
-
-      const localAnswer = await pc.createAnswer();
-      await pc.setLocalDescription(localAnswer);
+      // Retrieve local streams
+      const localVideoTrack = room.localParticipant.videoTrackPublications.values().next().value?.track;
+      const localAudioTrack = room.localParticipant.audioTrackPublications.values().next().value?.track;
+      
+      const tracks = [];
+      if (localVideoTrack?.mediaStreamTrack) tracks.push(localVideoTrack.mediaStreamTrack);
+      if (localAudioTrack?.mediaStreamTrack) tracks.push(localAudioTrack.mediaStreamTrack);
+      if (tracks.length > 0) {
+        setLocalStream(new MediaStream(tracks));
+      }
 
       socket?.emit("answer", {
         to: incomingCall.from,
-        answer: localAnswer,
         from: userData?._id,
       });
 
-      // Process queued ice candidates
-      iceCandidatesQueueRef.current.forEach((candidate) => {
-        pc.addIceCandidate(new RTCIceCandidate(candidate))
-          .catch((err) => console.error("Error adding queued candidate:", err));
-      });
-      iceCandidatesQueueRef.current = [];
     } catch (error) {
       console.error("Error accepting call:", error);
       cleanupCall();
@@ -303,30 +227,25 @@ export default function SocketProvider({ children }: any) {
   };
 
   const toggleMute = () => {
-    if (localStream) {
-      const audioTrack = localStream.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        setIsMuted(!audioTrack.enabled);
-      }
+    if (roomRef.current) {
+      const enabled = roomRef.current.localParticipant.isMicrophoneEnabled;
+      roomRef.current.localParticipant.setMicrophoneEnabled(!enabled);
+      setIsMuted(enabled);
     }
   };
 
   const toggleVideo = () => {
-    if (localStream) {
-      const videoTrack = localStream.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        setIsVideoMuted(!videoTrack.enabled);
-      }
+    if (roomRef.current) {
+      const enabled = roomRef.current.localParticipant.isCameraEnabled;
+      roomRef.current.localParticipant.setCameraEnabled(!enabled);
+      setIsVideoMuted(enabled);
     }
   };
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const isNginx = Socket_URL?.includes("codefam.fun");
     const connection = io(Socket_URL || "", {
-      path: isNginx ? "/jersapp-api/socket.io" : undefined,
+      path: "/jersapp/socket.io",
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
@@ -376,8 +295,8 @@ export default function SocketProvider({ children }: any) {
 
     // WebRTC connection listeners
     connection.on("offer", async (data) => {
-      setoffer(data);
       setIncomingCall(data);
+      setRoomName(data.roomName);
       setCallState("incoming");
       setActiveCallPartner(data.from);
       setIsAudioOnly(data.isAudioOnly || false);
@@ -404,20 +323,7 @@ export default function SocketProvider({ children }: any) {
       }
     });
     connection.on("answer", (data) => {
-      setanswer(data);
-      if (peerConnectionRef.current) {
-        peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.answer))
-          .catch((err) => console.error("Error setting remote description:", err));
-        setCallState("active");
-      }
-    });
-    connection.on("icecandidate", (data) => {
-      if (peerConnectionRef.current && peerConnectionRef.current.remoteDescription) {
-        peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate))
-          .catch((err) => console.error("Error adding ice candidate:", err));
-      } else {
-        iceCandidatesQueueRef.current.push(data.candidate);
-      }
+      setCallState("active");
     });
     connection.on("callend", () => {
       cleanupCall();

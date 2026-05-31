@@ -8,7 +8,7 @@ import {
   RTCIceCandidate,
   RTCSessionDescription,
   mediaDevices,
-} from 'react-native-webrtc';
+} from '@livekit/react-native-webrtc';
 import {useSocketHook} from '../../utils/socket';
 
 const VideoCallModal = ({receiverId, handleModelClose, visible, Data}) => {

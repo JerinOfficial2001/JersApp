@@ -10,6 +10,8 @@
     "test": "jest"
   },
   "dependencies": {
+    "@livekit/react-native": "^2.11.0",
+    "@livekit/react-native-webrtc": "^144.1.0",
     "@react-native-async-storage/async-storage": "^1.21.0",
     "@react-navigation/bottom-tabs": "^6.5.20",
     "@react-navigation/material-top-tabs": "^6.6.5",
@@ -17,8 +19,10 @@
     "@react-navigation/stack": "^6.3.20",
     "@tanstack/react-query": "^5.45.1",
     "axios": "^1.6.8",
+    "base-64": "^1.0.0",
     "deprecated-react-native-prop-types": "^5.0.0",
     "events": "^3.3.0",
+    "livekit-client": "^2.19.1",
     "lottie-react-native": "^6.7.2",
     "react": "18.2.0",
     "react-native": "^0.73.8",
@@ -39,7 +43,6 @@
     "react-native-tab-view": "^3.5.2",
     "react-native-vector-icons": "^10.0.3",
     "react-native-video": "^5.2.1",
-    "react-native-webrtc": "^124.0.3",
     "socket.io-client": "^4.7.4"
   },
   "devDependencies": {

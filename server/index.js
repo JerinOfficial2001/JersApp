@@ -5,6 +5,15 @@ const { createServer } = require("http");
 const { Server } = require("socket.io");
 const { randomUUID } = require("crypto");
 const cron = require("node-cron");
+const path = require("path");
+
+const next = require("next");
+const dev = process.env.NODE_ENV !== "production";
+const frontendPath = path.resolve(__dirname, "../web");
+const nextApp = next({ dev, dir: frontendPath });
+const handle = nextApp.getRequestHandler();
+
+const BASE_PATH = "/jersapp";
 
 const app = express();
 const bodyParser = require("body-parser");
@@ -18,7 +27,6 @@ app.use(cors({ origin: corsOrigin }));
 app.use(express.json());
 const logger = require("./middleware/logger");
 app.use(logger);
-const path = require("path");
 const db = process.env.MONGO_DB;
 mongoose.connect(db)
   .then(() => {
@@ -56,26 +64,25 @@ const {
   UpdateMsgCount,
 } = require("./controllers/socketContacts");
 
-const PORT = process.env.PORT || 4000;
-httpServer.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server is running on port ${PORT}`);
-});
-
-app.get("/", (req, res) => {
+app.get(`${BASE_PATH}/health`, (req, res) => {
   res.status(200).json({ status: "ok", message: "Socket Server is running" });
 });
 
-app.use("/api", Messages);
-app.use("/api/auth", Auth);
-app.use("/api", Contacts);
-app.use("/api/status", Status);
-app.use("/api/group", Groups);
-app.use("/api/member", Members);
-app.use("/api/chat", Chats);
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.get(`${BASE_PATH}/api`, (req, res) => {
+  res.status(200).json({ status: "ok", message: "JersApp API is running 🚀" });
+});
+
+app.use(`${BASE_PATH}/api`, Messages);
+app.use(`${BASE_PATH}/api/auth`, Auth);
+app.use(`${BASE_PATH}/api`, Contacts);
+app.use(`${BASE_PATH}/api/status`, Status);
+app.use(`${BASE_PATH}/api/group`, Groups);
+app.use(`${BASE_PATH}/api/member`, Members);
+app.use(`${BASE_PATH}/api/chat`, Chats);
+app.use(`${BASE_PATH}/uploads`, express.static(path.join(__dirname, "uploads")));
 
 // VChat API endpoints
-app.post("/vChat/auth", async (req, res) => {
+app.post(`${BASE_PATH}/vChat/auth`, async (req, res) => {
   try {
     const user = await VChat_Auth.findOne({ email: req.body.email });
     if (!user) {
@@ -95,7 +102,7 @@ app.post("/vChat/auth", async (req, res) => {
   }
 });
 
-app.get("/create-room", async (req, res) => {
+app.get(`${BASE_PATH}/create-room`, async (req, res) => {
   try {
     const roomID = randomUUID();
     res.json({ roomID });
@@ -105,33 +112,50 @@ app.get("/create-room", async (req, res) => {
   }
 });
 
+app.get(`${BASE_PATH}/get-token`, async (req, res) => {
+  try {
+    const { roomName, participantName } = req.query;
+    if (!roomName || !participantName) {
+      return res.status(400).json({ error: "Missing roomName or participantName" });
+    }
+    const { createToken } = require("./livekitHelper");
+    const token = await createToken(roomName, participantName);
+    res.json({ token });
+  } catch (err) {
+    console.error("Error creating token:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 cron.schedule("* * * * *", () => {
   deleteOldRecordsAndImages();
 });
 
 // Socket Servers Initializations
 const io = new Server(httpServer, {
+  path: `${BASE_PATH}/socket.io`,
   transports: ["polling", "websocket"],
   cors: {
     origin: corsOrigin,
   },
 });
 const ioVchat = new Server(httpServer, {
-  path: "/vchat",
+  path: `${BASE_PATH}/vchat`,
   transports: ["polling", "websocket"],
   cors: {
     origin: corsOrigin,
   },
 });
 const ioGroupVchat = new Server(httpServer, {
-  path: "/groupvchat",
+  path: `${BASE_PATH}/groupvchat`,
   transports: ["polling", "websocket"],
   cors: {
     origin: corsOrigin,
   },
 });
 const ioJersFolio = new Server(httpServer, {
-  path: "/jersfolio",
+  path: `${BASE_PATH}/jersfolio`,
   transports: ["polling", "websocket"],
   cors: {
     origin: corsOrigin,
@@ -168,6 +192,7 @@ io.on("connection", async (socket) => {
       offer: data.offer,
       localStream: data.localStream,
       name: data.name,
+      roomName: data.roomName,
     });
   });
 
@@ -524,11 +549,22 @@ ioJersFolio.on("connection", (socket) => {
   });
 });
 
+// Let Next.js handle everything else
+app.all("*", (req, res) => handle(req, res));
+
 // Global Error Handler Middleware
 app.use((err, req, res, next) => {
   console.error("Global Error Handler:", err.message);
   res.status(err.status || 500).json({
     status: "error",
     message: err.message || "Internal Server Error",
+  });
+});
+
+// Start server after Next.js is prepared
+const PORT = process.env.PORT || 9709;
+nextApp.prepare().then(() => {
+  httpServer.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server is running on port ${PORT}`);
   });
 });

@@ -20,7 +20,7 @@ export const SocketProvider = ({children}) => {
   useEffect(() => {
     const isNginx = socketServerApi?.includes('codefam.fun');
     const connection = io(socketServerApi, {
-      path: isNginx ? '/jersapp-api/socket.io' : undefined,
+      path: isNginx ? '/jersapp/socket.io' : undefined,
     });
     setsocket(connection);
 

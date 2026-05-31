@@ -46,7 +46,10 @@
     "styled-components": "^6.1.12",
     "swiper": "^11.1.10",
     "tailwind-merge": "^2.5.2",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "@livekit/components-react": "^2.9.17",
+    "@livekit/components-styles": "^1.2.0",
+    "livekit-client": "^2.16.0"
   },
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
