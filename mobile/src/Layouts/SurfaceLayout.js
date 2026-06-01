@@ -18,16 +18,17 @@ export default function SurfaceLayout({
   group,
   ids,
   isProcessing,
+  onEditPress,
 }) {
   const {jersAppTheme, selectedIds} = useContext(MyContext);
   const [UsersInArray, setUsersInArray] = useState([]);
   useEffect(() => {
     if (selectedIds && selectedIds.length > 0) {
-      GetUsersFromIds({ids: selectedIds}).then(data => {
+      GetUsersFromIds(selectedIds).then(data => {
         setUsersInArray(data);
       });
     } else if (ids && ids.length > 0) {
-      GetUsersFromIds({ids}).then(data => {
+      GetUsersFromIds(ids).then(data => {
         setUsersInArray(data);
       });
     }
@@ -166,6 +167,7 @@ export default function SurfaceLayout({
             </Text>
             {group.IsAdmin && (
               <TouchableOpacity
+                onPress={onEditPress}
                 style={{
                   borderRadius: 50,
                   padding: 5,

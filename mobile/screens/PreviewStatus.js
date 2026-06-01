@@ -13,25 +13,26 @@ export default function PreviewStatus({route, ...props}) {
   const [isLoading, setisLoading] = useState(false);
   // const [jersAppTheme, setjersAppTheme] = useState(JersAppThemeSchema);
   const {jersAppTheme} = useContext(MyContext);
-  const getMediaSorce = image => {
-    if (image !== null && image !== 'null') {
-      return image?.map(img => {
+  const getMediaSource = image => {
+    if (image && image !== 'null') {
+      return image.map(img => {
         return {
           uri: img.uri,
-          type: image.type ? image.type : 'image/jpeg',
-          name: image.type ? image.type : 'image.jpg',
+          type: img.type || 'image/jpeg',
+          name: img.name || 'file.jpg',
         };
       });
-    } else {
-      return {
-        uri: video?.uri,
+    } else if (video) {
+      return [{
+        uri: video.uri,
         type: 'video/mp4',
         name: 'video.mp4',
-      };
+      }];
     }
+    return [];
   };
   const [inputDatas, setinputDatas] = useState({
-    file: getMediaSorce(image),
+    file: getMediaSource(image),
     text: '',
     userID: id,
   });
@@ -45,12 +46,10 @@ export default function PreviewStatus({route, ...props}) {
       // if (typeof image == 'object') {
       //   formData.append('file', image);
       // } else {
-      if (image) {
-        inputDatas.file.forEach(image => {
-          formData.append('file', image);
+      if (inputDatas.file && inputDatas.file.length > 0) {
+        inputDatas.file.forEach(media => {
+          formData.append('file', media);
         });
-      } else {
-        formData.append('file', video);
       }
 
       // }

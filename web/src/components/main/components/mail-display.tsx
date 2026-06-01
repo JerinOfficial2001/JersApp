@@ -529,7 +529,7 @@ export function MailDisplay({ mail }: MailDisplayProps) {
             )}
             {isReceiverWatching && (
               <img
-                src="/crossAvatar.png"
+                src="/jersapp/crossAvatar.png"
                 alt="Watching Avatar"
                 className="absolute bottom-[160px] left-0 z-10 w-[50px] h-[60px] object-contain animate-pulse"
               />

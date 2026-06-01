@@ -1,17 +1,9 @@
-import axios from 'axios';
-import {expressApi} from '../api';
 import {ToastAndroid} from 'react-native';
+import apiClient from '../services/apiClient';
 
-export const GetGroups = async ({token, id}) => {
+export const GetGroups = async ({id}) => {
   try {
-    const {data} = await axios.get(
-      `${expressApi}/api/group/getGroups?userID=${id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
+    const {data} = await apiClient.get(`/api/group/getGroups?userID=${id}`);
     if (data.status == 'ok') {
       return data.data;
     } else {
@@ -19,39 +11,35 @@ export const GetGroups = async ({token, id}) => {
       console.log(data.message, 'GetGroupsERR');
     }
   } catch (error) {
-    console.log('GetGroupsERR Err:', error);
+    console.log('GetGroupsERR Err:', error.message);
   }
 };
-export const GetGroupByID = async ({token, id, groupID}) => {
+
+export const GetGroupByID = async ({id, groupID}) => {
   try {
-    const {data} = await axios.get(
-      `${expressApi}/api/group/getgroupbyid/${groupID}?userID=${id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
+    const {data} = await apiClient.get(
+      `/api/group/getgroupbyid/${groupID}?userID=${id}`
     );
     if (data.status == 'ok') {
       return data.data;
     } else {
-      console.log(data.message, 'GetGroupsERR');
+      console.log(data.message, 'GetGroupByID ERR');
     }
   } catch (error) {
-    console.log('GetGroupsERR Err:', error);
+    console.log('GetGroupByID Err:', error.message);
   }
 };
-export const CreateNewGroup = async ({token, id, formData}) => {
+
+export const CreateNewGroup = async ({id, formData}) => {
   try {
-    const {data} = await axios.post(
-      `${expressApi}/api/group/creategroup?userID=${id}`,
+    const {data} = await apiClient.post(
+      `/api/group/creategroup?userID=${id}`,
       formData,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
-      },
+      }
     );
     if (data) {
       return data;
@@ -59,20 +47,20 @@ export const CreateNewGroup = async ({token, id, formData}) => {
       console.log('CreateGroupERR');
     }
   } catch (error) {
-    console.log('CreateGroup Err:', error);
+    console.log('CreateGroup Err:', error.message);
   }
 };
-export const UpdateGroup = async ({token, id, formData, groupID}) => {
+
+export const UpdateGroup = async ({id, formData, groupID}) => {
   try {
-    const {data} = await axios.put(
-      `${expressApi}/api/group/updategroup/${groupID}?userID=${id}`,
+    const {data} = await apiClient.put(
+      `/api/group/updategroup/${groupID}?userID=${id}`,
       formData,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
-      },
+      }
     );
     if (data) {
       return data;
@@ -80,6 +68,6 @@ export const UpdateGroup = async ({token, id, formData, groupID}) => {
       console.log('UpdateGroupERR');
     }
   } catch (error) {
-    console.log('UpdateGroup Err:', error);
+    console.log('UpdateGroup Err:', error.message);
   }
 };

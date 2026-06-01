@@ -15,15 +15,19 @@ exports.getAllStatus = async (req, res, next) => {
     const contacts = allContacts.contacts;
     const allData = await JersApp_status.find({});
     const stories = allData.map((elem) => {
+      // User's own status
+      if (elem.userID == user_id) {
+        return { ...elem.toObject(), isCreator: true };
+      }
+      
+      // Contacts' statuses
       const isExist = contacts.some((i) => i.user_id == elem.userID);
       if (isExist) {
-        if (isExist.userID == user_id) {
-          return { ...elem.toObject(), isCreator: true };
-        } else {
-          return { ...elem.toObject(), isCreator: false };
-        }
+        return { ...elem.toObject(), isCreator: false };
       }
-    });
+      
+      return null; // explicitly return null for filtered ones
+    }).filter(Boolean); // remove nulls
     if (stories) {
       // console.log(BASE_URL);
       const DATA = stories.map((elem) => ({
@@ -32,6 +36,11 @@ exports.getAllStatus = async (req, res, next) => {
           format: img.format,
           url: img.url,
           public_id: img.public_id,
+          createdAt: img.createdAt || elem.createdAt,
+          viewedBy: img.viewedBy || [],
+          isText: img.isText,
+          text: img.text,
+          backgroundColor: img.backgroundColor,
         })),
       }));
 
@@ -57,6 +66,12 @@ exports.getStatusByID = async (req, res, next) => {
         file: allData.file.map((img) => ({
           format: img.format,
           url: img.url,
+          public_id: img.public_id,
+          createdAt: img.createdAt || allData.createdAt,
+          viewedBy: img.viewedBy || [],
+          isText: img.isText,
+          text: img.text,
+          backgroundColor: img.backgroundColor,
         })),
       };
       res.status(200).json({ status: "ok", data: DATA });
@@ -67,58 +82,71 @@ exports.getStatusByID = async (req, res, next) => {
   }
 };
 exports.addStatus = async (req, res, next) => {
-  const { userID, text } = req.body;
+  const { userID, text, backgroundColor } = req.body;
   if (!userID || userID === "undefined" || !mongoose.Types.ObjectId.isValid(userID)) {
     return res.status(400).json({ status: "error", message: "Invalid user ID" });
   }
   try {
-    if (!req.files || req.files.length === 0) {
-      res.status(400).json({ status: "error", message: "No data found" });
-    } else {
-      const userStatus = await JersApp_status.findOne({ userID });
-      const userData = await JersApp_Auth.findById(userID);
+    const hasFiles = req.files && req.files.length > 0;
+    const hasText = text && text.trim().length > 0;
+
+    if (!hasFiles && !hasText) {
+      return res.status(400).json({ status: "error", message: "No data found" });
+    }
+
+    const userStatus = await JersApp_status.findOne({ userID });
+    const userData = await JersApp_Auth.findById(userID);
+
+    let newFiles = [];
+    if (hasFiles) {
       const AddFile = (file) => ({
-        url: `${req.protocol}://${req.get("host")}/uploads/status/${file.filename}`,
+        url: `${req.protocol}://${req.get("host")}/jersapp/uploads/status/${file.filename}`,
         public_id: `status/${file.filename}`,
         format: file.mimetype,
         originalname: file.originalname,
         size: file.size,
+        createdAt: new Date(),
       });
-      if (userStatus && userData) {
-        userStatus.file = userStatus.file.concat(
-          req.files.map((file) => AddFile(file))
-        );
-        userStatus.userName = userData.name;
-        const result = await userStatus.save();
-        if (result) {
-          res.status(200).json({ status: "ok", message: "Status Updated" });
-        } else {
-          if (req.files) {
-            req.files.forEach((file) => DeleteLocalFile(`status/${file.filename}`));
-          }
-          res
-            .status(400)
-            .json({ status: "error", message: "Failed to Update Status" });
-        }
+      newFiles = req.files.map((file) => AddFile(file));
+    } else {
+      // Virtual text file item
+      newFiles = [{
+        isText: true,
+        text: text,
+        backgroundColor: backgroundColor || "#075E54",
+        createdAt: new Date(),
+        format: "text/plain",
+        public_id: `status_text_${Date.now()}`,
+      }];
+    }
+
+    if (userStatus && userData) {
+      userStatus.file = userStatus.file.concat(newFiles);
+      userStatus.userName = userData.name;
+      const result = await userStatus.save();
+      if (result) {
+        return res.status(200).json({ status: "ok", message: "Status Updated" });
       } else {
-        // If user data doesn't exist, create a new document
-        const newVal = new JersApp_status({
-          userID,
-          text,
-          file: req.files.map((file) => AddFile(file)),
-          userName: userData?.name,
-        });
-        const result = await newVal.save();
-        if (result) {
-          res.status(200).json({ status: "ok", message: "Status Posted" });
-        } else {
-          if (req.files) {
-            req.files.forEach((file) => DeleteLocalFile(`status/${file.filename}`));
-          }
-          res
-            .status(400)
-            .json({ status: "error", message: "Failed to Post Status" });
+        if (req.files) {
+          req.files.forEach((file) => DeleteLocalFile(`status/${file.filename}`));
         }
+        return res.status(400).json({ status: "error", message: "Failed to Update Status" });
+      }
+    } else {
+      const newVal = new JersApp_status({
+        userID,
+        text: hasFiles ? text : undefined,
+        file: newFiles,
+        userName: userData?.name,
+      });
+      const result = await newVal.save();
+      if (result) {
+        return res.status(200).json({ status: "ok", message: "Status Posted" });
+      } else {
+        if (req.files) {
+          req.files.forEach((file) => DeleteLocalFile(`status/${file.filename}`));
+        }
+        return res.status(400).json({ status: "error", message: "Failed to Post Status" });
       }
     }
   } catch (error) {
@@ -136,20 +164,37 @@ exports.deleteStatus = async (req, res, next) => {
     }
     const status = await JersApp_status.findById(req.params.id);
     if (status) {
-      if (status.file && Array.isArray(status.file)) {
-        for (const fileObj of status.file) {
-          if (fileObj.public_id) {
-            DeleteLocalFile(fileObj.public_id);
+      const { public_id } = req.query;
+      if (public_id) {
+        const fileToDelete = status.file.find(f => f.public_id === public_id);
+        if (fileToDelete) {
+          DeleteLocalFile(fileToDelete.public_id);
+          status.file = status.file.filter(f => f.public_id !== public_id);
+          if (status.file.length === 0) {
+            await JersApp_status.findByIdAndDelete(req.params.id);
+          } else {
+            await status.save();
+          }
+          return res.status(200).json({ status: "ok", message: "Status item deleted" });
+        } else {
+          return res.status(404).json({ status: "error", message: "Status item not found" });
+        }
+      } else {
+        if (status.file && Array.isArray(status.file)) {
+          for (const fileObj of status.file) {
+            if (fileObj.public_id) {
+              DeleteLocalFile(fileObj.public_id);
+            }
           }
         }
-      }
-      const result = await JersApp_status.findByIdAndDelete(req.params.id);
-      if (result) {
-        res.status(200).json({ status: "ok", message: "Status Deleted" });
-      } else {
-        res
-          .status(400)
-          .json({ status: "error", message: "Status not deleted" });
+        const result = await JersApp_status.findByIdAndDelete(req.params.id);
+        if (result) {
+          res.status(200).json({ status: "ok", message: "Status Deleted" });
+        } else {
+          res
+            .status(400)
+            .json({ status: "error", message: "Status not deleted" });
+        }
       }
     } else {
       res.status(404).json({ status: "error", message: "Status not found" });
@@ -159,6 +204,40 @@ exports.deleteStatus = async (req, res, next) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+exports.viewStatus = async (req, res, next) => {
+  const { statusID, public_id, viewerID, viewerName } = req.body;
+  if (!statusID || !viewerID) {
+    return res.status(400).json({ status: "error", message: "Missing required fields" });
+  }
+  try {
+    const status = await JersApp_status.findById(statusID);
+    if (status) {
+      status.file = status.file.map((f) => {
+        if (!public_id || f.public_id === public_id) {
+          if (!f.viewedBy) f.viewedBy = [];
+          const alreadyViewed = f.viewedBy.some((v) => v.userID === viewerID);
+          if (!alreadyViewed && viewerID !== status.userID) {
+            f.viewedBy.push({
+              userID: viewerID,
+              userName: viewerName || "Unknown Contact",
+              viewedAt: new Date(),
+            });
+          }
+        }
+        return f;
+      });
+      status.markModified("file");
+      await status.save();
+      return res.status(200).json({ status: "ok", message: "Status view recorded" });
+    } else {
+      return res.status(404).json({ status: "error", message: "Status not found" });
+    }
+  } catch (error) {
+    console.error("Error viewStatus:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 exports.deleteOldRecordsAndImages = async () => {
   try {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);

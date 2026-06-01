@@ -138,10 +138,12 @@ export default function CreateGroup({navigation, route, ...props}) {
       padding: 10,
     },
     errorText: {
-      color: 'red',
-      fontSize: 12,
+      color: '#ff4d4d',
+      fontSize: 13,
+      fontWeight: '500',
       alignSelf: 'flex-start',
-      marginLeft: 20,
+      marginTop: 4,
+      marginLeft: 10,
     },
     contentContainer: {
       alignItems: 'center',
@@ -156,11 +158,21 @@ export default function CreateGroup({navigation, route, ...props}) {
     },
     input: {
       backgroundColor: 'transparent',
-      width: '90%',
+      width: '100%',
+      fontSize: 18,
     },
     button: {
-      backgroundColor: jersAppTheme.themeText,
-      marginTop: 50,
+      backgroundColor: jersAppTheme.badgeColor,
+      marginTop: 40,
+      paddingVertical: 8,
+      borderRadius: 30,
+      width: '90%',
+      alignSelf: 'center',
+      shadowColor: jersAppTheme.badgeColor,
+      shadowOffset: {width: 0, height: 8},
+      shadowOpacity: 0.3,
+      shadowRadius: 15,
+      elevation: 6,
     },
   });
   return (
@@ -175,59 +187,90 @@ export default function CreateGroup({navigation, route, ...props}) {
       }}>
       <View style={styles.container}>
         <View style={styles.contentContainer}>
-          <View style={{position: 'relative'}}>
-            {formData.image ? (
-              <Avatar.Image
-                size={200}
-                source={{
-                  uri: formData.image.url
-                    ? formData.image.url
-                    : formData.image.uri,
-                }}
-              />
-            ) : (
-              <Avatar.Image
-                size={200}
-                source={require('../src/assets/user.png')}
-              />
-            )}
+          <View style={{position: 'relative', marginBottom: 20}}>
+            <View style={{
+                shadowColor: '#000',
+                shadowOffset: {width: 0, height: 10},
+                shadowOpacity: 0.2,
+                shadowRadius: 20,
+                elevation: 10,
+                borderRadius: 100,
+                borderWidth: 4,
+                borderColor: jersAppTheme.main,
+            }}>
+                {formData.image ? (
+                  <Avatar.Image
+                    size={160}
+                    source={{
+                      uri: formData.image.url
+                        ? formData.image.url
+                        : formData.image.uri,
+                    }}
+                  />
+                ) : (
+                  <Avatar.Image
+                    size={160}
+                    source={require('../src/assets/user.png')}
+                  />
+                )}
+            </View>
             <IconButton
               style={{
-                bottom: 0,
+                bottom: -5,
                 position: 'absolute',
-                right: 5,
+                right: -5,
                 backgroundColor: jersAppTheme.badgeColor,
-                padding: 10,
+                shadowColor: '#000',
+                shadowOffset: {width: 0, height: 4},
+                shadowOpacity: 0.3,
+                shadowRadius: 6,
+                elevation: 5,
+                borderWidth: 3,
+                borderColor: jersAppTheme.main,
               }}
               icon={() => (
                 <Image
                   style={{
-                    height: 25,
-                    width: 25,
+                    height: 20,
+                    width: 20,
+                    tintColor: '#fff'
                   }}
                   source={require('../src/assets/camera.png')}
                 />
               )}
-              size={40}
+              size={36}
               onPress={() => {
                 setopenImageModel(true);
               }}
             />
           </View>
-          <View style={{width: '100%', alignItems: 'center'}}>
-            <TextInput
-              value={formData.group_name}
-              onChangeText={value => {
-                handleOnchange('group_name', value);
-              }}
-              style={styles.input}
-              underlineColor="gray"
-              activeUnderlineColor="#92d4c7"
-              placeholder="Name"
-              keyboardType="default"
-              textColor={jersAppTheme.title}
-              error={err}
-            />
+          <View style={{width: '90%', alignItems: 'center'}}>
+            <View style={{
+                width: '100%',
+                backgroundColor: jersAppTheme.appBar,
+                borderRadius: 12,
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                shadowColor: '#000',
+                shadowOffset: {width: 0, height: 2},
+                shadowOpacity: 0.05,
+                shadowRadius: 8,
+                elevation: 2,
+            }}>
+                <TextInput
+                  value={formData.group_name}
+                  onChangeText={value => {
+                    handleOnchange('group_name', value);
+                  }}
+                  style={styles.input}
+                  underlineColor="transparent"
+                  activeUnderlineColor="transparent"
+                  placeholder="Group Name"
+                  keyboardType="default"
+                  textColor={jersAppTheme.title}
+                  error={err}
+                />
+            </View>
             {err && <Text style={styles.errorText}>{errMsg}</Text>}
           </View>
         </View>
@@ -235,9 +278,9 @@ export default function CreateGroup({navigation, route, ...props}) {
           onPress={handleSubmit}
           mode="contained"
           style={styles.button}
-          textColor={jersAppTheme.main}>
+          labelStyle={{ fontSize: 18, fontWeight: 'bold', color: '#fff' }}>
           {isProcessing ? (
-            <ActivityIndicator animating={true} color={jersAppTheme.appBar} />
+            <ActivityIndicator animating={true} color="#fff" />
           ) : (
             'Create Group'
           )}

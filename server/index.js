@@ -17,14 +17,14 @@ const BASE_PATH = "/jersapp";
 
 const app = express();
 const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
 const httpServer = createServer(app);
 const cors = require("cors");
 const corsOrigin = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(",")
   : "*";
 app.use(cors({ origin: corsOrigin }));
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
 const logger = require("./middleware/logger");
 app.use(logger);
 const db = process.env.MONGO_DB;
@@ -441,7 +441,10 @@ io.on("connection", async (socket) => {
       const newMsg = new JersApp_grp_message({
         group_id: obj.group_id,
         sender_id: obj.sender_id,
-        msg: obj.msg,
+        msg: obj.msg || "",
+        fileUrl: obj.fileUrl || null,
+        fileType: obj.fileType || null,
+        replyTo: obj.replyTo || null,
       });
       const result = await newMsg.save();
       if (result) {
@@ -450,7 +453,13 @@ io.on("connection", async (socket) => {
           group.messages.push(result._id);
           const isAdded = await group.save();
           if (isAdded) {
-            socket.to(obj.group_id).emit("new_group_msg", obj);
+            const payload = {
+              ...result.toObject(),
+              name: obj.name,
+              group_name: obj.group_name
+            };
+            socket.to(obj.group_id).emit("new_group_msg", payload);
+            socket.emit("new_group_msg", payload);
           }
         }
       }

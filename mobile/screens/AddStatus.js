@@ -21,7 +21,7 @@ export default function AddStatus({route, ...props}) {
   const handlePick = async () => {
     if (inputDatas.image == null) {
       const results = await DocumentPicker.pick({
-        type: [DocumentPicker.types.images],
+        type: [DocumentPicker.types.images, DocumentPicker.types.video],
         allowMultiSelection: true,
       });
       const result = results.map(img => img);
@@ -115,7 +115,10 @@ export default function AddStatus({route, ...props}) {
   return (
     <View style={styles.container}>
       {isRecording && (
-        <Text style={styles.recordingTime}>{formatTime(recordingTime)}</Text>
+        <View style={styles.recordingBadge}>
+          <View style={styles.recordingDot} />
+          <Text style={styles.recordingTime}>{formatTime(recordingTime)}</Text>
+        </View>
       )}
       <RNCamera
         ref={cameraRef}
@@ -192,25 +195,33 @@ export default function AddStatus({route, ...props}) {
               width: '100%',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 10,
-              padding: 10,
+              marginTop: 20,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              borderRadius: 30,
+              padding: 4,
+              width: 180,
+              alignSelf: 'center'
             }}>
             <Button
               onPress={handleCameraFunction}
               textColor="white"
               style={{
-                borderRadius: 15,
-                backgroundColor: !isTakePhoto ? '#5D5D5DC4' : 'transparent',
-              }}>
+                borderRadius: 25,
+                backgroundColor: !isTakePhoto ? 'rgba(255,255,255,0.2)' : 'transparent',
+                flex: 1,
+              }}
+              labelStyle={{ fontSize: 13, fontWeight: !isTakePhoto ? '700' : '500' }}>
               Video
             </Button>
             <Button
               onPress={handleCameraFunction}
               textColor="white"
               style={{
-                borderRadius: 15,
-                backgroundColor: isTakePhoto ? '#5D5D5DC4' : 'transparent',
-              }}>
+                borderRadius: 25,
+                backgroundColor: isTakePhoto ? 'rgba(255,255,255,0.2)' : 'transparent',
+                flex: 1,
+              }}
+              labelStyle={{ fontSize: 13, fontWeight: isTakePhoto ? '700' : '500' }}>
               Photo
             </Button>
           </View>
@@ -243,13 +254,17 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    paddingLeft: 15,
-    paddingRight: 15,
+    paddingLeft: 30,
+    paddingRight: 30,
+    paddingTop: 30,
+    paddingBottom: 50,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
   },
   controls: {
     flexDirection: 'row',
@@ -258,20 +273,28 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     width: '100%',
   },
-  capture: {
-    backgroundColor: '#fff',
-    borderRadius: 5,
-    padding: 15,
-    marginHorizontal: 10,
+  recordingBadge: {
+    position: 'absolute',
+    top: 50,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: 10,
   },
-  captureText: {
-    fontSize: 16,
+  recordingDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#ff4d4d',
+    marginRight: 8,
   },
   recordingTime: {
-    fontSize: 18,
-    color: 'red',
-    marginHorizontal: 10,
-    textAlign: 'center',
-    backgroundColor: 'transparent',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
   },
 });

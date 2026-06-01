@@ -1,6 +1,39 @@
 import apiClient from '../services/apiClient';
 import {ToastAndroid} from 'react-native';
 
+export const RecordStatusView = async (statusID, public_id, viewerID, viewerName) => {
+  try {
+    const {data} = await apiClient.post('/api/status/view', {
+      statusID,
+      public_id,
+      viewerID,
+      viewerName,
+    });
+    return data;
+  } catch (error) {
+    console.log('RecordStatusView Err:', error.message);
+  }
+};
+
+export const AddTextStatus = async (userID, text, backgroundColor) => {
+  try {
+    const {data} = await apiClient.post('/api/status/add', {
+      userID,
+      text,
+      backgroundColor,
+    });
+    if (data.status === 'ok') {
+      ToastAndroid.show('Status posted', ToastAndroid.SHORT);
+      return data;
+    } else {
+      ToastAndroid.show(data.message || 'Failed to post status', ToastAndroid.SHORT);
+    }
+  } catch (error) {
+    console.log('AddTextStatus Err:', error.message);
+    ToastAndroid.show('Failed to post status', ToastAndroid.SHORT);
+  }
+};
+
 export const AddStatus = async formData => {
   try {
     const {data} = await apiClient.post('/api/status/add', formData, {
@@ -40,9 +73,10 @@ export const GetStatusByID = async id => {
   }
 };
 
-export const DeleteStatus = async id => {
+export const DeleteStatus = async (id, publicId = null) => {
   try {
-    const {data} = await apiClient.delete(`/api/status/delete/${id}`);
+    const url = `/api/status/delete/${id}${publicId ? `?public_id=${encodeURIComponent(publicId)}` : ''}`;
+    const {data} = await apiClient.delete(url);
     if (data.status === 'ok') {
       ToastAndroid.show('Status deleted', ToastAndroid.SHORT);
       return data;

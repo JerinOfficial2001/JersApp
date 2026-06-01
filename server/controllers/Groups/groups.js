@@ -50,7 +50,7 @@ exports.createGroup = async (req, res, next) => {
               group_name: req.body.group_name,
               image: req.file
                 ? {
-                    url: `${req.protocol}://${req.get("host")}/uploads/group/${req.file.filename}`,
+                    url: `${req.protocol}://${req.get("host")}/jersapp/uploads/group/${req.file.filename}`,
                     public_id: `group/${req.file.filename}`,
                     mimetype: req.file.mimetype,
                     originalname: req.file.originalname,
@@ -186,8 +186,44 @@ exports.getGroups = async (req, res, next) => {
     if (token && isAuthenticated) {
       const UserData = isAuthenticated;
       if (UserData) {
-        const User = await JersApp_Auth.findById(userID).populate("groups");
-        res.status(200).json({ status: "ok", data: User.groups });
+        const User = await JersApp_Auth.findById(userID).populate({
+          path: "groups",
+          populate: {
+            path: "messages",
+            select: "sender_id msg fileType deletedForEveryone readBy createdAt"
+          }
+        });
+        
+        const validGroups = User.groups.filter(g => g != null);
+        const processedGroups = validGroups.map(group => {
+           let lastMsg = null;
+           let unreadCount = 0;
+           // Filter out any null messages (e.g. if a message was deleted directly from the DB)
+           const validMessages = group.messages ? group.messages.filter(m => m != null && m.sender_id) : [];
+           
+           if (validMessages.length > 0) {
+              const sortedMessages = [...validMessages].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+              const actualLastMsg = sortedMessages[sortedMessages.length - 1];
+              if (actualLastMsg) {
+                 lastMsg = {
+                    name: actualLastMsg.sender_id.toString() === userID ? "You" : "Member",
+                    msg: actualLastMsg.deletedForEveryone ? "🚫 This message was deleted" : (actualLastMsg.fileType ? `📷 ${actualLastMsg.fileType}` : actualLastMsg.msg),
+                    fileType: actualLastMsg.fileType,
+                 };
+              }
+              // Count unread
+              unreadCount = sortedMessages.filter(m => m.sender_id.toString() !== userID && m.readBy && !m.readBy.includes(userID)).length;
+           }
+           
+           return {
+              ...group.toObject(),
+              last_msg: lastMsg,
+              unread_msg: unreadCount,
+              messages: validMessages.map(m => m._id) // Don't send all messages back
+           };
+        });
+
+        res.status(200).json({ status: "ok", data: processedGroups });
       } else {
         res.status(200).json({ status: "error", message: "User not found" });
       }
@@ -244,7 +280,7 @@ exports.updateGroup = async (req, res, next) => {
               DeleteLocalFile(group.image.public_id);
             }
             group.image = {
-              url: `${req.protocol}://${req.get("host")}/uploads/group/${req.file.filename}`,
+              url: `${req.protocol}://${req.get("host")}/jersapp/uploads/group/${req.file.filename}`,
               public_id: `group/${req.file.filename}`,
               mimetype: req.file.mimetype,
               originalname: req.file.originalname,

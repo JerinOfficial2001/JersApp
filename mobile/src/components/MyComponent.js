@@ -25,6 +25,7 @@ const MyComponent = ({
   showSelectedIcon,
   customImg,
   isDisabled,
+  onRightIconPress,
 }) => {
   const navigation = useNavigation();
   const {jersAppTheme} = useContext(MyContext);
@@ -41,33 +42,63 @@ const MyComponent = ({
     ? contact?.ContactDetails?.name || contact?.name || 'Unknown'
     : contact?.name || 'Unknown';
 
-  const hasUnread = newMsgcount && newMsgcount !== '0' && newMsgcount !== 0;
+  const hasUnread = Boolean(newMsgcount && newMsgcount !== '0' && newMsgcount !== 0);
 
   const renderAvatar = () => {
     if (status?.file) {
+      const latestFile = status.file[status.file.length - 1];
+      const hasValidUrl = latestFile?.url &&
+        latestFile.url !== 'null' &&
+        latestFile.url !== 'undefined' &&
+        latestFile.url.trim() !== '' &&
+        latestFile.url.startsWith('http');
       return (
         <View style={styles.avatarWrapper}>
-          <Avatar.Image
-            size={54}
-            source={{uri: status.file[status.file.length - 1]?.url}}
-          />
-          <DonutChart width={175} height={54} data={status?.file} />
+          {latestFile?.isText ? (
+            <View
+              style={[
+                styles.avatarImg,
+                {
+                  backgroundColor: latestFile.backgroundColor || '#075E54',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                },
+              ]}>
+              <Text style={{color: 'white', fontWeight: 'bold', fontSize: 12}} numberOfLines={1}>
+                {latestFile.text?.substring(0, 5)}
+              </Text>
+            </View>
+          ) : !hasValidUrl ? (
+            <Image source={require('../assets/user.png')} style={styles.avatarImg} />
+          ) : (
+            <Avatar.Image
+              size={54}
+              source={{uri: latestFile.url}}
+            />
+          )}
+          <DonutChart data={status?.file} />
           {status.title === 'My status' && (
-            <TouchableOpacity
-              onPress={() => navigation.navigate('AddStatus', {onlyCamera: false, id: status?.id})}
-              style={[styles.addStatusBtn, {backgroundColor: jersAppTheme.loader}]}>
-              <Ionicons name="add-circle-sharp" size={22} color={jersAppTheme.statusIndicator} />
-            </TouchableOpacity>
+            <View
+              style={[
+                styles.addStatusBtn,
+                {
+                  backgroundColor: '#25D366', // WhatsApp green
+                  borderColor: jersAppTheme.main, // match background
+                  borderWidth: 2,
+                },
+              ]}>
+              <Ionicons name="add" size={14} color="white" />
+            </View>
           )}
         </View>
       );
     }
 
-    if (contact?.image?.url) {
+    if (contact?.image?.url && contact.image.url !== 'null' && contact.image.url !== 'undefined') {
       return <Avatar.Image size={54} source={{uri: contact.image.url}} />;
     }
 
-    if (contact?.ContactDetails?.image?.url) {
+    if (contact?.ContactDetails?.image?.url && contact.ContactDetails.image.url !== 'null' && contact.ContactDetails.image.url !== 'undefined') {
       return <Avatar.Image size={54} source={{uri: contact.ContactDetails.image.url}} />;
     }
 
@@ -75,11 +106,17 @@ const MyComponent = ({
       return (
         <View style={styles.avatarWrapper}>
           <Image source={require('../assets/user.png')} style={styles.avatarImg} />
-          <TouchableOpacity
-            onPress={() => navigation.navigate('AddStatus', {onlyCamera: false, id: status?.id})}
-            style={[styles.addStatusBtnPlain, {backgroundColor: jersAppTheme.main}]}>
-            <Ionicons name="add-circle-sharp" size={22} color={jersAppTheme.badgeColor} />
-          </TouchableOpacity>
+          <View
+            style={[
+              styles.addStatusBtnPlain,
+              {
+                backgroundColor: '#25D366', // WhatsApp green
+                borderColor: jersAppTheme.main,
+                borderWidth: 2,
+              },
+            ]}>
+            <Ionicons name="add" size={14} color="white" />
+          </View>
         </View>
       );
     }
@@ -130,53 +167,48 @@ const MyComponent = ({
 
         {/* Text content */}
         <View style={styles.textArea}>
-          {!status && (
-            <View style={styles.topRow}>
-              <Text
-                style={[
-                  styles.name,
-                  {
-                    color: isDisabled ? jersAppTheme.disabled : jersAppTheme.title,
-                  },
-                ]}
-                numberOfLines={1}>
-                {displayName}
-              </Text>
-              {!contactPg && (
-                <View style={styles.metaRight}>
-                  <Text style={[styles.dateText, {color: jersAppTheme.subText}]}>
-                    {contact?.date || ''}
-                  </Text>
-                  {hasUnread && (
-                    <View
-                      style={[styles.badge, {backgroundColor: jersAppTheme.badgeColor}]}>
-                      <Text
-                        style={[
-                          styles.badgeText,
-                          {color: jersAppTheme.badgeTextColor || 'white'},
-                        ]}>
-                        {newMsgcount > 99 ? '99+' : newMsgcount}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              )}
-            </View>
-          )}
+          <View style={styles.topRow}>
+            <Text
+              style={[
+                styles.name,
+                {
+                  color: isDisabled ? jersAppTheme.disabled : jersAppTheme.title,
+                },
+              ]}
+              numberOfLines={1}>
+              {status ? (status.title || status.userName) : displayName}
+            </Text>
+            {!status && !contactPg && (
+              <View style={styles.metaRight}>
+                <Text style={[styles.dateText, {color: jersAppTheme.subText}]}>
+                  {contact?.date || ''}
+                </Text>
+                {hasUnread && (
+                  <View
+                    style={[styles.badge, {backgroundColor: jersAppTheme.badgeColor}]}>
+                    <Text
+                      style={[
+                        styles.badgeText,
+                        {color: jersAppTheme.badgeTextColor || 'white'},
+                      ]}>
+                      {newMsgcount > 99 ? '99+' : newMsgcount}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
 
           {/* Subtitle / last message */}
           {(contact?.mobNum ||
             contact?.lastMsg ||
-            status?.title ||
-            status?.userName) && (
+            status) && (
             <Text
               style={[
                 styles.subtitle,
                 {
                   color: isDisabled
                     ? jersAppTheme.disabled
-                    : status?.title || status?.userName
-                    ? jersAppTheme.title
                     : jersAppTheme.subText,
                   fontWeight: hasUnread ? '500' : '400',
                 },
@@ -185,7 +217,7 @@ const MyComponent = ({
               {contactPg
                 ? contact?.mobNum || 'Phone Number'
                 : status
-                ? status?.title || status?.userName
+                ? status.emptySubtitle || (status.createdAt ? new Date(status.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now')
                 : contact?.lastMsg?.msg
                 ? contact?.lastMsg?.name === 'You'
                   ? `You: ${contact?.lastMsg?.msg}`
@@ -196,6 +228,19 @@ const MyComponent = ({
             </Text>
           )}
         </View>
+
+        {/* Three dots for My Status details */}
+        {status?.title === 'My status' && status?.file && status?.file.length > 0 && (
+          <TouchableOpacity
+            style={{padding: 10, marginMinus: -5}}
+            onPress={(e) => {
+              if (onRightIconPress) {
+                onRightIconPress();
+              }
+            }}>
+            <MaterialCommunityIcons name="dots-horizontal" size={24} color={jersAppTheme.subText} />
+          </TouchableOpacity>
+        )}
 
         {/* Selection checkbox */}
         {showSelectedIcon && (
@@ -249,15 +294,23 @@ const styles = StyleSheet.create({
   },
   addStatusBtn: {
     position: 'absolute',
-    right: -5,
-    bottom: -3,
+    right: 0,
+    bottom: 0,
     borderRadius: 50,
+    height: 20,
+    width: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   addStatusBtnPlain: {
     position: 'absolute',
-    right: -5,
-    bottom: -3,
+    right: 0,
+    bottom: 0,
     borderRadius: 50,
+    height: 20,
+    width: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   customImgWrapper: {
     height: 54,

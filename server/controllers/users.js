@@ -126,7 +126,7 @@ exports.register = async (req, res, next) => {
 
     if (req.file) {
       userData.image = {
-        url: `${req.protocol}://${req.get("host")}/uploads/profile/${req.file.filename}`,
+        url: `${req.protocol}://${req.get("host")}/jersapp/uploads/profile/${req.file.filename}`,
         public_id: `profile/${req.file.filename}`,
         mimetype: req.file.mimetype,
         originalname: req.file.originalname,
@@ -202,7 +202,7 @@ exports.updateProfile = async (req, res, next) => {
       theme: theme || userDatas.theme,
       image: req.file
         ? {
-            url: `${req.protocol}://${req.get("host")}/uploads/profile/${req.file.filename}`,
+            url: `${req.protocol}://${req.get("host")}/jersapp/uploads/profile/${req.file.filename}`,
             public_id: `profile/${req.file.filename}`,
             mimetype: req.file.mimetype,
             originalname: req.file.originalname,

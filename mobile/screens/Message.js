@@ -47,6 +47,7 @@ import {getTime, groupMessagesByDate} from '../utils/methods/Date&Time';
 import SectionHeader from '../src/components/SectionHeader';
 import VideoCallModal from '../src/components/VideoCallModal';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import apiClient from '../src/services/apiClient';
 
 const AudioPlayer = ({ fileUrl, received, theme }) => {
   const [paused, setPaused] = useState(true);
@@ -557,15 +558,11 @@ export default function Message({route, navigation, ...props}) {
           type: res.type || 'application/octet-stream',
         });
 
-        const uploadRes = await fetch(`${expressApi}/api/message/upload`, {
-          method: 'POST',
-          body: formData,
+        const { data: uploadData } = await apiClient.post('/api/message/upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${Data.accessToken}`,
           },
         });
-        const uploadData = await uploadRes.json();
         if (uploadData && uploadData.status === 'ok' && uploadData.fileUrl) {
           let fileType = 'document';
           if (res.type?.startsWith('image/')) fileType = 'image';
@@ -637,15 +634,11 @@ export default function Message({route, navigation, ...props}) {
           type: 'audio/mp4',
         });
 
-        const uploadRes = await fetch(`${expressApi}/api/message/upload`, {
-          method: 'POST',
-          body: formData,
+        const { data: uploadData } = await apiClient.post('/api/message/upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${Data.accessToken}`,
           },
         });
-        const uploadData = await uploadRes.json();
         if (uploadData && uploadData.status === 'ok' && uploadData.fileUrl) {
           const msgPayload = {
             chatID: chatID,
@@ -850,42 +843,25 @@ export default function Message({route, navigation, ...props}) {
       gap: 2,
     },
     inputContainer: {
-      marginBottom: 10,
-      marginTop: 6,
-      marginHorizontal: 8,
-      justifyContent: 'center',
-      alignItems: 'flex-end',
+      marginBottom: 12,
+      marginTop: 8,
+      paddingHorizontal: 12,
       flexDirection: 'row',
-      gap: 8,
-    },
-    inputBar: {
-      flex: 1,
-      borderRadius: 25,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      minHeight: 48,
-      justifyContent: 'center',
-    },
-    textInput: {
-      fontSize: 15,
-      maxHeight: 120,
-      paddingVertical: 4,
-    },
-    messageCardContainer: {
-      marginVertical: 3,
-      width: 'auto',
-    },
-    messageCardtext: {
-      backgroundColor: '#064e49',
-      width: 'auto',
+      alignItems: 'center',
+      gap: 10,
     },
     sendBtn: {
-      width: 48,
+      backgroundColor: jersAppTheme.badgeColor,
       height: 48,
+      width: 48,
       borderRadius: 24,
       alignItems: 'center',
       justifyContent: 'center',
-      elevation: 3,
+      shadowColor: jersAppTheme.badgeColor,
+      shadowOffset: {width: 0, height: 4},
+      shadowOpacity: 0.3,
+      shadowRadius: 6,
+      elevation: 5,
     },
   });
 
@@ -1016,64 +992,53 @@ export default function Message({route, navigation, ...props}) {
           )}
 
           <View style={[styles.inputContainer, replyingTo ? { marginTop: 0 } : {}]}>
-            <TouchableOpacity
-              onPress={handlePickDocument}
-              style={[
-                styles.sendBtn,
-                {
-                  backgroundColor: jersAppTheme.model || '#2D3544',
-                  marginRight: -2,
-                },
-              ]}
-              activeOpacity={0.8}
-            >
-              <MaterialCommunityIcons name="paperclip" size={22} color="white" />
-            </TouchableOpacity>
-
-            <View
-              style={[
-                styles.inputBar,
-                {backgroundColor: jersAppTheme.model || '#2D3544'},
-              ]}>
+            <View style={{
+              flex: 1,
+              backgroundColor: jersAppTheme.appBar,
+              borderRadius: 25,
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingHorizontal: 16,
+              shadowColor: '#000',
+              shadowOffset: {width: 0, height: 2},
+              shadowOpacity: 0.05,
+              shadowRadius: 5,
+              elevation: 2,
+            }}>
+              <TouchableOpacity onPress={handlePickDocument} style={{marginRight: 8}}>
+                <MaterialCommunityIcons name="paperclip" size={24} color={jersAppTheme.placeholderColor} />
+              </TouchableOpacity>
               <TextInput
-                placeholder="Message..."
-                placeholderTextColor={jersAppTheme.placeholderColor}
-                style={[styles.textInput, {color: jersAppTheme.title}]}
+                placeholder={isRecording ? 'Recording...' : 'Type a message...'}
+                placeholderTextColor={isRecording ? 'red' : jersAppTheme.placeholderColor}
+                style={{
+                  color: isRecording ? 'red' : jersAppTheme.title,
+                  flex: 1,
+                  paddingVertical: 12,
+                  fontSize: 16,
+                }}
                 value={formDatas.msg ? formDatas.msg : ''}
                 onChangeText={value => {
                   handleOnchange(value, 'msg');
                 }}
                 multiline
                 maxLength={2000}
+                editable={!isRecording}
               />
+              {formDatas.msg === '' && !isRecording && (
+                <TouchableOpacity onPress={startRecording} style={{marginLeft: 8}}>
+                  <MaterialCommunityIcons name="microphone" size={24} color={jersAppTheme.placeholderColor} />
+                </TouchableOpacity>
+              )}
+              {isRecording && (
+                <TouchableOpacity onPress={stopRecording} style={{marginLeft: 8}}>
+                  <MaterialCommunityIcons name="stop-circle" size={26} color="red" />
+                </TouchableOpacity>
+              )}
             </View>
-            {enableSendBtn ? (
-              <TouchableOpacity
-                onPress={handleSubmit}
-                style={[
-                  styles.sendBtn,
-                  {
-                    backgroundColor: jersAppTheme.badgeColor,
-                  },
-                ]}
-                activeOpacity={0.8}>
+            {(enableSendBtn || replyingTo) && !isRecording && (
+              <TouchableOpacity onPress={handleSubmit} style={styles.sendBtn} activeOpacity={0.8}>
                 <Send color="white" />
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                onPress={isRecording ? stopRecording : startRecording}
-                style={[
-                  styles.sendBtn,
-                  {
-                    backgroundColor: isRecording ? '#E53E3E' : jersAppTheme.badgeColor,
-                  },
-                ]}
-                activeOpacity={0.8}>
-                <MaterialCommunityIcons
-                  name={isRecording ? 'stop' : 'microphone'}
-                  size={22}
-                  color="white"
-                />
               </TouchableOpacity>
             )}
           </View>

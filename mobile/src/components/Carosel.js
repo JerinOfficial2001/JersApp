@@ -11,7 +11,7 @@ import StatusIndicator from './StatusIndicator';
 import Video from 'react-native-video';
 import {Text} from 'react-native-paper';
 import {MyContext} from '../../App';
-const Carousel = ({navigation, data, preview, text}) => {
+const Carousel = ({navigation, data, preview, text, onIndexChange}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLastImage, setIsLastImage] = useState(false);
   const carouselRef = useRef(null);
@@ -21,6 +21,7 @@ const Carousel = ({navigation, data, preview, text}) => {
     const {contentOffset} = event.nativeEvent;
     const index = Math.round(contentOffset.x / Dimensions.get('window').width);
     setCurrentIndex(index);
+    if (onIndexChange) onIndexChange(index);
   };
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -29,9 +30,12 @@ const Carousel = ({navigation, data, preview, text}) => {
       } else {
         if (!preview) {
           setIsLastImage(false);
+          const nextIndex = currentIndex + 1;
           carouselRef.current.scrollTo({
-            x: (currentIndex + 1) * Dimensions.get('window').width,
+            x: nextIndex * Dimensions.get('window').width,
           });
+          setCurrentIndex(nextIndex);
+          if (onIndexChange) onIndexChange(nextIndex);
         }
       }
     }, 5000);
@@ -50,9 +54,12 @@ const Carousel = ({navigation, data, preview, text}) => {
       setIsLastImage(true);
     } else {
       setIsLastImage(false);
+      const nextIndex = index + 1;
       carouselRef.current.scrollTo({
-        x: (index + 1) * Dimensions.get('window').width,
+        x: nextIndex * Dimensions.get('window').width,
       });
+      setCurrentIndex(nextIndex);
+      if (onIndexChange) onIndexChange(nextIndex);
     }
   };
 
@@ -114,18 +121,38 @@ const Carousel = ({navigation, data, preview, text}) => {
               <TouchableOpacity
                 onPress={() => handleImagePress(index)}
                 style={styles.touchableOpacity}
-                activeOpacity={1} // Adjust the opacity when pressed
+                activeOpacity={1}
               >
-                {item.type == 'video/mp4' ? (
+                {item.isText ? (
+                  <View
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      backgroundColor: item.backgroundColor || '#075E54',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      paddingHorizontal: 30,
+                    }}>
+                    <Text
+                      style={{
+                        color: 'white',
+                        fontSize: 28,
+                        fontWeight: '500',
+                        textAlign: 'center',
+                        lineHeight: 38,
+                      }}>
+                      {item.text}
+                    </Text>
+                  </View>
+                ) : (item.type == 'video/mp4' || item.format?.includes('video') || item.url?.endsWith('.mp4')) ? (
                   <Video
-                    onLoad={() => {
-                      setisLoading(false);
-                    }}
-                    source={{uri: status?.file?.url}}
-                    style={{height: '80%', width: '100%'}}
+                    source={{uri: preview ? item?.uri : item?.url}}
+                    style={{height: '100%', width: '100%'}}
                     paused={false}
+                    resizeMode="contain"
+                    controls={true}
                     onEnd={() => {
-                      props.navigation.navigate('Status');
+                      if (!preview) navigation.navigate('Status');
                     }}
                   />
                 ) : (
@@ -138,10 +165,9 @@ const Carousel = ({navigation, data, preview, text}) => {
               </TouchableOpacity>
             </View>
           ))
-          // )
         }
       </ScrollView>
-      <Text style={{color: 'white'}}>{text}</Text>
+      {text && <Text style={styles.captionText}>{text}</Text>}
     </View>
   );
 };
@@ -149,14 +175,24 @@ const Carousel = ({navigation, data, preview, text}) => {
 const styles = StyleSheet.create({
   touchableOpacity: {
     width: Dimensions.get('window').width,
-    height: 400,
+    height: Dimensions.get('window').height - 140,
     justifyContent: 'center',
     alignItems: 'center',
   },
   image: {
     height: '100%',
     width: '100%',
-    resizeMode: 'cover',
+    resizeMode: 'contain',
+  },
+  captionText: {
+    color: 'white',
+    fontSize: 16,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    textAlign: 'center',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    width: '100%',
+    paddingTop: 10,
   },
 });
 

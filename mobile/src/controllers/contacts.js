@@ -15,7 +15,7 @@ export const requestContactsPermission = async () => {
       },
     );
     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-      const response = await Contacts.getAll();
+      const response = await Contacts.getAllWithoutPhotos();
       return response;
     } else {
       console.log('Contacts permission denied');

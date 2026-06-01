@@ -1,82 +1,71 @@
-// components/DonutChart.js
-import React, {useContext, useState} from 'react';
-import {View} from 'react-native';
-import {Path, Svg} from 'react-native-svg';
+import React, {useContext} from 'react';
+import {StyleSheet} from 'react-native';
+import {Circle, Svg} from 'react-native-svg';
 import {MyContext} from '../../App';
-const DonutChart = ({data, width, height}) => {
+
+const DonutChart = ({data, size = 58}) => {
   const {jersAppTheme} = useContext(MyContext);
-  const total = data.reduce((acc, {value}) => acc + 2, 0);
-  const innerRadius = width / 7;
-  const outerRadius = width / 8;
+  
+  if (!data || data.length === 0) return null;
 
-  let startAngle = 0;
-  const spaceBetween = data?.length > 1 ? 5 : 1; // Adjust this value to increase or decrease space between slices
+  const N = data.length;
+  const radius = (size - 4) / 2; // e.g. (58 - 4)/2 = 27
+  const strokeWidth = 2.5;
+  const center = size / 2; // 29
+  const circumference = 2 * Math.PI * radius; // ~169.6
+  
+  const statusColor = jersAppTheme.statusIndicator || '#25D366';
 
-  const chartData = data.map(({value, color}) => {
-    const angle = (2 / total) * (360 - spaceBetween * data.length); // Adjusting for space between slices
-    const innerStart = polarToCartesian(
-      width / 2,
-      height / 2,
-      innerRadius,
-      startAngle,
+  if (N === 1) {
+    // Single status update - solid circle
+    return (
+      <Svg width={size} height={size} style={styles.svg}>
+        <Circle
+          cx={center}
+          cy={center}
+          r={radius}
+          fill="transparent"
+          stroke={statusColor}
+          strokeWidth={strokeWidth}
+        />
+      </Svg>
     );
-    const outerStart = polarToCartesian(
-      width / 2,
-      height / 2,
-      outerRadius,
-      startAngle,
-    );
-    const innerEnd = polarToCartesian(
-      width / 2,
-      height / 2,
-      innerRadius,
-      startAngle + angle,
-    );
-    const outerEnd = polarToCartesian(
-      width / 2,
-      height / 2,
-      outerRadius,
-      startAngle + angle,
-    );
+  }
 
-    const largeArcFlag = angle <= 180 ? '0' : '1';
+  // Multiple status updates - segmented circle
+  const gap = 4.5;
+  const totalGapLength = N * gap;
+  const segmentLength = (circumference - totalGapLength) / N;
+  const strokeDasharray = `${segmentLength} ${gap}`;
 
-    const path = [
-      `M ${outerStart.x} ${outerStart.y}`,
-      `A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${outerEnd.x} ${outerEnd.y}`,
-      `L ${innerEnd.x} ${innerEnd.y}`,
-      `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${innerStart.x} ${innerStart.y}`,
-      'Z', // Close path
-    ].join(' ');
-
-    startAngle += angle + spaceBetween; // Increment startAngle for the next slice
-    return {path, color};
-  });
+  // Start rotation from top (-90 degrees)
+  const rotation = -90;
 
   return (
-    <Svg
-      style={{
-        position: 'absolute',
-        alignItems: 'center',
-        display: 'flex',
-        justifyContent: 'center',
-        left: '-125%',
-      }}
-      width={width}
-      height={height}>
-      {chartData.map(({path, color}, index) => (
-        <Path key={index} d={path} fill={jersAppTheme.statusIndicator} />
-      ))}
+    <Svg width={size} height={size} style={styles.svg}>
+      <Circle
+        cx={center}
+        cy={center}
+        r={radius}
+        fill="transparent"
+        stroke={statusColor}
+        strokeWidth={strokeWidth}
+        strokeDasharray={strokeDasharray}
+        strokeDashoffset={0}
+        transform={`rotate(${rotation} ${center} ${center})`}
+        strokeLinecap="round"
+      />
     </Svg>
   );
 };
 
-function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
-  const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
-  return {
-    x: centerX + radius * Math.cos(angleInRadians),
-    y: centerY + radius * Math.sin(angleInRadians),
-  };
-}
+const styles = StyleSheet.create({
+  svg: {
+    position: 'absolute',
+    top: -2,
+    left: -2,
+    zIndex: 1,
+  },
+});
 
 export default DonutChart;

@@ -14,6 +14,8 @@ import AddStatus from '../screens/AddStatus';
 import MyProfile from '../screens/MyProfile';
 import PreviewStatus from '../screens/PreviewStatus';
 import InitialPage from '../screens/InitialPage';
+import MyStatuses from '../screens/MyStatuses';
+import AddTextStatus from '../screens/AddTextStatus';
 import {DarkThemeSchema, JersAppThemeSchema} from '../utils/theme';
 import Themes from '../screens/Themes';
 import {MyContext} from '../App';
@@ -145,8 +147,27 @@ export default function Navigator() {
           options={{
             headerShown: false,
           }}
+          name="AddTextStatus"
+          component={AddTextStatus}
+        />
+        <Stack.Screen
+          options={{
+            headerShown: false,
+          }}
           name="PreviewStatus"
           component={PreviewStatus}
+        />
+        <Stack.Screen
+          options={{
+            headerStyle: {
+              backgroundColor: jersAppTheme.appBar,
+              elevation: 0,
+            },
+            title: 'My Statuses',
+            headerTintColor: 'white',
+          }}
+          name="MyStatuses"
+          component={MyStatuses}
         />
         <Stack.Screen
           options={{

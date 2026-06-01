@@ -9,7 +9,14 @@ const {
   getLastMessage,
   sendMsg,
 } = require("../controllers/message");
-const { getMessages } = require("../controllers/Groups/messages");
+const {
+  getMessages,
+  deleteGroupMsgForMe,
+  deleteGroupMsgForEveryone,
+  addGroupReaction,
+  removeGroupReaction,
+  markGroupMsgAsRead,
+} = require("../controllers/Groups/messages");
 const authenticateJWT = require("../middleware/auth");
 const { uploadMessageMedia } = require("../middleware/upload");
 const route = express.Router();
@@ -34,7 +41,13 @@ route.post("/message/upload", authenticateJWT, uploadMessageMedia.single("file")
     res.status(500).json({ status: "error", message: "Upload failed" });
   }
 });
+
 //*Group
 route.get("/groupMsg", authenticateJWT, getMessages);
+route.post("/groupMsg/deleteForMe", authenticateJWT, deleteGroupMsgForMe);
+route.post("/groupMsg/deleteForEveryone", authenticateJWT, deleteGroupMsgForEveryone);
+route.post("/groupMsg/react", authenticateJWT, addGroupReaction);
+route.delete("/groupMsg/react", authenticateJWT, removeGroupReaction);
+route.post("/groupMsg/read", authenticateJWT, markGroupMsgAsRead);
 
 module.exports = route;
