@@ -3,22 +3,28 @@ import { GET_LOCAL_STORAGE } from "@/utils/EncryptedCookies";
 import axios, { AxiosError } from "axios";
 import toast from "react-hot-toast";
 
-const userData = GET_LOCAL_STORAGE("JersApp_userData");
-const headers = userData
-  ? {
-      headers: {
-        Authorization: `Bearer ${userData.accessToken}`,
-      },
-    }
-  : {};
-const multipartheaders = userData
-  ? {
-      headers: {
-        Authorization: `Bearer ${userData.accessToken}`,
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  : {};
+const getHeaders = () => {
+  const userData = GET_LOCAL_STORAGE("JersApp_userData");
+  return userData
+    ? {
+        headers: {
+          Authorization: `Bearer ${userData.accessToken}`,
+        },
+      }
+    : {};
+};
+
+const getMultipartHeaders = () => {
+  const userData = GET_LOCAL_STORAGE("JersApp_userData");
+  return userData
+    ? {
+        headers: {
+          Authorization: `Bearer ${userData.accessToken}`,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    : {};
+};
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof AxiosError) {
@@ -36,7 +42,7 @@ export const GET = async (queryOrParams: any, token?: string) => {
   try {
     const { data } = await axios.get(
       API + queryOrParams,
-      token ? { headers: { Authorization: `Bearer ${token}` } } : headers
+      token ? { headers: { Authorization: `Bearer ${token}` } } : getHeaders()
     );
     return data;
   } catch (error) {
@@ -53,7 +59,7 @@ export const POST = async (
     const { data } = await axios.post(
       API + queryOrParams,
       formData,
-      isMultipart ? multipartheaders : headers
+      isMultipart ? getMultipartHeaders() : getHeaders()
     );
     return data;
   } catch (error) {
@@ -70,7 +76,7 @@ export const PUT = async (
     const { data } = await axios.put(
       API + queryOrParams,
       formData,
-      isMultipart ? multipartheaders : headers
+      isMultipart ? getMultipartHeaders() : getHeaders()
     );
     return data;
   } catch (error) {
@@ -80,7 +86,7 @@ export const PUT = async (
 };
 export const DELETE = async (queryOrParams: any) => {
   try {
-    const { data } = await axios.delete(API + queryOrParams, headers);
+    const { data } = await axios.delete(API + queryOrParams, getHeaders());
     return data;
   } catch (error) {
     const msg = getErrorMessage(error);

@@ -3,9 +3,9 @@ import { GET, POST, PUT } from "@/services/requests";
 import { GET_LOCAL_STORAGE, SET_UserData } from "@/utils/EncryptedCookies";
 import toast from "react-hot-toast";
 
-const userData = GET_LOCAL_STORAGE("JersApp_userData");
+
 export const login = async (formData: any) => {
-  const { mobNum, password } = formData;
+  const { mobNum, password, redirectUrl = "/jersapp/chats" } = formData;
   try {
     const data = await POST("/api/auth/login", { mobNum, password });
     if (data.status === "ok") {
@@ -14,7 +14,7 @@ export const login = async (formData: any) => {
       if (userData) {
         if (userData.status === "ok") {
           SET_UserData(userData.data);
-          window.location.href = "/chats";
+          window.location.href = redirectUrl;
         } else {
           toast.error(userData.data);
         }
@@ -110,6 +110,8 @@ export const UpdateThemeByID = async (formData: any) => {
   }
 };
 export const getUserNameByID = async (id: string) => {
+  const userData = GET_LOCAL_STORAGE("JersApp_userData");
+  if (!userData) return null;
   const allUsers = await getAllUsers(userData._id);
   if (allUsers) {
     const user = allUsers.find((elem: any) => elem._id == id);

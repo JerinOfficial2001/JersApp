@@ -1,6 +1,6 @@
 "use client";
 import Loader from "@/components/chatComponents/Loader";
-import { DownloadAPK_URL, getAPK } from "@/controllers/apk";
+import { getAPK } from "@/controllers/apk";
 import { AuthenticateByToken, login as loginAPI } from "@/controllers/auth";
 import useWindowWidth from "@/hooks/windowData";
 import { useSocket } from "@/utils/socket";
@@ -18,10 +18,7 @@ import {
 } from "lucide-react";
 import QRCode from "qrcode.react";
 import React, { useEffect, useState } from "react";
-
-interface APKType {
-  fileId: string;
-}
+import Image from "next/image";
 
 const steps = [
   {
@@ -75,6 +72,7 @@ export default function Home() {
   const { data: APK, isLoading: isApkLoading } = useQuery({
     queryKey: ["apk"],
     queryFn: getAPK,
+    refetchOnWindowFocus: false,
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -85,10 +83,10 @@ export default function Home() {
   }, []);
 
   const handleDownload = async () => {
-    if (APK) {
+    if (APK && APK.apkUrl) {
       setIsLoading(true);
       try {
-        const downloadUrl = `${DownloadAPK_URL}/${APK.fileId}`;
+        const downloadUrl = APK.apkUrl;
         const response = await fetch(downloadUrl);
         if (response.ok) {
           const blob = await response.blob();
@@ -103,12 +101,18 @@ export default function Home() {
           link.click();
           document.body.removeChild(link);
           URL.revokeObjectURL(link.href);
+        } else {
+          // If fetch fails (CORS or other error), fallback to direct window open
+          window.open(downloadUrl, "_blank");
         }
       } catch (error) {
         console.error("Download error:", error);
+        window.open(APK.apkUrl, "_blank");
       } finally {
         setIsLoading(false);
       }
+    } else {
+      toast.error("APK URL not configured");
     }
   };
 
@@ -142,10 +146,12 @@ export default function Home() {
           {/* Navbar */}
           <nav className="relative z-10 flex items-center justify-between px-8 py-5 border-b border-white/5">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#439BCC] flex items-center justify-center shadow-lg shadow-[#439BCC]/30">
-                <MessageCircle size={20} color="white" />
-              </div>
-              <span className="font-bold text-lg tracking-wide">JersApp</span>
+              <Image
+                src="/jersapp/Logo.png"
+                alt="JersApp Logo"
+                width={100}
+                height={40}
+              />
             </div>
             <div className="flex items-center gap-2">
               <Wifi size={14} className="text-green-400" />
@@ -157,22 +163,25 @@ export default function Home() {
 
           {/* Main content */}
           <main
-            className={`relative z-10 flex ${
-              isDesktop ? "flex-row" : "flex-col"
-            } items-center justify-center min-h-[calc(100vh-72px)] gap-16 px-8 py-12`}
+            className={`relative z-10 flex ${isDesktop ? "flex-row" : "flex-col"
+              } items-center justify-center min-h-[calc(100vh-72px)] gap-16 px-8 py-12`}
           >
             {/* Left column */}
             <div className="flex flex-col items-center gap-8 max-w-md">
               {/* Hero */}
               <div className="flex flex-col items-center gap-4 text-center">
                 <div
-                  className="w-24 h-24 rounded-3xl flex items-center justify-center float"
+                  className="w-24 h-24 rounded-full flex items-center justify-center float"
                   style={{
-                    background: "linear-gradient(135deg, #439BCC, #2F58A7)",
                     boxShadow: "0 20px 60px rgba(67, 155, 204, 0.4)",
                   }}
                 >
-                  <MessageCircle size={48} color="white" />
+                  <Image
+                    src="/jersapp/JersApp Icon.png"
+                    alt="JersApp Logo"
+                    width={100}
+                    height={100}
+                  />
                 </div>
                 <div>
                   <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">

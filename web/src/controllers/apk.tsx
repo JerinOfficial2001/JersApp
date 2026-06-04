@@ -1,21 +1,31 @@
-import { DownloadAPK_API } from "@/api";
-import { GET_Apk } from "@/services/requests";
+import { GET, POST } from "@/services/requests";
 import toast from "react-hot-toast";
 
 export const getAPK = async () => {
   try {
-    const data = await GET_Apk(
-      "/Projects/getapk?userID=66276a73361a148fef6608c2&projectID=66927272e38e6ffa8d666702"
-    );
+    const data = await GET("/api/config/apk");
     if (data && data.status == "ok") {
       return data.data;
     } else {
-      toast.error(data.message);
       return null;
     }
   } catch (error) {
     console.log(error);
   }
 };
-// export const DownloadAPK_URL = `http://localhost:4000/portfolio/Projects/downloadapk`;
-export const DownloadAPK_URL = `${DownloadAPK_API}/Projects/downloadapk`;
+
+export const updateAPK = async (apkUrl: string, adminKey: string) => {
+  try {
+    const data = await POST("/api/config/apk", { apkUrl, adminKey });
+    if (data && data.status == "ok") {
+      toast.success("APK URL updated successfully!");
+      return data.data;
+    } else {
+      toast.error(data?.message || "Failed to update APK URL");
+      return null;
+    }
+  } catch (error) {
+    console.log(error);
+    toast.error("Failed to update APK URL");
+  }
+};

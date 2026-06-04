@@ -1,19 +1,18 @@
 import type { Config } from "tailwindcss"
-import  { fontFamily } from "tailwindcss/defaultTheme"
-import path from "path"
+import { fontFamily } from "tailwindcss/defaultTheme"
 
-const isServerDir = process.cwd().endsWith('server');
-const rootDir = isServerDir ? path.join(process.cwd(), '../web') : process.cwd();
-
+// Relative paths work correctly because server/index.js calls
+// process.chdir(webDir) before loading Next.js, so process.cwd()
+// is always the web/ directory when Tailwind resolves these globs.
 const config = {
   darkMode: ["class"],
   content: [
-    path.join(rootDir, './pages/**/*.{ts,tsx}').replace(/\\/g, '/'),
-    path.join(rootDir, './components/**/*.{ts,tsx}').replace(/\\/g, '/'),
-    path.join(rootDir, './app/**/*.{ts,tsx}').replace(/\\/g, '/'),
-    path.join(rootDir, './src/**/*.{ts,tsx}').replace(/\\/g, '/'),
-    path.join(rootDir, "./node_modules/flowbite/**/*.js").replace(/\\/g, '/'),
-	],
+    './pages/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './app/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx}',
+    './node_modules/flowbite/**/*.js',
+  ],
   prefix: "",
   theme: {
     container: {

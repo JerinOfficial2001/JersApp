@@ -478,6 +478,7 @@ export default function SocketProvider({ children }: any) {
         endCall,
         toggleMute,
         toggleVideo,
+        socketLogout,
       }}
     >
       {children}

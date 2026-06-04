@@ -121,9 +121,9 @@ export function Mail({
           /> */}
           <div className="p-2 flex items-center justify-center ">
             {isCollapsed ? (
-              <AvatarIcon src={"/JersApp Icon.png"} name="JersApp" />
+              <AvatarIcon src={"/jersapp/JersApp Icon.png"} name="JersApp" />
             ) : (
-              <Image alt="JersApp" src={"/Logo.png"} height="100" width="100" />
+              <Image alt="JersApp" src={"/jersapp/Logo.png"} height="100" width="100" />
             )}
             {/* {!isCollapsed && (
               <p className="font-bold text-[25px] text-[#4954ec]">ersApp</p>

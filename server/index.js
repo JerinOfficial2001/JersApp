@@ -7,9 +7,20 @@ const { randomUUID } = require("crypto");
 const cron = require("node-cron");
 const path = require("path");
 
-const next = require("next");
-const dev = process.env.NODE_ENV !== "production";
+// Resolve the `next` package from the web/ directory so that
+// all web dependencies (LiveKit, Radix UI, Flowbite, etc.) are
+// resolved from web/node_modules, not server/node_modules.
 const frontendPath = path.resolve(__dirname, "../web");
+
+// ⚠️ Change cwd to web/ BEFORE loading Next.js.
+// This makes Tailwind CSS resolve relative content globs (./src/**) against
+// the web/ directory instead of server/. All server file paths use __dirname
+// (absolute), so this does NOT break any server functionality.
+process.chdir(frontendPath);
+
+const nextPkgPath = require.resolve("next", { paths: [frontendPath] });
+const next = require(nextPkgPath);
+const dev = process.env.NODE_ENV !== "production";
 const nextApp = next({ dev, dir: frontendPath });
 const handle = nextApp.getRequestHandler();
 
@@ -43,12 +54,14 @@ const Status = require("./routes/status");
 const Groups = require("./routes/group");
 const Members = require("./routes/member");
 const Chats = require("./routes/chats");
+const Config = require("./routes/config");
 const { deleteOldRecordsAndImages } = require("./controllers/status");
 
 // Socket imports and controllers
 const { JersApp_Message } = require("./model/message");
 const { JersApp_grp_message } = require("./model/Groups/message");
 const { JersApp_Group } = require("./model/Groups/group");
+const { JersApp_Chats } = require("./model/chats");
 const { VChat_Auth } = require("./model/Vchat_Auth");
 const {
   RemoveUser,
@@ -79,6 +92,7 @@ app.use(`${BASE_PATH}/api/status`, Status);
 app.use(`${BASE_PATH}/api/group`, Groups);
 app.use(`${BASE_PATH}/api/member`, Members);
 app.use(`${BASE_PATH}/api/chat`, Chats);
+app.use(`${BASE_PATH}/api/config`, Config);
 app.use(`${BASE_PATH}/uploads`, express.static(path.join(__dirname, "uploads")));
 
 // VChat API endpoints
@@ -570,10 +584,7 @@ ioJersFolio.on("connection", (socket) => {
   });
 });
 
-// Let Next.js handle everything else
-app.all("*", (req, res) => handle(req, res));
-
-// Global Error Handler Middleware
+// Global Error Handler Middleware (must be before the Next.js catch-all)
 app.use((err, req, res, next) => {
   console.error("Global Error Handler:", err.message);
   res.status(err.status || 500).json({
@@ -581,6 +592,9 @@ app.use((err, req, res, next) => {
     message: err.message || "Internal Server Error",
   });
 });
+
+// Let Next.js handle everything else (must be last)
+app.all("*", (req, res) => handle(req, res));
 
 // Start server after Next.js is prepared
 const PORT = process.env.PORT || 9709;

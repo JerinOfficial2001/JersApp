@@ -2,7 +2,6 @@ import { GET, POST, DELETE } from "@/services/requests";
 import { GET_UserData } from "@/utils/EncryptedCookies";
 import toast from "react-hot-toast";
 
-const userData = GET_UserData();
 export const AddStatus = async (formData: any) => {
   try {
     const data: any = await POST(`/api/status/add`, formData, "multipart");
@@ -18,6 +17,7 @@ export const AddStatus = async (formData: any) => {
   }
 };
 export const GetAllStatus = async () => {
+  const userData = GET_UserData();
   try {
     const data: any = await GET("/api/status/get?userID=" + userData._id);
     if (data && data.status == "ok") {

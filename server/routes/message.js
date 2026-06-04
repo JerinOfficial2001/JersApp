@@ -34,7 +34,7 @@ route.post("/message/upload", authenticateJWT, uploadMessageMedia.single("file")
     if (!req.file) {
       return res.status(400).json({ status: "error", message: "No file uploaded" });
     }
-    const fileUrl = `/uploads/messages/${req.file.filename}`;
+    const fileUrl = `/jersapp/uploads/messages/${req.file.filename}`;
     res.status(200).json({ status: "ok", fileUrl });
   } catch (error) {
     console.error("Upload error:", error);

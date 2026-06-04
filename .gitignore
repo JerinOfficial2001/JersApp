@@ -8,3 +8,4 @@
 **/.env.production.local
 mobile/ios/build/
 mobile/android/app/build/
+**/logs/*

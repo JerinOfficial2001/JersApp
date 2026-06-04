@@ -21,7 +21,7 @@ export default function Providers({ children }: Props) {
     if (userData) {
       router.push("/chats");
     } else {
-      if (pathname != "/admin") {
+      if (!pathname.startsWith("/admin")) {
         router.push("/");
       }
     }
